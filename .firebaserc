@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "skiptow-worldwide",
+    "skiptow-worldwide": "skiptow-worldwide"
+  },
+  "targets": {},
+  "etags": {}
+}

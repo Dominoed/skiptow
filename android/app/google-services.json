@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257919407604",
+    "project_id": "skiptow-worldwide",
+    "storage_bucket": "skiptow-worldwide.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257919407604:android:ae42c691509ead702715a1",
+        "android_client_info": {
+          "package_name": "com.skiptow.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiruDa5g7MDlGKDhJZO48TRRssAv4N7GA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
