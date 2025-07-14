@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:skiptow/pages/create_invoice_page.dart';import 'package:geolocator/geolocator.dart';
+import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CustomerDashboard extends StatefulWidget {
@@ -18,6 +18,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   GoogleMapController? mapController;
   Map<String, dynamic> mechanicsInRange = {};
   Set<Marker> markers = {};
+  BitmapDescriptor? wrenchIcon;
   bool showNoMechanics = true;
   String mechanicStatusMessage = "";
   bool chooseTechMode = false;
@@ -27,6 +28,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   void initState() {
     super.initState();
     _ensureLocationPermission();
+    _loadWrenchIcon();
     _getCurrentLocation();
     //Move map to current location
     if (mapController != null && currentPosition != null) {
@@ -121,6 +123,14 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return true;
   }
 
+  Future<void> _loadWrenchIcon() async {
+    wrenchIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/icons/wrench.png',
+    );
+    if (mounted) setState(() {});
+  }
+
   void _loadMechanics() async {
     final snapshot = await FirebaseFirestore.instance.collection('users').where('isActive', isEqualTo: true).get();
 
@@ -150,14 +160,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           insideExtended = true;
         }
 
-        tempMarkers.add(Marker(
+        tempMarkers.add(
+          Marker(
             markerId: MarkerId(doc.id),
             position: LatLng(lat, lng),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              distance <= radius
-                  ? BitmapDescriptor.hueGreen
-                  : BitmapDescriptor.hueAzure,
-            ),
+            icon: wrenchIcon ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                  distance <= radius
+                      ? BitmapDescriptor.hueGreen
+                      : BitmapDescriptor.hueAzure,
+                ),
+            anchor: const Offset(0.5, 0.5),
             onTap: () {
               if (chooseTechMode) {
                 setState(() {
