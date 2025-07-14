@@ -51,3 +51,4 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+.firebase/hosting.YnVpbGQvd2Vi.cache
