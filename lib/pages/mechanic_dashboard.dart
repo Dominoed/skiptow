@@ -4,7 +4,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 BitmapDescriptor? wrenchIcon;
@@ -122,7 +121,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     };
 
     await FirebaseFirestore.instance.collection('users').doc(widget.userId).update(data);
-    await FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update(data);
 
     setState(() {
       isActive = !isActive;
@@ -269,9 +267,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
                         'radiusMiles': val,
                       });
-                      FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update({
-                        'radiusMiles': val,
-                      });
                     }
                   },
                 ),
@@ -299,13 +294,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
 
       if (isActive && currentPosition != null) {
-        await FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update({
-          'location': {
-            'lat': currentPosition!.latitude,
-            'lng': currentPosition!.longitude,
-          },
-          'timestamp': DateTime.now(),
-        });
         await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
           'location': {
             'lat': currentPosition!.latitude,
