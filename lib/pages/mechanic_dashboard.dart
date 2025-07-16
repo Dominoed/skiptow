@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'invoices_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -227,7 +228,23 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         : const LatLng(37.7749, -122.4194); // Default SF location
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mechanic Dashboard')),
+      appBar: AppBar(
+        title: const Text('Mechanic Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: 'View My Invoices',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvoicesPage(userId: widget.userId),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           SizedBox(
