@@ -6,6 +6,7 @@ import 'customer_dashboard.dart';
 import 'login_page.dart';
 import 'settings_page.dart';
 import 'admin_dashboard.dart';
+import 'help_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
@@ -89,6 +90,20 @@ class DashboardPage extends StatelessWidget {
                 },
                 tooltip: 'Settings',
                 child: const Icon(Icons.settings),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton(
+                heroTag: 'help_button',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const HelpPage(),
+                    ),
+                  );
+                },
+                tooltip: 'Help / Support',
+                child: const Icon(Icons.help_outline),
               ),
               const SizedBox(height: 12),
               FloatingActionButton(
