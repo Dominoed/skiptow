@@ -109,6 +109,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
                           invoiceId: docs[index].id,
                           data: data,
                           role: role!,
+                          currentUserId: widget.userId,
                         );
                       },
                     );
@@ -128,11 +129,13 @@ class _InvoiceTile extends StatelessWidget {
   final String invoiceId;
   final Map<String, dynamic> data;
   final String role;
+  final String currentUserId;
 
   const _InvoiceTile({
     required this.invoiceId,
     required this.data,
     required this.role,
+    required this.currentUserId,
   });
 
   // Simple date formatting used throughout the UI.
@@ -146,6 +149,8 @@ class _InvoiceTile extends StatelessWidget {
     switch (status) {
       case 'completed':
         return Colors.green;
+      case 'cancelled':
+        return Colors.red;
       default:
         return Colors.yellow[700]!;
     }
@@ -215,6 +220,54 @@ class _InvoiceTile extends StatelessWidget {
                   .update({'status': 'completed'});
             },
             child: const Text('Mark Completed'),
+          ),
+        ),
+      );
+    }
+
+    if (role == 'customer' &&
+        status == 'active' &&
+        data['customerId'] == currentUserId) {
+      columnChildren.add(
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Cancel Request'),
+                    content: const Text(
+                        'Are you sure you want to cancel this service request?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('No'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Yes'),
+                      ),
+                    ],
+                  );
+                },
+              );
+
+              if (confirmed == true) {
+                await FirebaseFirestore.instance
+                    .collection('invoices')
+                    .doc(invoiceId)
+                    .update({'status': 'cancelled'});
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request cancelled.')),
+                  );
+                }
+              }
+            },
+            child: const Text('Cancel Request'),
           ),
         ),
       );
