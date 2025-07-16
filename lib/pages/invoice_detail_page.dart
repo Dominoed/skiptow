@@ -17,6 +17,7 @@ class InvoiceDetailPage extends StatefulWidget {
 }
 
 class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
+  late final Future<Map<String, dynamic>?> _invoiceFuture;
   Future<Map<String, dynamic>?> _loadInvoice() async {
     final doc = await FirebaseFirestore.instance
         .collection('invoices')
@@ -40,9 +41,15 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _invoiceFuture = _loadInvoice();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>?>(
-      future: _loadInvoice(),
+      future: _invoiceFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           if (snapshot.connectionState == ConnectionState.waiting) {
