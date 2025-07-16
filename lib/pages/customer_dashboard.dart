@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'invoices_page.dart';
+import 'service_request_history_page.dart';
 import 'messages_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
@@ -356,12 +356,14 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         actions: [
           IconButton(
             icon: const Icon(Icons.receipt_long),
-            tooltip: 'View My Invoices',
+            tooltip: 'View My Requests',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => InvoicesPage(userId: widget.userId),
+                  builder: (_) => ServiceRequestHistoryPage(
+                    userId: widget.userId,
+                  ),
                 ),
               );
             },
