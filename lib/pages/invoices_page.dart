@@ -62,9 +62,12 @@ class _InvoicesPageState extends State<InvoicesPage> {
         }
 
         Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-            .collection('invoices')
-            .where(role == 'customer' ? 'customerId' : 'mechanicId',
-                isEqualTo: widget.userId);
+            .collection('invoices');
+        if (role == 'customer') {
+          query = query.where('customerId', isEqualTo: widget.userId);
+        } else {
+          query = query.where('mechanicId', whereIn: [widget.userId, 'any']);
+        }
         if (_selectedFilter == 'active' || _selectedFilter == 'completed') {
           query = query.where('status', isEqualTo: _selectedFilter);
         }
