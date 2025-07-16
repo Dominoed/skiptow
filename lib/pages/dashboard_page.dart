@@ -5,10 +5,14 @@ import 'mechanic_dashboard.dart';
 import 'customer_dashboard.dart';
 import 'login_page.dart';
 import 'settings_page.dart';
+import 'admin_dashboard.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
   const DashboardPage({super.key, required this.userId});
+
+  /// TODO: Replace with your real admin UID.
+  static const String _adminUserId = 'ADMIN_USER_ID';
 
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
@@ -57,6 +61,22 @@ class DashboardPage extends StatelessWidget {
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (userId == _adminUserId) ...[
+                FloatingActionButton(
+                  heroTag: 'admin_button',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AdminDashboardPage(userId: userId),
+                      ),
+                    );
+                  },
+                  tooltip: 'Admin Dashboard',
+                  child: const Icon(Icons.admin_panel_settings),
+                ),
+                const SizedBox(height: 12),
+              ],
               FloatingActionButton(
                 heroTag: 'settings_button',
                 onPressed: () {
