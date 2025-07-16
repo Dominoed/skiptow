@@ -275,6 +275,79 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  void _handleAnyTech() {
+    final activeMechanics = <Map<String, dynamic>>[];
+    mechanicsInRange.forEach((id, data) {
+      if (data['withinActive'] == true) {
+        activeMechanics.add({
+          'id': id,
+          'username': data['username'],
+          'distance': data['distance'],
+        });
+      }
+    });
+
+    if (activeMechanics.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No mechanics in range')),
+      );
+      return;
+    }
+
+    Future<void> continueFn() async {
+      Navigator.pop(context); // close dialog if open
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreateInvoicePage(
+            customerId: widget.userId,
+            mechanicId: 'any',
+            mechanicUsername: 'Any Tech',
+            distance: 0,
+          ),
+        ),
+      );
+    }
+
+    if (activeMechanics.length > 1) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Nearby Mechanics'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: activeMechanics.length,
+                itemBuilder: (context, index) {
+                  final m = activeMechanics[index];
+                  final dist = (m['distance'] as double).toStringAsFixed(1);
+                  return ListTile(
+                    title: Text(m['username'] ?? 'Unnamed'),
+                    subtitle: Text('$dist mi away'),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: continueFn,
+                child: const Text('Request Service'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      continueFn();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -358,9 +431,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
-                              onPressed: () {
-                                // TODO: implement any tech logic
-                              },
+                              onPressed: _handleAnyTech,
                               child: const Text("Any Tech"),
                             ),
                             const SizedBox(width: 10),

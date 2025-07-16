@@ -27,6 +27,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   final TextEditingController descriptionController = TextEditingController();
 
   bool isSubmitting = false;
+  bool get isAnyTech => widget.mechanicId == 'any';
 
   bool get isFormValid =>
       carYearController.text.isNotEmpty &&
@@ -92,7 +93,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         'mechanicId': widget.mechanicId,
         'customerId': widget.customerId,
         'mechanicUsername': widget.mechanicUsername,
-        'distance': widget.distance,
+        if (!isAnyTech) 'distance': widget.distance,
         'location': {
           'lat': position.latitude,
           'lng': position.longitude,
@@ -153,7 +154,8 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Mechanic: ${widget.mechanicUsername}'),
-            Text('Distance: ${widget.distance.toStringAsFixed(1)} mi'),
+            if (!isAnyTech)
+              Text('Distance: ${widget.distance.toStringAsFixed(1)} mi'),
             const SizedBox(height: 16),
             TextField(
               controller: carYearController,
