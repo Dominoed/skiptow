@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'mechanic_dashboard.dart';
 import 'customer_dashboard.dart';
+import 'login_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
@@ -13,6 +15,17 @@ class DashboardPage extends StatelessWidget {
       return doc.data()?['role'];
     }
     return null;
+  }
+
+  void _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -27,15 +40,26 @@ class DashboardPage extends StatelessWidget {
         }
 
         final role = snapshot.data;
+        Widget? dash;
         if (role == 'mechanic') {
-          return MechanicDashboard(userId: userId);
+          dash = MechanicDashboard(userId: userId);
         } else if (role == 'customer') {
-          return CustomerDashboard(userId: userId);
+          dash = CustomerDashboard(userId: userId);
         } else {
           return const Scaffold(
             body: Center(child: Text('❌ Unknown role or error')),
           );
         }
+
+        return Scaffold(
+          body: dash,
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'logout_button',
+            onPressed: () => _logout(context),
+            tooltip: 'Logout',
+            child: const Icon(Icons.logout),
+          ),
+        );
       },
     );
   }
