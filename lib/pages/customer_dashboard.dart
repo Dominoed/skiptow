@@ -206,6 +206,18 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       }
     }
 
+    if (kIsWeb && currentPosition != null) {
+      tempMarkers.add(
+        Marker(
+          markerId: const MarkerId('web-user-location'),
+          position:
+              LatLng(currentPosition!.latitude, currentPosition!.longitude),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
+      );
+    }
+
     setState(() {
       markers = tempMarkers;
       mechanicsInRange = inRange;
