@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class ServiceRequestHistoryPage extends StatelessWidget {
   final String userId;
@@ -20,7 +21,7 @@ class ServiceRequestHistoryPage extends StatelessWidget {
   String _formatDate(Timestamp? ts) {
     if (ts == null) return '';
     final dt = ts.toDate().toLocal();
-    return dt.toString().split('.').first;
+    return DateFormat('MMMM d, yyyy').format(dt);
   }
 
   @override
@@ -69,9 +70,8 @@ class ServiceRequestHistoryPage extends StatelessWidget {
                       if (description.toString().isNotEmpty) Text(description),
                       const SizedBox(height: 4),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text('Submitted: ${_formatDate(ts)}'),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
@@ -86,6 +86,8 @@ class ServiceRequestHistoryPage extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      Text('Submitted on ${_formatDate(ts)}'),
                     ],
                   ),
                 ),

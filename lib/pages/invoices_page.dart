@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'invoice_detail_page.dart';
 
 /// Displays a list of invoices for the logged in user.
@@ -146,7 +147,7 @@ class _InvoiceTile extends StatelessWidget {
   String _formatDate(Timestamp? ts) {
     if (ts == null) return '';
     final dt = ts.toDate().toLocal();
-    return dt.toString().split('.').first; // yyyy-MM-dd HH:mm:ss
+    return DateFormat('MMMM d, yyyy').format(dt);
   }
 
   Color _statusColor(String status) {
@@ -209,7 +210,7 @@ class _InvoiceTile extends StatelessWidget {
       if (carText.isNotEmpty) Text(carText),
       if (description.toString().isNotEmpty) Text(description),
       if (distance != null) Text('Distance: ${distance.toStringAsFixed(1)} mi'),
-      Text('Submitted: ${_formatDate(ts)}'),
+      Text('Submitted on ${_formatDate(ts)}'),
     ];
 
     if (role == 'mechanic' && status == 'active') {
