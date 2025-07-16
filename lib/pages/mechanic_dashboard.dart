@@ -232,15 +232,41 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         children: [
           SizedBox(
             height: 300,
-            child: GoogleMap(
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: initialMapPos,
-                zoom: 13,
-              ),
-              myLocationEnabled: false,
-              markers: _buildMarkers(),
-              circles: _buildRadiusCircles(),
+            child: Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: initialMapPos,
+                    zoom: 13,
+                  ),
+                  myLocationEnabled: !kIsWeb,
+                  myLocationButtonEnabled: !kIsWeb,
+                  markers: _buildMarkers(),
+                  circles: _buildRadiusCircles(),
+                ),
+                if (kIsWeb)
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      heroTag: 'center_map',
+                      onPressed: () {
+                        if (currentPosition != null) {
+                          mapController?.animateCamera(
+                            CameraUpdate.newLatLng(
+                              LatLng(
+                                currentPosition!.latitude,
+                                currentPosition!.longitude,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Icon(Icons.my_location),
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
