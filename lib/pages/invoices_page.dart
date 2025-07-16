@@ -68,7 +68,9 @@ class _InvoicesPageState extends State<InvoicesPage> {
         } else {
           query = query.where('mechanicId', whereIn: [widget.userId, 'any']);
         }
-        if (_selectedFilter == 'active' || _selectedFilter == 'completed') {
+        if (_selectedFilter == 'active' ||
+            _selectedFilter == 'completed' ||
+            _selectedFilter == 'cancelled') {
           query = query.where('status', isEqualTo: _selectedFilter);
         }
         query = query.orderBy('timestamp', descending: true);
@@ -85,6 +87,8 @@ class _InvoicesPageState extends State<InvoicesPage> {
                     _filterButton('active', 'Show Active'),
                     const SizedBox(width: 8),
                     _filterButton('completed', 'Show Completed'),
+                    const SizedBox(width: 8),
+                    _filterButton('cancelled', 'Show Cancelled'),
                   ],
                 ),
               ),
