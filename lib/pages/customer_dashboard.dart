@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'invoices_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -236,7 +237,23 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Customer Map")),
+      appBar: AppBar(
+        title: const Text("Customer Map"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: 'View My Invoices',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvoicesPage(userId: widget.userId),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: currentPosition == null
           ? const Center(child: CircularProgressIndicator())
           : Stack(
