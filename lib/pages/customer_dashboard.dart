@@ -30,14 +30,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _ensureLocationPermission();
     _loadWrenchIcon();
     _getCurrentLocation();
-    //Move map to current location
-    if (mapController != null && currentPosition != null) {
-      mapController!.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        ),
-      );
-    }
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -232,6 +224,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    if (currentPosition != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        ),
+      );
+    }
   }
 
   @override
