@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 /// Simple admin dashboard for monitoring the platform.
 /// Access is granted only if the [userId] matches [_adminUserId].
@@ -19,6 +20,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _activeMechanics = 0;
   int _activeInvoices = 0;
   int _completedInvoices = 0;
+  int _cancelledInvoices = 0;
+
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
 
@@ -29,6 +33,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .collection('invoices')
         .orderBy('timestamp', descending: true)
         .snapshots();
+    _invoiceSub = _invoiceStream.listen(_updateInvoiceCounts);
     _loadStats();
   }
 
@@ -50,7 +55,41 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('status', isEqualTo: 'completed')
         .get();
     _completedInvoices = completedSnap.size;
+
+    final cancelledSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('status', isEqualTo: 'cancelled')
+        .get();
+    _cancelledInvoices = cancelledSnap.size;
     if (mounted) setState(() {});
+  }
+
+  void _updateInvoiceCounts(
+      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    int active = 0;
+    int completed = 0;
+    int cancelled = 0;
+    for (final doc in snapshot.docs) {
+      final status = doc.data()['status'];
+      if (status == 'active') {
+        active++;
+      } else if (status == 'completed') {
+        completed++;
+      } else if (status == 'cancelled') {
+        cancelled++;
+      }
+    }
+    if (!mounted) {
+      _activeInvoices = active;
+      _completedInvoices = completed;
+      _cancelledInvoices = cancelled;
+      return;
+    }
+    setState(() {
+      _activeInvoices = active;
+      _completedInvoices = completed;
+      _cancelledInvoices = cancelled;
+    });
   }
 
   Future<void> _refresh() async {
@@ -73,6 +112,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Mechanics: $_activeMechanics'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
+        Text('Cancelled Invoices: $_cancelledInvoices'),
       ],
     );
   }
@@ -152,6 +192,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _invoiceSub?.cancel();
+    super.dispose();
   }
 
   @override
