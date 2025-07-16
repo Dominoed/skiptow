@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'mechanic_dashboard.dart';
 import 'customer_dashboard.dart';
 import 'login_page.dart';
+import 'settings_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
@@ -53,11 +54,30 @@ class DashboardPage extends StatelessWidget {
 
         return Scaffold(
           body: dash,
-          floatingActionButton: FloatingActionButton(
-            heroTag: 'logout_button',
-            onPressed: () => _logout(context),
-            tooltip: 'Logout',
-            child: const Icon(Icons.logout),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                heroTag: 'settings_button',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SettingsPage(),
+                    ),
+                  );
+                },
+                tooltip: 'Settings',
+                child: const Icon(Icons.settings),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton(
+                heroTag: 'logout_button',
+                onPressed: () => _logout(context),
+                tooltip: 'Logout',
+                child: const Icon(Icons.logout),
+              ),
+            ],
           ),
         );
       },
