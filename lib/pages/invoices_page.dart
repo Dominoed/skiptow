@@ -7,16 +7,40 @@ import 'invoice_detail_page.dart';
 /// The page automatically determines if the user is a customer or
 /// mechanic by checking the `users` collection. It then queries the
 /// `invoices` collection for documents associated with the user.
-class InvoicesPage extends StatelessWidget {
+class InvoicesPage extends StatefulWidget {
   final String userId;
 
   const InvoicesPage({super.key, required this.userId});
 
+  @override
+  State<InvoicesPage> createState() => _InvoicesPageState();
+}
+
+class _InvoicesPageState extends State<InvoicesPage> {
+  String? _selectedFilter;
+
   // Fetch the role of the current user so we know which field to query.
   Future<String?> _getRole() async {
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
     return doc.data()?['role'] as String?;
+  }
+
+  Widget _filterButton(String value, String label) {
+    final bool selected = _selectedFilter == value;
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _selectedFilter = selected ? null : value;
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: selected ? Colors.blue : null,
+      ),
+      child: Text(label),
+    );
   }
 
   @override
@@ -37,38 +61,58 @@ class InvoicesPage extends StatelessWidget {
           );
         }
 
-        final query = FirebaseFirestore.instance
+        Query<Map<String, dynamic>> query = FirebaseFirestore.instance
             .collection('invoices')
             .where(role == 'customer' ? 'customerId' : 'mechanicId',
-                isEqualTo: userId)
-            .orderBy('timestamp', descending: true);
+                isEqualTo: widget.userId);
+        if (_selectedFilter == 'active' || _selectedFilter == 'completed') {
+          query = query.where('status', isEqualTo: _selectedFilter);
+        }
+        query = query.orderBy('timestamp', descending: true);
 
         return Scaffold(
           appBar: AppBar(title: const Text('Invoices')),
-          body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: query.snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _filterButton('active', 'Show Active'),
+                    const SizedBox(width: 8),
+                    _filterButton('completed', 'Show Completed'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: query.snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-              final docs = snapshot.data?.docs ?? [];
-              if (docs.isEmpty) {
-                return const Center(child: Text('No invoices found'));
-              }
+                    final docs = snapshot.data?.docs ?? [];
+                    if (docs.isEmpty) {
+                      return const Center(child: Text('No invoices found'));
+                    }
 
-              return ListView.builder(
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final data = docs[index].data();
-                  return _InvoiceTile(
-                    invoiceId: docs[index].id,
-                    data: data,
-                    role: role!,
-                  );
-                },
-              );
-            },
+                    return ListView.builder(
+                      itemCount: docs.length,
+                      itemBuilder: (context, index) {
+                        final data = docs[index].data();
+                        return _InvoiceTile(
+                          invoiceId: docs[index].id,
+                          data: data,
+                          role: role!,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
