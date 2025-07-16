@@ -21,6 +21,8 @@ class MechanicDashboard extends StatefulWidget {
 class _MechanicDashboardState extends State<MechanicDashboard> {
   Timer? backgroundTimer;
   StreamSubscription<Position>? positionStream;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? invoiceSubscription;
+  bool _initialInvoiceLoad = true;
   bool isActive = false;
   double radiusMiles = 5;
   String status = 'Inactive';
@@ -34,6 +36,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     _loadWrenchIcon();
     _loadStatus();
     _handleLocationPermission();
+    _listenForInvoices();
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -128,6 +131,30 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       positionStream?.cancel();
       backgroundTimer?.cancel();
     }
+  }
+
+  void _listenForInvoices() {
+    invoiceSubscription?.cancel();
+    invoiceSubscription = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'active')
+        .snapshots()
+        .listen((snapshot) {
+      if (_initialInvoiceLoad) {
+        _initialInvoiceLoad = false;
+        return;
+      }
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('New service request received')),
+            );
+          }
+        }
+      }
+    });
   }
 
   Future<bool> _handleLocationPermission() async {
@@ -373,6 +400,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    positionStream?.cancel();
+    backgroundTimer?.cancel();
+    invoiceSubscription?.cancel();
+    super.dispose();
+  }
+
   void _startPositionUpdates() async {
     positionStream?.cancel(); // cancel previous stream
     backgroundTimer?.cancel(); // cancel any background timer
