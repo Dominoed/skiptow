@@ -32,14 +32,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     _loadWrenchIcon();
     _loadStatus();
     _handleLocationPermission();
-    //Move map to current location
-    if (mapController != null && currentPosition != null) {
-      mapController!.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        ),
-      );
-    }
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -217,6 +209,17 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     };
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    if (currentPosition != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final LatLng initialMapPos = currentPosition != null
@@ -230,7 +233,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           SizedBox(
             height: 300,
             child: GoogleMap(
-              onMapCreated: (controller) => mapController = controller,
+              onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
                 target: initialMapPos,
                 zoom: 13,
