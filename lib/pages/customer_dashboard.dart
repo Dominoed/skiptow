@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'invoices_page.dart';
+import 'messages_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -234,6 +235,46 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
   }
 
+  void _openMessages() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Recipient ID'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(labelText: 'User ID'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final otherId = controller.text.trim();
+                if (otherId.isNotEmpty) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MessagesPage(
+                        currentUserId: widget.userId,
+                        otherUserId: otherId,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Chat'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,6 +292,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 ),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.mail),
+            tooltip: 'Messages',
+            onPressed: _openMessages,
           ),
         ],
       ),

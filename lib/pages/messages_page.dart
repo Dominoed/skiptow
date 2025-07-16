@@ -76,7 +76,13 @@ class _MessagesPageState extends State<MessagesPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Messages'),
+      ),
       body: Column(
         children: [
           Expanded(
