@@ -7,6 +7,7 @@ import 'login_page.dart';
 import 'settings_page.dart';
 import 'admin_dashboard.dart';
 import 'help_page.dart';
+import 'service_request_history_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
@@ -105,6 +106,22 @@ class DashboardPage extends StatelessWidget {
                 tooltip: 'Help / Support',
                 child: const Icon(Icons.help_outline),
               ),
+              if (role == 'customer') ...[
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'history_button',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ServiceRequestHistoryPage(userId: userId),
+                      ),
+                    );
+                  },
+                  tooltip: 'My Service Requests',
+                  child: const Icon(Icons.history),
+                ),
+              ],
               const SizedBox(height: 12),
               FloatingActionButton(
                 heroTag: 'logout_button',
