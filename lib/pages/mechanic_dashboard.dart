@@ -115,10 +115,14 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       'location': currentPosition != null
           ? {'lat': currentPosition!.latitude, 'lng': currentPosition!.longitude}
           : FieldValue.delete(),
+      'role': 'mechanic',
+      'timestamp': DateTime.now(),
     };
 
-    await FirebaseFirestore.instance.collection('users').doc(widget.userId).update(data);
-    await FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update(data);
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update(data);
 
     setState(() {
       isActive = !isActive;
@@ -383,14 +387,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   },
                   onChangeEnd: (val) {
                     if (isActive) {
-                      FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(widget.userId)
+                          .update({
                         'radiusMiles': val,
-                      });
-                      FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update({
-                        'radiusMiles': val,
+                        'role': 'mechanic',
+                        'timestamp': DateTime.now(),
                       });
                     }
-                  },
+                 },
                 ),
                 Text('Service Radius: ${radiusMiles.toInt()} miles'),
               ],
@@ -425,18 +431,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
 
       if (isActive && currentPosition != null) {
-        await FirebaseFirestore.instance.collection('mechanics').doc(widget.userId).update({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.userId)
+            .update({
           'location': {
             'lat': currentPosition!.latitude,
             'lng': currentPosition!.longitude,
           },
-          'timestamp': DateTime.now(),
-        });
-        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-          'location': {
-            'lat': currentPosition!.latitude,
-            'lng': currentPosition!.longitude,
-          },
+          'role': 'mechanic',
           'timestamp': DateTime.now(),
         });
       }
