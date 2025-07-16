@@ -4,7 +4,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 BitmapDescriptor? wrenchIcon;
@@ -191,29 +190,28 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Set<Marker> _buildMarkers() {
-    if (currentPosition == null || !isActive || wrenchIcon == null) return {};
-    if (kIsWeb && currentPosition != null) {
+    if (currentPosition == null) return {};
+    final LatLng pos =
+        LatLng(currentPosition!.latitude, currentPosition!.longitude);
+
+    if (isActive && wrenchIcon != null) {
       return {
-      Marker(
-        markerId: const MarkerId('mechanic'),
-        position: LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        icon: wrenchIcon!,
-        anchor: const Offset(0.5, 0.5), // Center of icon
-        infoWindow: const InfoWindow(title: 'You (Mechanic)'),
-      ),
-      Marker(
-        markerId: const MarkerId('web-user-location'),
-        position: LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      ),
+        Marker(
+          markerId: const MarkerId('mechanic'),
+          position: pos,
+          icon: wrenchIcon!,
+          anchor: const Offset(0.5, 0.5),
+          infoWindow: const InfoWindow(title: 'You (Mechanic)'),
+        ),
       };
-    };
+    }
+
     return {
       Marker(
         markerId: const MarkerId('mechanic'),
-        position: LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        icon: wrenchIcon!,
-        anchor: const Offset(0.5, 0.5), // Center of icon
+        position: pos,
+        icon:
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         infoWindow: const InfoWindow(title: 'You (Mechanic)'),
       ),
     };
@@ -237,7 +235,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 target: initialMapPos,
                 zoom: 13,
               ),
-              myLocationEnabled: !isActive || kIsWeb,
+              myLocationEnabled: false,
               markers: _buildMarkers(),
               circles: _buildRadiusCircles(),
             ),
