@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'invoice_detail_page.dart';
 
 /// Displays a list of invoices for the logged in user.
 ///
@@ -172,13 +173,26 @@ class _InvoiceTile extends StatelessWidget {
       );
     }
 
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: columnChildren,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => InvoiceDetailPage(
+              invoiceId: invoiceId,
+              role: role,
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.all(8),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: columnChildren,
+          ),
         ),
       ),
     );
