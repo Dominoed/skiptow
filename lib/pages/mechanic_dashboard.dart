@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'invoices_page.dart';
+import 'messages_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -221,6 +222,46 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
   }
 
+  void _openMessages() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Recipient ID'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(labelText: 'User ID'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final otherId = controller.text.trim();
+                if (otherId.isNotEmpty) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MessagesPage(
+                        currentUserId: widget.userId,
+                        otherUserId: otherId,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Chat'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final LatLng initialMapPos = currentPosition != null
@@ -242,6 +283,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.mail),
+            tooltip: 'Messages',
+            onPressed: _openMessages,
           ),
         ],
       ),
