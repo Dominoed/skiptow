@@ -32,6 +32,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         .doc(data['customerId'])
         .get();
     final customerData = customerDoc.data();
+    data['customerName'] =
+        customerData?['displayName'] ?? customerData?['username'];
     data['customerUsername'] = customerData?['username'] ?? 'Unknown';
     // Optional contact info
     data['customerPhone'] =
@@ -112,9 +114,22 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final status = data['status'] ?? 'active';
         final finalPrice = data['finalPrice'];
 
-        final children = <Widget>[
+        final children = <Widget>[];
+        if (widget.role == 'mechanic') {
+          final name = data['customerName'] ?? data['customerUsername'];
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Customer: ${name ?? 'Unknown'}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        }
+        children.add(
           Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
-        ];
+        );
 
         if (widget.role == 'customer') {
           if (data['distanceToMechanic'] != null) {
@@ -146,7 +161,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         }
 
         children.addAll([
-          Text('Customer: ${data['customerUsername'] ?? 'Unknown'}'),
+          if (widget.role != 'mechanic')
+            Text('Customer: ${data['customerName'] ?? data['customerUsername'] ?? 'Unknown'}'),
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
             Text('Problem: ${data['description']}'),
