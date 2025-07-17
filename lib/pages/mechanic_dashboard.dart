@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
+import 'mechanic_request_queue_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -535,6 +536,20 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => InvoicesPage(userId: widget.userId),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.work_outline),
+            tooltip: 'Request Queue',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MechanicRequestQueuePage(
+                    mechanicId: widget.userId,
+                  ),
                 ),
               );
             },
