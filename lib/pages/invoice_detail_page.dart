@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'payment_processing_page.dart';
 
 /// Page to show full invoice details.
 class InvoiceDetailPage extends StatefulWidget {
@@ -455,14 +456,11 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () async {
-                  await FirebaseFirestore.instance
-                      .collection('invoices')
-                      .doc(widget.invoiceId)
-                      .update({'paymentStatus': 'paid'});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Payment system not yet implemented.'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PaymentProcessingPage(),
                     ),
                   );
                 },
