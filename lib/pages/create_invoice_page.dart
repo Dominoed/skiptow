@@ -46,9 +46,10 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   }
 
   Future<void> _checkActiveRequest() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
     final snapshot = await FirebaseFirestore.instance
         .collection('invoices')
-        .where('customerId', isEqualTo: widget.customerId)
+        .where('customerId', isEqualTo: uid)
         .where('status', isEqualTo: 'active')
         .limit(1)
         .get();
@@ -125,9 +126,10 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     }
 
     // Check for an existing active invoice for this customer before proceeding
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
     final activeSnapshot = await FirebaseFirestore.instance
         .collection('invoices')
-        .where('customerId', isEqualTo: widget.customerId)
+        .where('customerId', isEqualTo: uid)
         .where('status', isEqualTo: 'active')
         .limit(1)
         .get();
@@ -160,6 +162,28 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
     try {
       final position = await Geolocator.getCurrentPosition();
+
+      // Re-check for any active invoice before submitting to avoid duplicates
+      final uidCheck = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
+      final dupSnapshot = await FirebaseFirestore.instance
+          .collection('invoices')
+          .where('customerId', isEqualTo: uidCheck)
+          .where('status', isEqualTo: 'active')
+          .limit(1)
+          .get();
+      if (dupSnapshot.docs.isNotEmpty) {
+        if (mounted) {
+          Navigator.of(context).pop(); // hide loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You already have an active request.')),
+          );
+        }
+        setState(() {
+          isSubmitting = false;
+        });
+        return;
+      }
+
       final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
       await FirebaseFirestore.instance.collection('invoices').add({
