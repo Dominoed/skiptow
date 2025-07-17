@@ -234,6 +234,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           if (data['closedAt'] != null)
             Text('Closed: ${_formatDate(data['closedAt'])}'),
+          if ((data['customerReview'] ?? '').toString().isNotEmpty)
+            Text('Review: ${data['customerReview']}'),
         ],
       ),
     );
