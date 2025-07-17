@@ -473,10 +473,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
             ),
             const SizedBox(height: 12),
+            if (paymentStatus != 'paid') ...[
+              const Text(
+                'Please complete payment to close the request.',
+                style: TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 12),
+            ],
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () async {
+                onPressed: paymentStatus == 'paid'
+                    ? () async {
                   final reviewController = TextEditingController();
                   final confirmed = await showDialog<bool>(
                     context: context,
@@ -532,10 +540,11 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                           content: Text('Request closed. Thank you for using SkipTow.'),
                         ),
                       );
-                      Navigator.pop(context);
-                    }
+                    Navigator.pop(context);
                   }
-                },
+                }
+              }
+                    : null,
                 child: const Text('Close Request'),
               ),
             ),
