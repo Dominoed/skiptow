@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 
 /// Page to show full invoice details.
 class InvoiceDetailPage extends StatefulWidget {
@@ -45,6 +46,24 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           .get();
       final mechData = mechDoc.data();
       data['mechanicIsActive'] = mechData?['isActive'] ?? false;
+
+      final mechLocation = mechData?['location'];
+      final invoiceLocation = data['location'];
+      if (widget.role == 'customer' &&
+          mechLocation != null &&
+          invoiceLocation != null &&
+          mechLocation['lat'] != null &&
+          mechLocation['lng'] != null &&
+          invoiceLocation['lat'] != null &&
+          invoiceLocation['lng'] != null) {
+        final double meters = Geolocator.distanceBetween(
+          invoiceLocation['lat'],
+          invoiceLocation['lng'],
+          mechLocation['lat'],
+          mechLocation['lng'],
+        );
+        data['distanceToMechanic'] = meters / 1609.34;
+      }
 
       // Contact details only for non-customer views
       if (widget.role != 'customer') {
@@ -95,6 +114,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final children = <Widget>[
           Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
         ];
+
+        if (widget.role == 'customer') {
+          if (data['distanceToMechanic'] != null) {
+            children.add(
+              Text(
+                'Distance to Mechanic: '
+                '${(data['distanceToMechanic'] as double).toStringAsFixed(1)} miles',
+              ),
+            );
+          } else {
+            children.add(const Text('Distance unavailable.'));
+          }
+        }
 
         final bool? mechActive = data['mechanicIsActive'] as bool?;
         if (mechActive != null) {
