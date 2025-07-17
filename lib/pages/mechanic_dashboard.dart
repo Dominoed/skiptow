@@ -481,6 +481,17 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                         markers: _buildMarkers(),
                         circles: _buildRadiusCircles(),
                       ),
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: FloatingActionButton(
+                          heroTag: 'refresh_location',
+                          tooltip: 'Refresh Location',
+                          mini: true,
+                          onPressed: _refreshLocation,
+                          child: const Icon(Icons.refresh),
+                        ),
+                      ),
                       if (kIsWeb)
                         Positioned(
                           bottom: 16,
@@ -566,6 +577,34 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     backgroundTimer?.cancel();
     invoiceSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _refreshLocation() async {
+    final hasPermission = await _handleLocationPermission();
+    if (!hasPermission) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      setState(() {
+        currentPosition = position;
+      });
+
+      mapController?.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(position.latitude, position.longitude),
+        ),
+      );
+
+      if (isActive) {
+        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+          'location': {'lat': position.latitude, 'lng': position.longitude},
+          'role': 'mechanic',
+          'timestamp': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      debugPrint('Error refreshing location: $e');
+    }
   }
 
   void _startPositionUpdates() async {

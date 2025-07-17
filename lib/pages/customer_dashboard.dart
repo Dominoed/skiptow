@@ -175,6 +175,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
   }
 
+  Future<void> _refreshLocation() async {
+    await _getCurrentLocation();
+    if (currentPosition != null) {
+      mapController?.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        ),
+      );
+    }
+  }
+
   Future<bool> _handleLocationPermission() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -508,6 +519,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
+                ),
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'refresh_location_cust',
+                    tooltip: 'Refresh Location',
+                    mini: true,
+                    onPressed: _refreshLocation,
+                    child: const Icon(Icons.refresh),
+                  ),
                 ),
                 if (kIsWeb)
                   Positioned(
