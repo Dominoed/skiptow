@@ -60,37 +60,48 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 20),
             Text(_status, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const TermsOfServicePage(),
-                      ),
-                    );
-                  },
-                  child: const Text('Terms of Service'),
-                ),
-                const SizedBox(width: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PrivacyPolicyPage(),
-                      ),
-                    );
-                  },
-                  child: const Text('Privacy Policy'),
-                ),
-              ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TermsOfServicePage(),
+                    ),
+                  );
+                },
+                child: const Text('Terms of Service'),
+              ),
+              const SizedBox(width: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PrivacyPolicyPage(),
+                    ),
+                  );
+                },
+                child: const Text('Privacy Policy'),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Center(
+            child: Text(
+              'App Version 1.0.0',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.grey),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
