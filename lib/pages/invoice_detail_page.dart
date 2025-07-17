@@ -206,7 +206,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           Text('Status: $status'),
           if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
-        ];
+        ]);
 
         if (widget.role == 'mechanic' && status == 'active') {
           children.add(
