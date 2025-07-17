@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import 'admin_dashboard.dart';
 import 'help_page.dart';
 import 'service_request_history_page.dart';
+import 'vehicle_history_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
@@ -149,6 +150,20 @@ class DashboardPage extends StatelessWidget {
                   },
                   tooltip: 'My Service Requests',
                   child: const Icon(Icons.history),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'vehicles_button',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VehicleHistoryPage(userId: userId),
+                      ),
+                    );
+                  },
+                  tooltip: 'My Vehicles',
+                  child: const Icon(Icons.directions_car),
                 ),
               ],
               const SizedBox(height: 12),
