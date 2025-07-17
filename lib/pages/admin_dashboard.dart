@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -123,6 +125,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
     } catch (_) {
       // Keep default version on failure
+    }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
     }
   }
 
@@ -279,7 +292,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Admin Dashboard')),
+          appBar: AppBar(
+            title: const Text('Admin Dashboard'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: _logout,
+                tooltip: 'Logout',
+              ),
+            ],
+          ),
           body: RefreshIndicator(
             onRefresh: _refresh,
             child: SingleChildScrollView(
