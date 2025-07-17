@@ -30,7 +30,12 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         .collection('users')
         .doc(data['customerId'])
         .get();
-    data['customerUsername'] = customerDoc.data()?['username'] ?? 'Unknown';
+    final customerData = customerDoc.data();
+    data['customerUsername'] = customerData?['username'] ?? 'Unknown';
+    // Optional contact info
+    data['customerPhone'] =
+        customerData?['phone'] ?? customerData?['phoneNumber'];
+    data['customerEmail'] = customerData?['email'];
     return data;
   }
 
@@ -76,6 +81,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
             Text('Problem: ${data['description']}'),
+          if ((data['customerPhone'] ?? '').toString().isNotEmpty)
+            Text('Phone: ${data['customerPhone']}'),
+          if ((data['customerEmail'] ?? '').toString().isNotEmpty)
+            Text('Email: ${data['customerEmail']}'),
           if (location != null)
             Text('Location: ${location['lat']}, ${location['lng']}'),
           if (data['distance'] != null)
