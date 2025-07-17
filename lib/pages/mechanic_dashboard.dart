@@ -447,6 +447,20 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             )
           : Column(
               children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  color: isActive ? Colors.green : Colors.red,
+                  child: Text(
+                    'Service Status: ${isActive ? 'Active' : 'Inactive'}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
                 SizedBox(
                   height: 300,
                   child: Stack(
