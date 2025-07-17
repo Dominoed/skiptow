@@ -339,10 +339,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       );
     }
 
+    final bool noMechanics = !insideActive && !insideExtended;
+
     setState(() {
-      markers = tempMarkers;
+      showNoMechanics = noMechanics;
+      markers = noMechanics ? {} : tempMarkers;
       mechanicsInRange = inRange;
-      showNoMechanics = !insideActive && !insideExtended;
       mechanicStatusMessage = insideActive
           ? "✅ Mechanic nearby"
           : insideExtended
@@ -517,7 +519,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             )
           : currentPosition == null
               ? const Center(child: CircularProgressIndicator())
-              : Stack(
+              : showNoMechanics
+                  ? const Center(
+                      child: Text('No active mechanics nearby.'),
+                    )
+                  : Stack(
               children: [
                 GoogleMap(
                   onMapCreated: _onMapCreated,
