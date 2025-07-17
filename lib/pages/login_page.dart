@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:skiptow/pages/dashboard_page.dart';
 import 'package:skiptow/pages/signup_page.dart';
+import 'package:skiptow/pages/terms_of_service_page.dart';
+import 'package:skiptow/pages/privacy_policy_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,6 +59,35 @@ class _LoginPageState extends State<LoginPage> {
             }, child: const Text('Create new account')),
             const SizedBox(height: 20),
             Text(_status, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TermsOfServicePage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Terms of Service'),
+                ),
+                const SizedBox(width: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PrivacyPolicyPage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Privacy Policy'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:skiptow/pages/privacy_policy_page.dart';
+import 'package:skiptow/pages/terms_of_service_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -104,6 +106,35 @@ class _SignupPageState extends State<SignupPage> {
             ),
             const SizedBox(height: 12),
             Text(_status, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TermsOfServicePage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Terms of Service'),
+                ),
+                const SizedBox(width: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PrivacyPolicyPage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Privacy Policy'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
