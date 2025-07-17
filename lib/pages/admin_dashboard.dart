@@ -123,6 +123,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return dt.toString().split('.').first;
   }
 
+  Widget _invoiceTile(Map<String, dynamic> data) {
+    return ListTile(
+      title: Text('Mechanic: ${data['mechanicId']}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Customer: ${data['customerId']}'),
+          Text('Status: ${data['status']}'),
+          Text('Submitted: ${_formatDate(data['timestamp'])}'),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInvoices() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _invoiceStream,
@@ -134,24 +148,49 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (docs.isEmpty) {
           return const Text('No invoices');
         }
-        return ListView.builder(
+
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> active = [];
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> completed = [];
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> cancelled = [];
+
+        for (final d in docs) {
+          final status = d.data()['status'];
+          if (status == 'active') {
+            active.add(d);
+          } else if (status == 'completed') {
+            completed.add(d);
+          } else if (status == 'cancelled') {
+            cancelled.add(d);
+          }
+        }
+
+        List<Widget> section(String title,
+            List<QueryDocumentSnapshot<Map<String, dynamic>>> items) {
+          if (items.isEmpty) return <Widget>[];
+          return [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ...items.map((e) => _invoiceTile(e.data())),
+            const Divider(),
+          ];
+        }
+
+        final children = <Widget>[
+          ...section('Active Invoices', active),
+          ...section('Completed Invoices', completed),
+          ...section('Cancelled Invoices', cancelled),
+        ];
+        if (children.isNotEmpty && children.last is Divider) {
+          children.removeLast();
+        }
+
+        return ListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final data = docs[index].data();
-            return ListTile(
-              title: Text('Mechanic: ${data['mechanicId']}'),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Customer: ${data['customerId']}'),
-                  Text('Status: ${data['status']}'),
-                  Text('Submitted: ${_formatDate(data['timestamp'])}'),
-                ],
-              ),
-            );
-          },
+          children: children,
         );
       },
     );
