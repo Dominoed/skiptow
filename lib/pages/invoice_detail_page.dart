@@ -283,6 +283,54 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
             ),
           );
+
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Cancel Request'),
+                        content: const Text(
+                            'Are you sure you want to cancel this service request?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('No'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Yes'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmed == true) {
+                    await FirebaseFirestore.instance
+                        .collection('invoices')
+                        .doc(widget.invoiceId)
+                        .update({
+                      'status': 'cancelled',
+                      'cancelledBy': 'mechanic',
+                    });
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Request cancelled.')),
+                      );
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                child: const Text('Cancel Request'),
+              ),
+            ),
+          );
         }
 
         return Scaffold(
