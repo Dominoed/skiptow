@@ -492,27 +492,17 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                           child: const Icon(Icons.refresh),
                         ),
                       ),
-                      if (kIsWeb)
-                        Positioned(
-                          bottom: 16,
-                          right: 16,
-                          child: FloatingActionButton(
-                            heroTag: 'center_map',
-                            onPressed: () {
-                              if (currentPosition != null) {
-                                mapController?.animateCamera(
-                                  CameraUpdate.newLatLng(
-                                    LatLng(
-                                      currentPosition!.latitude,
-                                      currentPosition!.longitude,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: const Icon(Icons.my_location),
-                          ),
+                      Positioned(
+                        bottom: 16,
+                        right: 16,
+                        child: FloatingActionButton.extended(
+                          heroTag: 'center_map_mech',
+                          tooltip: 'Center Map',
+                          label: const Text('Center Map'),
+                          icon: const Icon(Icons.my_location),
+                          onPressed: _centerMap,
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -577,6 +567,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     backgroundTimer?.cancel();
     invoiceSubscription?.cancel();
     super.dispose();
+  }
+
+  void _centerMap() {
+    if (currentPosition != null) {
+      mapController?.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        ),
+      );
+    }
   }
 
   Future<void> _refreshLocation() async {

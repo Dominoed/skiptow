@@ -186,6 +186,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
   }
 
+  void _centerMap() {
+    if (currentPosition != null) {
+      mapController?.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(currentPosition!.latitude, currentPosition!.longitude),
+        ),
+      );
+    }
+  }
+
   Future<bool> _handleLocationPermission() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -531,23 +541,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     child: const Icon(Icons.refresh),
                   ),
                 ),
-                if (kIsWeb)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: FloatingActionButton(
-                      mini: true,
-                      heroTag: 'webLocationBtn',
-                      onPressed: () {
-                        if (currentPosition != null) {
-                          mapController?.animateCamera(CameraUpdate.newLatLng(
-                            LatLng(currentPosition!.latitude, currentPosition!.longitude),
-                          ));
-                        }
-                      },
-                      child: const Icon(Icons.my_location),
-                    ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: FloatingActionButton.extended(
+                    heroTag: 'center_map_cust',
+                    tooltip: 'Center Map',
+                    label: const Text('Center Map'),
+                    icon: const Icon(Icons.my_location),
+                    onPressed: _centerMap,
                   ),
+                ),
                 Positioned(
                   bottom: 20,
                   left: 20,
