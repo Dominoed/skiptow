@@ -56,18 +56,20 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _checkLocationPermissionOnLoad();
   }
 
-  Future<void> _ensureLocationPermission() async {
+  Future<bool> _ensureLocationPermission() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location services are disabled.')),
       );
-      return;
+      return false;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
+    bool requested = false;
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      requested = true;
     }
 
     if (permission == LocationPermission.deniedForever) {
@@ -75,13 +77,18 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         const SnackBar(
             content: Text('Location permissions are permanently denied.')),
       );
-      return;
+      return false;
     }
-    // ✅ Permission granted — you can now get location
+
+    final granted =
+        permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse;
+
+    return requested && granted;
   }
 
   Future<void> _checkLocationPermissionOnLoad() async {
-    await _ensureLocationPermission();
+    final newlyGranted = await _ensureLocationPermission();
     final permission = await Geolocator.checkPermission();
     final granted =
         permission == LocationPermission.always || permission == LocationPermission.whileInUse;
@@ -105,6 +112,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       setState(() {
         _locationPermissionGranted = true;
       });
+      if (newlyGranted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission granted.')),
+        );
+      }
       _getCurrentLocation();
     }
   }
@@ -148,8 +160,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
+    bool requested = false;
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      requested = true;
     }
 
     if (permission == LocationPermission.denied ||
@@ -172,9 +186,15 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       return false;
     }
 
+    final wasGranted = _locationPermissionGranted;
     setState(() {
       _locationPermissionGranted = true;
     });
+    if (!wasGranted && requested && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location permission granted.')),
+      );
+    }
 
     return true;
   }
