@@ -27,6 +27,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         .get();
     final data = doc.data();
     if (data == null) return null;
+    if (data['flagged'] == true && widget.role != 'admin') return null;
 
     final customerDoc = await FirebaseFirestore.instance
         .collection('users')
