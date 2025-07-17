@@ -579,6 +579,33 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Widget _buildArrivalOverlay() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'arrived')
+        .limit(1)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('🚗 Mechanic has arrived!'),
+        );
+      },
+    );
+  }
+
   Widget _buildMechanicCountOverlay() {
     final text = availableMechanicCount > 0
         ? 'Available Mechanics Nearby: ' + availableMechanicCount.toString()
@@ -791,6 +818,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   top: 10,
                   left: 10,
                   child: _buildActiveInvoiceOverlay(),
+                ),
+                Positioned(
+                  top: 90,
+                  left: 10,
+                  child: _buildArrivalOverlay(),
                 ),
                 Positioned(
                   bottom: 20,
