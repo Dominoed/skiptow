@@ -29,10 +29,32 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   Position? currentPosition;
   GoogleMapController? mapController;
   bool _locationPermissionGranted = false;
+  bool _hasAccountData = true;
 
   @override
   void initState() {
     super.initState();
+    _verifyAccountData();
+  }
+
+  Future<void> _verifyAccountData() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
+    if (!doc.exists) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Account data not found. Please contact support.')),
+        );
+      }
+      setState(() {
+        _hasAccountData = false;
+      });
+      return;
+    }
+
     _loadWrenchIcon();
     _listenForInvoices();
     _checkLocationPermissionOnLoad();
@@ -99,7 +121,23 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Future<void> _loadStatus() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
+    if (!doc.exists) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Account data not found. Please contact support.')),
+        );
+      }
+      setState(() {
+        _hasAccountData = false;
+      });
+      return;
+    }
+
     final data = doc.data();
     if (data != null) {
       setState(() {
@@ -343,6 +381,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_hasAccountData) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mechanic Dashboard')),
+        body: const Center(
+          child: Text('Account data not found. Please contact support.'),
+        ),
+      );
+    }
+
     final LatLng initialMapPos = currentPosition != null
         ? LatLng(currentPosition!.latitude, currentPosition!.longitude)
         : const LatLng(37.7749, -122.4194); // Default SF location
