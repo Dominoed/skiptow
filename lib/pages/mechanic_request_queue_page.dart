@@ -195,6 +195,7 @@ class _RequestTile extends StatelessWidget {
         '${car['year'] ?? ''} ${car['make'] ?? ''} ${car['model'] ?? ''}'.trim();
     final status = (data['status'] ?? 'active').toString();
     final distance = data['distance'];
+    final location = data['location'];
 
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
@@ -221,6 +222,12 @@ class _RequestTile extends StatelessWidget {
                 if (carText.isNotEmpty) Text('Car: $carText'),
                 if (ts != null)
                   Text('Submitted: ${_formatTimestamp(ts)}'),
+                if (location != null &&
+                    location['lat'] != null &&
+                    location['lng'] != null)
+                  Text("Location: ${location['lat']}, ${location['lng']}")
+                else
+                  const Text('Location unavailable.'),
                 if (phone != null && phone.toString().isNotEmpty)
                   Text('Phone: $phone'),
                 if (email != null && email.toString().isNotEmpty)
