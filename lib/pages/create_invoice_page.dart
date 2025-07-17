@@ -210,6 +210,37 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         'status': 'active',
       });
 
+      // Save the vehicle to the user's profile for future reference
+      final vehicle = {
+        'year': carYearController.text.trim(),
+        'make': carMakeController.text.trim(),
+        'model': carModelController.text.trim(),
+      };
+      try {
+        final userRef =
+            FirebaseFirestore.instance.collection('users').doc(widget.customerId);
+        final userSnap = await userRef.get();
+        final List<dynamic> vehicles =
+            (userSnap.data()?['vehicles'] as List<dynamic>?) ?? [];
+        final exists = vehicles.any((v) {
+          if (v is Map<String, dynamic>) {
+            return (v['year']?.toString() ?? '') == vehicle['year'] &&
+                (v['make']?.toString().toLowerCase() ?? '') ==
+                    vehicle['make']!.toLowerCase() &&
+                (v['model']?.toString().toLowerCase() ?? '') ==
+                    vehicle['model']!.toLowerCase();
+          }
+          return false;
+        });
+        if (!exists) {
+          await userRef.update({
+            'vehicles': FieldValue.arrayUnion([vehicle])
+          });
+        }
+      } catch (e) {
+        logError('Save vehicle to profile error: $e');
+      }
+
       carYearController.clear();
       carMakeController.clear();
       carModelController.clear();
