@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
+import 'dashboard_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -338,9 +339,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }
 
         if (snapshot.data != 'admin') {
-          return const Scaffold(
-            body: Center(child: Text('Access denied')),
-          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Access denied.')),
+              );
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => DashboardPage(userId: widget.userId)),
+                (route) => false,
+              );
+            }
+          });
+          return const SizedBox.shrink();
         }
 
         return Scaffold(

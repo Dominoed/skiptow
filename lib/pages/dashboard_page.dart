@@ -50,6 +50,22 @@ class DashboardPage extends StatelessWidget {
         }
 
         final role = snapshot.data;
+        if (role == 'admin') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AdminDashboardPage(userId: userId),
+                ),
+              );
+            }
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         if (!_snackbarShown && role != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
