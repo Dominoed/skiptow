@@ -285,7 +285,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       : BitmapDescriptor.hueAzure,
                 ),
             anchor: const Offset(0.5, 0.5),
+            infoWindow: InfoWindow(
+              title: data['username'] ?? 'Unnamed',
+              snippet: data['isActive'] == true ? 'Active' : 'Inactive',
+            ),
             onTap: () {
+              mapController?.showMarkerInfoWindow(MarkerId(doc.id));
               if (chooseTechMode) {
                 if (!_hasAvailableMechanics) {
                   ScaffoldMessenger.of(context).showSnackBar(
