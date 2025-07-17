@@ -328,13 +328,28 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   ),
                 );
               } else {
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => MessagesPage(
                       currentUserId: widget.userId,
                       otherUserId: doc.id,
-                      initialMessage: "I'm nearby your radius. Are you available for service?",
+                      initialMessage:
+                          "I'm nearby your radius. Are you available for service?",
+                    ),
+                  ),
+                );
+                if (!mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateInvoicePage(
+                      customerId: widget.userId,
+                      mechanicId: doc.id,
+                      mechanicUsername: data['username'] ?? 'Unnamed',
+                      distance: distance ?? 0,
+                      defaultDescription:
+                          'My car is near your location. Please assist.',
                     ),
                   ),
                 );
