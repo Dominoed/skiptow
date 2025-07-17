@@ -503,14 +503,29 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   color: isActive ? Colors.green : Colors.red,
-                  child: Text(
-                    'Service Status: ${isActive ? 'Active' : 'Inactive'}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Service Status: ${isActive ? 'Active' : 'Inactive'}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isActive
+                            ? 'Customers in your radius can now send you service requests.'
+                            : 'You are not visible to customers.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(
