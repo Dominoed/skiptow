@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:skiptow/services/error_logger.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
 
@@ -205,7 +206,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     if (!isActive) {
       try {
         currentPosition = await Geolocator.getCurrentPosition();
-      } catch (_) {
+      } catch (e) {
+        logError('Get current position error: $e');
         currentPosition = null;
       }
       if (currentPosition == null) {
@@ -235,6 +237,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           .doc(widget.userId)
           .update(data);
     } catch (e) {
+      logError('Toggle status update error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -553,6 +556,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                           'timestamp': DateTime.now(),
                         });
                       } catch (e) {
+                        logError('Update radius error: $e');
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -616,6 +620,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         });
       }
     } catch (e) {
+      logError('Error refreshing location: $e');
       debugPrint('Error refreshing location: $e');
     }
   }
@@ -650,6 +655,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             'timestamp': DateTime.now(),
           });
         } catch (e) {
+          logError('Position update error: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('An error occurred. Please try again.')),

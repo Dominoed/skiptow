@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:skiptow/services/error_logger.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   final String customerId;
@@ -162,6 +163,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         Navigator.pop(context);
       }
     } catch (e) {
+      logError('Submit invoice error: $e');
       if (mounted) {
         Navigator.of(context).pop(); // hide loading
         ScaffoldMessenger.of(context).showSnackBar(

@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:skiptow/services/error_logger.dart';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 
@@ -168,6 +169,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
       _loadMechanics();
     } catch (e) {
+      logError('Error getting location: $e');
       debugPrint('Error getting location: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not get current location')),
