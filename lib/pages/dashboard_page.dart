@@ -64,7 +64,7 @@ class DashboardPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (userId == _adminUserId) ...[
-                FloatingActionButton(
+                FloatingActionButton.extended(
                   heroTag: 'admin_button',
                   onPressed: () {
                     Navigator.push(
@@ -74,8 +74,8 @@ class DashboardPage extends StatelessWidget {
                       ),
                     );
                   },
-                  tooltip: 'Admin Dashboard',
-                  child: const Icon(Icons.admin_panel_settings),
+                  label: const Text('Admin Dashboard'),
+                  icon: const Icon(Icons.admin_panel_settings),
                 ),
                 const SizedBox(height: 12),
               ],
