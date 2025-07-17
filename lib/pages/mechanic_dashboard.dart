@@ -28,15 +28,14 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   String status = 'Inactive';
   Position? currentPosition;
   GoogleMapController? mapController;
+  bool _locationPermissionGranted = false;
 
   @override
   void initState() {
     super.initState();
-    _ensureLocationPermission();
     _loadWrenchIcon();
-    _loadStatus();
-    _handleLocationPermission();
     _listenForInvoices();
+    _checkLocationPermissionOnLoad();
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -59,6 +58,35 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             content: Text('Location permissions are permanently denied.')),
       );
       return;
+    }
+  }
+
+  Future<void> _checkLocationPermissionOnLoad() async {
+    await _ensureLocationPermission();
+    final permission = await Geolocator.checkPermission();
+    final granted =
+        permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+    if (!granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                const Text('Location permission is required for map features.'),
+            action: SnackBarAction(
+              label: 'Grant',
+              onPressed: () async {
+                await Geolocator.requestPermission();
+                _checkLocationPermissionOnLoad();
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      setState(() {
+        _locationPermissionGranted = true;
+      });
+      _loadStatus();
     }
   }
 
@@ -94,8 +122,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         status = isActive ? 'Active' : 'Inactive';
       });
 
-      // ✅ Start live updates if mechanic is active
-      if (isActive) {
+      // ✅ Start live updates if mechanic is active and permission granted
+      if (isActive && _locationPermissionGranted) {
         _startPositionUpdates();
       }
     }
@@ -129,7 +157,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       status = isActive ? 'Active' : 'Inactive';
     });
 
-    if (isActive) {
+    if (isActive && _locationPermissionGranted) {
       _startPositionUpdates();
     } else {
       positionStream?.cancel();
@@ -175,24 +203,33 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied.')),
-          );
-        }
-        return false;
-      }
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission permanently denied.')),
+          SnackBar(
+            content:
+                const Text('Location permission is required for map features.'),
+            action: SnackBarAction(
+              label: 'Grant',
+              onPressed: () async {
+                await Geolocator.requestPermission();
+              },
+            ),
+          ),
         );
       }
+      setState(() {
+        _locationPermissionGranted = false;
+      });
       return false;
     }
+
+    setState(() {
+      _locationPermissionGranted = true;
+    });
 
     return true;
   }
@@ -322,53 +359,60 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 300,
-            child: Stack(
+      body: !_locationPermissionGranted
+          ? Center(
+              child: ElevatedButton(
+                onPressed: _checkLocationPermissionOnLoad,
+                child: const Text('Grant Location Permission'),
+              ),
+            )
+          : Column(
               children: [
-                GoogleMap(
-                  onMapCreated: _onMapCreated,
-                  initialCameraPosition: CameraPosition(
-                    target: initialMapPos,
-                    zoom: 13,
+                SizedBox(
+                  height: 300,
+                  child: Stack(
+                    children: [
+                      GoogleMap(
+                        onMapCreated: _onMapCreated,
+                        initialCameraPosition: CameraPosition(
+                          target: initialMapPos,
+                          zoom: 13,
+                        ),
+                        myLocationEnabled: !kIsWeb,
+                        myLocationButtonEnabled: !kIsWeb,
+                        markers: _buildMarkers(),
+                        circles: _buildRadiusCircles(),
+                      ),
+                      if (kIsWeb)
+                        Positioned(
+                          bottom: 16,
+                          right: 16,
+                          child: FloatingActionButton(
+                            heroTag: 'center_map',
+                            onPressed: () {
+                              if (currentPosition != null) {
+                                mapController?.animateCamera(
+                                  CameraUpdate.newLatLng(
+                                    LatLng(
+                                      currentPosition!.latitude,
+                                      currentPosition!.longitude,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Icon(Icons.my_location),
+                          ),
+                        ),
+                    ],
                   ),
-                  myLocationEnabled: !kIsWeb,
-                  myLocationButtonEnabled: !kIsWeb,
-                  markers: _buildMarkers(),
-                  circles: _buildRadiusCircles(),
                 ),
-                if (kIsWeb)
-                  Positioned(
-                    bottom: 16,
-                    right: 16,
-                    child: FloatingActionButton(
-                      heroTag: 'center_map',
-                      onPressed: () {
-                        if (currentPosition != null) {
-                          mapController?.animateCamera(
-                            CameraUpdate.newLatLng(
-                              LatLng(
-                                currentPosition!.latitude,
-                                currentPosition!.longitude,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Icon(Icons.my_location),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Text('Status: $status', style: const TextStyle(fontSize: 20)),
-                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      Text('Status: $status', style: const TextStyle(fontSize: 20)),
+                      const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: _toggleStatus,
                   child: Text(isActive ? 'Go Inactive' : 'Go Active'),
@@ -401,9 +445,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 Text('Service Radius: ${radiusMiles.toInt()} miles'),
               ],
             ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -416,6 +460,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   void _startPositionUpdates() async {
+    if (!_locationPermissionGranted) return;
     positionStream?.cancel(); // cancel previous stream
     backgroundTimer?.cancel(); // cancel any background timer
 

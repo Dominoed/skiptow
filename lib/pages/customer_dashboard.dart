@@ -25,13 +25,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   String mechanicStatusMessage = "";
   bool chooseTechMode = false;
   String? selectedMechanicId;
+  bool _locationPermissionGranted = false;
 
   @override
   void initState() {
     super.initState();
-    _ensureLocationPermission();
     _loadWrenchIcon();
-    _getCurrentLocation();
+    _checkLocationPermissionOnLoad();
   }
 
   Future<void> _ensureLocationPermission() async {
@@ -56,6 +56,35 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       return;
     }
     // ✅ Permission granted — you can now get location
+  }
+
+  Future<void> _checkLocationPermissionOnLoad() async {
+    await _ensureLocationPermission();
+    final permission = await Geolocator.checkPermission();
+    final granted =
+        permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+    if (!granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                const Text('Location permission is required for map features.'),
+            action: SnackBarAction(
+              label: 'Grant',
+              onPressed: () async {
+                await Geolocator.requestPermission();
+                _checkLocationPermissionOnLoad();
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      setState(() {
+        _locationPermissionGranted = true;
+      });
+      _getCurrentLocation();
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -99,20 +128,31 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied.')),
-        );
-        return false;
-      }
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permission permanently denied.')),
+        SnackBar(
+          content:
+              const Text('Location permission is required for map features.'),
+          action: SnackBarAction(
+            label: 'Grant',
+            onPressed: () async {
+              await Geolocator.requestPermission();
+            },
+          ),
+        ),
       );
+      setState(() {
+        _locationPermissionGranted = false;
+      });
       return false;
     }
+
+    setState(() {
+      _locationPermissionGranted = true;
+    });
 
     return true;
   }
@@ -375,9 +415,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           ),
         ],
       ),
-      body: currentPosition == null
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
+      body: !_locationPermissionGranted
+          ? Center(
+              child: ElevatedButton(
+                onPressed: _checkLocationPermissionOnLoad,
+                child: const Text('Grant Location Permission'),
+              ),
+            )
+          : currentPosition == null
+              ? const Center(child: CircularProgressIndicator())
+              : Stack(
               children: [
                 GoogleMap(
                   onMapCreated: _onMapCreated,
