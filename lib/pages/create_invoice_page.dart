@@ -74,19 +74,28 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   }
 
   Future<void> _submitInvoice() async {
+    if (isSubmitting) return;
+    setState(() {
+      isSubmitting = true;
+    });
+
     if (!isFormValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
       );
+      setState(() {
+        isSubmitting = false;
+      });
       return;
     }
 
     final hasPermission = await _handleLocationPermission();
-    if (!hasPermission) return;
-
-    setState(() {
-      isSubmitting = true;
-    });
+    if (!hasPermission) {
+      setState(() {
+        isSubmitting = false;
+      });
+      return;
+    }
 
     showDialog(
       context: context,
