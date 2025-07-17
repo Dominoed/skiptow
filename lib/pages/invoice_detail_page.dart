@@ -268,37 +268,75 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                   onPressed: () async {
-                    final controller = TextEditingController();
-                    final price = await showDialog<double>(
+                    final priceController = TextEditingController();
+                    final notesController = TextEditingController();
+                    final result = await showDialog<Map<String, dynamic>>(
                       context: context,
                       builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Mark as Completed'),
-                          content: TextField(
-                            controller: controller,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(
-                              labelText: 'Enter final total price (in USD):',
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                final val = double.tryParse(controller.text);
-                                Navigator.of(context).pop(val);
-                              },
-                              child: const Text('Submit'),
-                            ),
-                          ],
+                        String? errorText;
+                        return StatefulBuilder(
+                          builder: (context, setState) {
+                            return AlertDialog(
+                              title: const Text('Mark as Completed'),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      controller: priceController,
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Enter final total price (in USD):',
+                                      ),
+                                    ),
+                                    TextField(
+                                      controller: notesController,
+                                      minLines: 3,
+                                      maxLines: 5,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Post-Job Notes (required)',
+                                      ),
+                                    ),
+                                    if (errorText != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          errorText!,
+                                          style: const TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    final price = double.tryParse(priceController.text);
+                                    final notes = notesController.text.trim();
+                                    if (price == null || notes.isEmpty) {
+                                      setState(() {
+                                        errorText = 'Please enter a valid price and notes.';
+                                      });
+                                    } else {
+                                      Navigator.of(context).pop({'price': price, 'notes': notes});
+                                    }
+                                  },
+                                  child: const Text('Submit'),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
                     );
 
-                    if (price != null) {
+                    if (result != null) {
+                      final double price = result['price'] as double;
+                      final String notes = result['notes'] as String;
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) {
@@ -328,12 +366,13 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             .update({
                           'status': 'completed',
                           'finalPrice': price,
+                          'postJobNotes': notes,
                         });
 
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Invoice marked as completed.'),
+                              content: Text('Job marked as completed with notes.'),
                             ),
                           );
                           Navigator.pop(context);
