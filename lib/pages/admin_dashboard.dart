@@ -22,9 +22,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _completedInvoices = 0;
   int _cancelledInvoices = 0;
   int _platformCompletedJobs = 0;
+  int _totalActiveUsers = 0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
 
@@ -59,6 +61,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _platformCompletedJobs = snapshot.size;
       }
     });
+    _usersSub = FirebaseFirestore.instance
+        .collection('users')
+        .snapshots()
+        .listen(_updateActiveUsers);
     _loadStats();
     _loadAppVersion();
   }
@@ -68,6 +74,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _totalUsers = usersSnapshot.size;
     _activeMechanics = usersSnapshot.docs
         .where((d) => d.data()['role'] == 'mechanic' && d.data()['isActive'] == true)
+        .length;
+    _totalActiveUsers = usersSnapshot.docs
+        .where((d) =>
+            (d.data()['role'] == 'mechanic' && d.data()['isActive'] == true) ||
+            d.data()['role'] == 'customer')
         .length;
 
     final activeSnap = await FirebaseFirestore.instance
@@ -119,6 +130,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     });
   }
 
+  void _updateActiveUsers(
+      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    int count = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final role = data['role'];
+      if (role == 'mechanic') {
+        if (data['isActive'] == true) count++;
+      } else if (role == 'customer') {
+        count++;
+      }
+    }
+    if (!mounted) {
+      _totalActiveUsers = count;
+      return;
+    }
+    setState(() {
+      _totalActiveUsers = count;
+    });
+  }
+
   Future<void> _refresh() async {
     await _loadStats();
   }
@@ -161,6 +193,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       children: [
         Text('Total Users: $_totalUsers'),
         Text('Active Mechanics: $_activeMechanics'),
+        Text('Total Active Users: $_totalActiveUsers'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Cancelled Invoices: $_cancelledInvoices'),
@@ -289,6 +322,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void dispose() {
     _invoiceSub?.cancel();
     _completedJobsSub?.cancel();
+    _usersSub?.cancel();
     super.dispose();
   }
 
