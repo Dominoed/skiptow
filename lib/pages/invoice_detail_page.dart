@@ -460,7 +460,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const PaymentProcessingPage(),
+                      builder: (_) => PaymentProcessingPage(
+                        invoiceId: widget.invoiceId,
+                      ),
                     ),
                   );
                 },

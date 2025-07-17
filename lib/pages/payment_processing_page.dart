@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Placeholder page that simulates Stripe payment processing.
 class PaymentProcessingPage extends StatefulWidget {
-  const PaymentProcessingPage({super.key});
+  final String invoiceId;
+  const PaymentProcessingPage({super.key, required this.invoiceId});
 
   @override
   State<PaymentProcessingPage> createState() => _PaymentProcessingPageState();
@@ -14,7 +16,11 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(widget.invoiceId)
+          .update({'paymentStatus': 'paid'});
       if (mounted) {
         setState(() {
           _done = true;
