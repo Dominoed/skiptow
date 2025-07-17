@@ -236,6 +236,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return dt.toString().split('.').first;
   }
 
+  Color _paymentStatusColor(String status) {
+    switch (status) {
+      case 'paid':
+        return Colors.green;
+      case 'pending':
+        return Colors.red;
+      default:
+        return Colors.orange;
+    }
+  }
+
   Future<void> _flagInvoice(String id) async {
     await FirebaseFirestore.instance
         .collection('invoices')
@@ -276,6 +287,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _invoiceTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final flagged = data['flagged'] == true;
+    final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
     return ListTile(
       title: Text('Mechanic: ${data['mechanicId']}'),
       subtitle: Column(
@@ -283,7 +295,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         children: [
           Text('Customer: ${data['customerId']}'),
           Text('Status: ${data['status']}'),
-          Text('Payment Status: ${data['paymentStatus'] ?? 'pending'}'),
+          Row(
+            children: [
+              const Text('Payment Status: '),
+              Text(
+                paymentStatus,
+                style: TextStyle(
+                  color: _paymentStatusColor(paymentStatus),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           if (data['closedAt'] != null)
             Text('Closed: ${_formatDate(data['closedAt'])}'),
