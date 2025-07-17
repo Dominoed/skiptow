@@ -210,9 +210,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           Text('Status: $status'),
           if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
-          if (widget.role == 'mechanic' &&
-              (data['customerReview'] ?? '').toString().isNotEmpty)
-            Text('Customer Review:\n${data['customerReview']}'),
+          if (widget.role == 'mechanic')
+            (data['customerReview'] ?? '').toString().isNotEmpty
+                ? Text('Customer Review:\n${data['customerReview']}')
+                : const Text('No customer review provided.'),
         ]);
 
         if (widget.role == 'mechanic' && status == 'accepted') {
