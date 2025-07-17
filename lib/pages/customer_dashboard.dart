@@ -26,10 +26,32 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool chooseTechMode = false;
   String? selectedMechanicId;
   bool _locationPermissionGranted = false;
+  bool _hasAccountData = true;
 
   @override
   void initState() {
     super.initState();
+    _verifyAccountData();
+  }
+
+  Future<void> _verifyAccountData() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
+    if (!doc.exists) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Account data not found. Please contact support.')),
+        );
+      }
+      setState(() {
+        _hasAccountData = false;
+      });
+      return;
+    }
+
     _loadWrenchIcon();
     _checkLocationPermissionOnLoad();
   }
@@ -390,6 +412,15 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_hasAccountData) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Customer Map')),
+        body: const Center(
+          child: Text('Account data not found. Please contact support.'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Customer Map"),
