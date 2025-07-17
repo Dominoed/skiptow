@@ -486,6 +486,42 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Widget _buildActiveInvoiceOverlay() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'active')
+        .limit(1)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!.docs.first.data();
+        final car = data['carInfo'] ?? {};
+        final year = (car['year'] ?? '').toString();
+        final make = (car['make'] ?? '').toString();
+        final model = (car['model'] ?? '').toString();
+        final vehicle = [year, make, model].where((e) => e.isNotEmpty).join(' ');
+
+        if (vehicle.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text('Your Request: $vehicle'),
+        );
+      },
+    );
+  }
+
   void _handleAnyTech() {
     final activeMechanics = <Map<String, dynamic>>[];
     mechanicsInRange.forEach((id, data) {
@@ -637,6 +673,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     icon: const Icon(Icons.my_location),
                     onPressed: _centerMap,
                   ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: _buildActiveInvoiceOverlay(),
                 ),
                 Positioned(
                   bottom: 20,
