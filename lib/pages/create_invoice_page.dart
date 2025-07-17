@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 
 class CreateInvoicePage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   final TextEditingController carMakeController = TextEditingController();
   final TextEditingController carModelController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   bool isSubmitting = false;
   bool get isAnyTech => widget.mechanicId == 'any';
@@ -88,6 +90,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
     try {
       final position = await Geolocator.getCurrentPosition();
+      final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
       await FirebaseFirestore.instance.collection('invoices').add({
         'mechanicId': widget.mechanicId,
@@ -104,6 +107,8 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           'model': carModelController.text,
         },
         'description': descriptionController.text,
+        'customerPhone': phoneController.text.trim(),
+        'customerEmail': userEmail,
         'timestamp': DateTime.now(),
         'status': 'active',
       });
@@ -112,6 +117,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       carMakeController.clear();
       carModelController.clear();
       descriptionController.clear();
+      phoneController.clear();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +147,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     carMakeController.dispose();
     carModelController.dispose();
     descriptionController.dispose();
+    phoneController.dispose();
     super.dispose();
   }
 
@@ -171,6 +178,12 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             TextField(
               controller: carModelController,
               decoration: const InputDecoration(labelText: 'Car Model'),
+              onChanged: (_) => setState(() {}),
+            ),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: 'Phone (optional)'),
+              keyboardType: TextInputType.phone,
               onChanged: (_) => setState(() {}),
             ),
             TextField(

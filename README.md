@@ -62,6 +62,8 @@ firebase_options.dart
 - location (lat/lng)
 - carInfo (year/make/model)
 - description
+- customerPhone
+- customerEmail
 - timestamp
 - status: `"active"` or `"completed"`
 
