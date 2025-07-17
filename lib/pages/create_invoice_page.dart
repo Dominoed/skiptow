@@ -9,6 +9,7 @@ class CreateInvoicePage extends StatefulWidget {
   final String mechanicId;
   final String mechanicUsername;
   final double distance;
+  final String? defaultDescription;
 
   const CreateInvoicePage({
     super.key,
@@ -16,6 +17,7 @@ class CreateInvoicePage extends StatefulWidget {
     required this.mechanicId,
     required this.mechanicUsername,
     required this.distance,
+    this.defaultDescription,
   });
 
   @override
@@ -37,6 +39,9 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   @override
   void initState() {
     super.initState();
+    if (widget.defaultDescription != null) {
+      descriptionController.text = widget.defaultDescription!;
+    }
     _checkActiveRequest();
   }
 
