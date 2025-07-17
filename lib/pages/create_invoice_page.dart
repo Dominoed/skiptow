@@ -89,6 +89,26 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       return;
     }
 
+    // Check for an existing active invoice for this customer before proceeding
+    final activeSnapshot = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.customerId)
+        .where('status', isEqualTo: 'active')
+        .limit(1)
+        .get();
+    if (activeSnapshot.docs.isNotEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('You already have an active service request.')),
+        );
+      }
+      setState(() {
+        isSubmitting = false;
+      });
+      return;
+    }
+
     final hasPermission = await _handleLocationPermission();
     if (!hasPermission) {
       setState(() {
