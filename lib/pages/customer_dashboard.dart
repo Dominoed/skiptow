@@ -31,6 +31,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _locationBannerVisible = false;
   bool _hasAccountData = true;
   int availableMechanicCount = 0;
+  bool _noMechanicsSnackbarShown = false;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -397,6 +398,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               : "❌ No active mechanics nearby";
       availableMechanicCount = count;
     });
+
+    if (noMechanics && !_noMechanicsSnackbarShown && mounted) {
+      _noMechanicsSnackbarShown = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No mechanics available nearby.')),
+      );
+    }
+    if (!noMechanics) {
+      _noMechanicsSnackbarShown = false;
+    }
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -766,19 +777,34 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
-                              onPressed: _handleAnyTech,
+                              onPressed: _hasAvailableMechanics
+                                  ? _handleAnyTech
+                                  : () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('No mechanics available nearby.')),
+                                      );
+                                    },
                               child: const Text("Any Tech"),
                             ),
                             const SizedBox(width: 10),
                             ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  chooseTechMode = true;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("☝🏽 Find and tap a mechanic icon")),
-                                );
-                              },
+                              onPressed: _hasAvailableMechanics
+                                  ? () {
+                                      setState(() {
+                                        chooseTechMode = true;
+                                      });
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text("☝🏽 Find and tap a mechanic icon")),
+                                      );
+                                    }
+                                  : () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('No mechanics available nearby.')),
+                                      );
+                                    },
                               child: const Text("Choose Tech"),
                             ),
                           ],
