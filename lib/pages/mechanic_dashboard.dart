@@ -583,6 +583,26 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     );
                   },
                 ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('invoices')
+                      .where('mechanicId', isEqualTo: widget.userId)
+                      .where('status', isEqualTo: 'completed')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final completedCount = snapshot.data?.size ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        'Completed Jobs: $completedCount',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
