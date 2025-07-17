@@ -26,6 +26,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _platformCompletedJobs = 0;
   int _closedInvoices = 0;
   int _flaggedInvoices = 0;
+  int _overdueInvoices = 0;
   int _totalActiveUsers = 0;
   int _paidInvoices = 0;
   double _totalPaidAmount = 0.0;
@@ -144,6 +145,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('flagged', isEqualTo: true)
         .get();
     _flaggedInvoices = flaggedSnap.size;
+
+    final overdueSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('paymentStatus', isEqualTo: 'pending')
+        .where(
+          'createdAt',
+          isLessThan: Timestamp.fromDate(
+            DateTime.now().subtract(const Duration(days: 7)),
+          ),
+        )
+        .get();
+    _overdueInvoices = overdueSnap.size;
     if (mounted) setState(() {});
   }
 
@@ -154,6 +167,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int cancelled = 0;
     int closed = 0;
     int flagged = 0;
+    int overdue = 0;
     int paid = 0;
     double total = 0.0;
     double pendingTotal = 0.0;
@@ -172,6 +186,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         cancelled++;
       }
       if (data['flagged'] == true) flagged++;
+      final Timestamp? createdAtTs = data['createdAt'];
+      if (paymentStatus == 'pending' &&
+          createdAtTs != null &&
+          DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
+        overdue++;
+      }
       if (paymentStatus == 'paid') {
         paid++;
         total += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
@@ -186,6 +206,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
+      _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
@@ -198,6 +219,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
+      _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
@@ -285,6 +307,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_unpaidOutstanding)}',
         ),
         Text('Cancelled Invoices: $_cancelledInvoices'),
+        Text('Overdue Invoices: $_overdueInvoices'),
         Text('Flagged Invoices: $_flaggedInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
         Text('Total Requests Closed: $_closedInvoices'),
