@@ -208,7 +208,31 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Final Price: \$${finalPrice.toString()}'),
         ]);
 
-        if (widget.role == 'mechanic' && status == 'active') {
+        if (widget.role == 'mechanic' && status == 'accepted') {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('invoices')
+                      .doc(widget.invoiceId)
+                      .update({'status': 'arrived'});
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Arrival confirmed.')),
+                    );
+                  }
+                },
+                child: const Text('Confirm Arrival'),
+              ),
+            ),
+          );
+        }
+
+        if (widget.role == 'mechanic' &&
+            (status == 'active' || status == 'accepted' || status == 'arrived')) {
           children.add(
             Align(
               alignment: Alignment.centerRight,
