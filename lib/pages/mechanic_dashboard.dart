@@ -258,6 +258,37 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
   }
 
+  Future<void> _onTogglePressed() async {
+    if (!isActive) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Confirm Activation'),
+            content: const Text(
+                'Are you ready to go active and start receiving service requests?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm != true) {
+        return;
+      }
+    }
+
+    await _toggleStatus();
+  }
+
   void _listenForInvoices() {
     invoiceSubscription?.cancel();
     invoiceSubscription = FirebaseFirestore.instance
@@ -526,7 +557,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       Text('Status: $status', style: const TextStyle(fontSize: 20)),
                       const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: _toggleStatus,
+                  onPressed: _onTogglePressed,
                   child: Text(isActive ? 'Go Inactive' : 'Go Active'),
                 ),
                 const SizedBox(height: 20),
