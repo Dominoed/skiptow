@@ -305,7 +305,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Set<Circle> _buildRadiusCircles() {
-    if (currentPosition == null || !isActive) return {};
+    if (!_locationPermissionGranted || currentPosition == null || !isActive) {
+      return {};
+    }
     final LatLng center = LatLng(currentPosition!.latitude, currentPosition!.longitude);
     final meters = radiusMiles * 1609.34;
 
@@ -322,7 +324,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Set<Marker> _buildMarkers() {
-    if (currentPosition == null) return {};
+    if (!_locationPermissionGranted || currentPosition == null) return {};
     final LatLng pos =
         LatLng(currentPosition!.latitude, currentPosition!.longitude);
 
@@ -439,11 +441,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         ],
       ),
       body: !_locationPermissionGranted
-          ? Center(
-              child: ElevatedButton(
-                onPressed: _checkLocationPermissionOnLoad,
-                child: const Text('Grant Location Permission'),
-              ),
+          ? const Center(
+              child: Text('Location permission is required to view the map.'),
             )
           : Column(
               children: [

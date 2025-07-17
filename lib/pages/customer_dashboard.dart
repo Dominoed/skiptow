@@ -481,11 +481,8 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         ],
       ),
       body: !_locationPermissionGranted
-          ? Center(
-              child: ElevatedButton(
-                onPressed: _checkLocationPermissionOnLoad,
-                child: const Text('Grant Location Permission'),
-              ),
+          ? const Center(
+              child: Text('Location permission is required to view the map.'),
             )
           : currentPosition == null
               ? const Center(child: CircularProgressIndicator())
