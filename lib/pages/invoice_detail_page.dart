@@ -448,7 +448,24 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         }
 
         if (widget.role == 'customer' && status == 'completed') {
-          children.add(
+          children.addAll([
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Payment system not yet implemented.'),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: const Text('Pay Now'),
+              ),
+            ),
+            const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
@@ -515,7 +532,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 child: const Text('Close Request'),
               ),
             ),
-          );
+          ]);
         }
 
         return Scaffold(
