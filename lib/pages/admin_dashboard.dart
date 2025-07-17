@@ -350,49 +350,64 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final data = doc.data();
     final flagged = data['flagged'] == true;
     final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
-    return ListTile(
-      title: Text('Mechanic: ${data['mechanicId']}'),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Customer: ${data['customerId']}'),
-          Text('Status: ${data['status']}'),
-          Row(
-            children: [
-              const Text('Payment Status: '),
-              Text(
-                paymentStatus,
+    final Timestamp? createdAtTs = data['createdAt'];
+    final bool overdue = paymentStatus == 'pending' &&
+        createdAtTs != null &&
+        DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+    return Container(
+      color: overdue ? Colors.red.shade50 : null,
+      child: ListTile(
+        title: Text('Mechanic: ${data['mechanicId']}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Customer: ${data['customerId']}'),
+            Text('Status: ${data['status']}'),
+            Row(
+              children: [
+                const Text('Payment Status: '),
+                Text(
+                  paymentStatus,
+                  style: TextStyle(
+                    color: _paymentStatusColor(paymentStatus),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            if (overdue)
+              const Text(
+                '⚠️ Overdue Payment',
                 style: TextStyle(
-                  color: _paymentStatusColor(paymentStatus),
+                  color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-          Text('Submitted: ${_formatDate(data['timestamp'])}'),
-          if (data['closedAt'] != null)
-            Text('Closed: ${_formatDate(data['closedAt'])}'),
-          Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
-          if ((data['customerReview'] ?? '').toString().isNotEmpty)
-            Text('Customer Review: ${data['customerReview']}')
-          else
-            const Text('No review.'),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.flag),
-            onPressed: flagged ? null : () => _flagInvoice(doc.id),
-            tooltip: 'Flag Invoice',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _confirmDeleteInvoice(doc.id),
-            tooltip: 'Delete Invoice',
-          ),
-        ],
+            Text('Submitted: ${_formatDate(data['timestamp'])}'),
+            if (data['closedAt'] != null)
+              Text('Closed: ${_formatDate(data['closedAt'])}'),
+            Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
+            if ((data['customerReview'] ?? '').toString().isNotEmpty)
+              Text('Customer Review: ${data['customerReview']}')
+            else
+              const Text('No review.'),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.flag),
+              onPressed: flagged ? null : () => _flagInvoice(doc.id),
+              tooltip: 'Flag Invoice',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _confirmDeleteInvoice(doc.id),
+              tooltip: 'Delete Invoice',
+            ),
+          ],
+        ),
       ),
     );
   }
