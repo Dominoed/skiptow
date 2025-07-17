@@ -36,6 +36,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     data['customerPhone'] =
         customerData?['phone'] ?? customerData?['phoneNumber'];
     data['customerEmail'] = customerData?['email'];
+
+    // Fetch mechanic contact info for non-customer views
+    if (widget.role != 'customer') {
+      final mechDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(data['mechanicId'])
+          .get();
+      final mechData = mechDoc.data();
+      data['mechanicPhone'] =
+          mechData?['phone'] ?? mechData?['phoneNumber'];
+      data['mechanicEmail'] = mechData?['email'];
+    }
     return data;
   }
 
@@ -81,10 +93,20 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
             Text('Problem: ${data['description']}'),
-          if ((data['customerPhone'] ?? '').toString().isNotEmpty)
+          // Show customer contact info only to mechanics
+          if (widget.role == 'mechanic' &&
+              (data['customerPhone'] ?? '').toString().isNotEmpty)
             Text('Phone: ${data['customerPhone']}'),
-          if ((data['customerEmail'] ?? '').toString().isNotEmpty)
+          if (widget.role == 'mechanic' &&
+              (data['customerEmail'] ?? '').toString().isNotEmpty)
             Text('Email: ${data['customerEmail']}'),
+          // Show mechanic contact info to non-customers (e.g. mechanic or admin)
+          if (widget.role != 'customer' &&
+              (data['mechanicPhone'] ?? '').toString().isNotEmpty)
+            Text('Mechanic Phone: ${data['mechanicPhone']}'),
+          if (widget.role != 'customer' &&
+              (data['mechanicEmail'] ?? '').toString().isNotEmpty)
+            Text('Mechanic Email: ${data['mechanicEmail']}'),
           if (location != null)
             Text('Location: ${location['lat']}, ${location['lng']}'),
           if (data['distance'] != null)
