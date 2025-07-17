@@ -205,54 +205,104 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                  onPressed: () async {
-                    final controller = TextEditingController();
-                    final price = await showDialog<double>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Mark as Completed'),
-                          content: TextField(
-                            controller: controller,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(
-                              labelText: 'Enter final total price (in USD):',
-                            ),
+                onPressed: () async {
+                  final controller = TextEditingController();
+                  final price = await showDialog<double>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Mark as Completed'),
+                        content: TextField(
+                          controller: controller,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Enter final total price (in USD):',
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                final val = double.tryParse(controller.text);
-                                Navigator.of(context).pop(val);
-                              },
-                              child: const Text('Submit'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-
-                    if (price != null) {
-                      await FirebaseFirestore.instance
-                          .collection('invoices')
-                          .doc(widget.invoiceId)
-                          .update({'status': 'completed', 'finalPrice': price});
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Invoice marked as completed.'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
                           ),
-                        );
-                        Navigator.pop(context);
-                      }
+                          TextButton(
+                            onPressed: () {
+                              final val = double.tryParse(controller.text);
+                              Navigator.of(context).pop(val);
+                            },
+                            child: const Text('Submit'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (price != null) {
+                    await FirebaseFirestore.instance
+                        .collection('invoices')
+                        .doc(widget.invoiceId)
+                        .update({'status': 'completed', 'finalPrice': price});
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Invoice marked as completed.'),
+                        ),
+                      );
+                      Navigator.pop(context);
                     }
-                  },
+                  }
+                },
                 child: const Text('Mark as Completed'),
+              ),
+            ),
+          );
+
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Cancel Request'),
+                        content: const Text(
+                            'Are you sure you want to cancel this service request?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('No'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Yes'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmed == true) {
+                    await FirebaseFirestore.instance
+                        .collection('invoices')
+                        .doc(widget.invoiceId)
+                        .update({
+                      'status': 'cancelled',
+                      'cancelledBy': 'mechanic',
+                    });
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Request cancelled.')),
+                      );
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                child: const Text('Cancel Request'),
               ),
             ),
           );
