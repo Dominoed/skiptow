@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -23,6 +24,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
 
+  String _appVersion = '1.0.0';
+
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance
         .collection('users')
@@ -40,6 +43,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .snapshots();
     _invoiceSub = _invoiceStream.listen(_updateInvoiceCounts);
     _loadStats();
+    _loadAppVersion();
   }
 
   Future<void> _loadStats() async {
@@ -107,6 +111,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .doc(mechId)
         .update({'isActive': false});
     await _loadStats();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = info.version;
+        });
+      }
+    } catch (_) {
+      // Keep default version on failure
+    }
   }
 
   Widget _buildStats() {
@@ -277,6 +294,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
                   _buildInvoices(),
                   _buildActiveMechanics(),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      'SkipTow Platform Version: $_appVersion',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Colors.grey),
+                    ),
+                  ),
                 ],
               ),
             ),
