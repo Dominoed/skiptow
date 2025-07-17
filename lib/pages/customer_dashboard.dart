@@ -625,6 +625,33 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Widget _buildInProgressOverlay() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'in_progress')
+        .limit(1)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('🛠️ Mechanic is working on your vehicle.'),
+        );
+      },
+    );
+  }
+
   Widget _buildMechanicCountOverlay() {
     final text = availableMechanicCount > 0
         ? 'Available Mechanics Nearby: ' + availableMechanicCount.toString()
@@ -924,6 +951,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   top: 90,
                   left: 10,
                   child: _buildArrivalOverlay(),
+                ),
+                Positioned(
+                  top: 130,
+                  left: 10,
+                  child: _buildInProgressOverlay(),
                 ),
                 Positioned(
                   bottom: 20,
