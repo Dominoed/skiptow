@@ -20,6 +20,20 @@ class InvoicesPage extends StatefulWidget {
 class _InvoicesPageState extends State<InvoicesPage> {
   String? _selectedFilter;
 
+  Widget _resetFilterButton() {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _selectedFilter = null;
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.orange,
+      ),
+      child: const Text('Reset Filters'),
+    );
+  }
+
   // Fetch the role of the current user so we know which field to query.
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance
@@ -90,6 +104,15 @@ class _InvoicesPageState extends State<InvoicesPage> {
                     _filterButton('completed', 'Show Completed'),
                     const SizedBox(width: 8),
                     _filterButton('cancelled', 'Show Cancelled'),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _resetFilterButton(),
                   ],
                 ),
               ),
