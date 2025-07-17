@@ -150,6 +150,12 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
             Text('Problem: ${data['description']}'),
+          if (widget.role == 'customer')
+            Text(
+              finalPrice != null
+                  ? 'Final Total: \$${finalPrice.toStringAsFixed(2)}'
+                  : 'Final Total: Pending',
+            ),
           // Show customer contact info only to mechanics
           if (widget.role == 'mechanic' &&
               (data['customerPhone'] ?? '').toString().isNotEmpty)
@@ -170,7 +176,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Distance: ${data['distance'].toStringAsFixed(1)} mi'),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           Text('Status: $status'),
-          if (finalPrice != null)
+          if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
         ];
 
