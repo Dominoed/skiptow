@@ -11,6 +11,8 @@ import 'service_request_history_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final String userId;
+  // Track if the role snackbar has been shown for this session
+  static bool _snackbarShown = false;
   const DashboardPage({super.key, required this.userId});
 
 
@@ -24,6 +26,8 @@ class DashboardPage extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
+    // Reset snackbar flag so message shows on next login
+    _snackbarShown = false;
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,
@@ -45,6 +49,16 @@ class DashboardPage extends StatelessWidget {
         }
 
         final role = snapshot.data;
+        if (!_snackbarShown && role != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Logged in as $role')),
+              );
+            }
+          });
+          _snackbarShown = true;
+        }
         Widget? dash;
         if (role == 'mechanic') {
           dash = MechanicDashboard(userId: userId);
