@@ -218,6 +218,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           Text('Customer: ${data['customerId']}'),
           Text('Status: ${data['status']}'),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
+          if (data['closedAt'] != null)
+            Text('Closed: ${_formatDate(data['closedAt'])}'),
         ],
       ),
     );
