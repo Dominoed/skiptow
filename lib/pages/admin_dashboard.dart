@@ -283,6 +283,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         children: [
           Text('Customer: ${data['customerId']}'),
           Text('Status: ${data['status']}'),
+          Text('Payment Status: ${data['paymentStatus'] ?? 'pending'}'),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           if (data['closedAt'] != null)
             Text('Closed: ${_formatDate(data['closedAt'])}'),
