@@ -444,12 +444,27 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () async {
+                  final reviewController = TextEditingController();
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) {
                       return AlertDialog(
                         title: const Text('Close Request'),
-                        content: const Text('Mark this service request as closed?'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Mark this service request as closed?'),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: reviewController,
+                              minLines: 3,
+                              maxLines: 5,
+                              decoration: const InputDecoration(
+                                labelText: 'Leave a review for your mechanic (optional)',
+                              ),
+                            ),
+                          ],
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
@@ -465,13 +480,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   );
 
                   if (confirmed == true) {
+                    final Map<String, dynamic> updateData = {
+                      'status': 'closed',
+                      'closedAt': FieldValue.serverTimestamp(),
+                    };
+                    final review = reviewController.text.trim();
+                    if (review.isNotEmpty) {
+                      updateData['customerReview'] = review;
+                    }
                     await FirebaseFirestore.instance
                         .collection('invoices')
                         .doc(widget.invoiceId)
-                        .update({
-                      'status': 'closed',
-                      'closedAt': FieldValue.serverTimestamp(),
-                    });
+                        .update(updateData);
 
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
