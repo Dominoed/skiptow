@@ -30,6 +30,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _paidInvoices = 0;
   double _totalPaidAmount = 0.0;
   double _averagePaidAmount = 0.0;
+  double _unpaidOutstanding = 0.0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
@@ -128,6 +129,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _averagePaidAmount =
         _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
 
+    final pendingSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('paymentStatus', isEqualTo: 'pending')
+        .get();
+    double outstanding = 0.0;
+    for (final doc in pendingSnap.docs) {
+      outstanding += (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+    }
+    _unpaidOutstanding = outstanding;
+
     final flaggedSnap = await FirebaseFirestore.instance
         .collection('invoices')
         .where('flagged', isEqualTo: true)
@@ -145,6 +156,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int flagged = 0;
     int paid = 0;
     double total = 0.0;
+    double pendingTotal = 0.0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'];
@@ -163,6 +175,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       if (paymentStatus == 'paid') {
         paid++;
         total += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+      } else if (paymentStatus == 'pending') {
+        pendingTotal += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       }
     }
     final avg = paid > 0 ? total / paid : 0.0;
@@ -175,6 +189,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
+      _unpaidOutstanding = pendingTotal;
       return;
     }
     setState(() {
@@ -186,6 +201,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
+      _unpaidOutstanding = pendingTotal;
     });
   }
 
@@ -263,6 +279,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Average Payment Per Job: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_averagePaidAmount)}',
+        ),
+        Text(
+          'Unpaid Balance Outstanding: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_unpaidOutstanding)}',
         ),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Flagged Invoices: $_flaggedInvoices'),
