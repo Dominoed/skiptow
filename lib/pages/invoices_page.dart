@@ -209,6 +209,13 @@ class _InvoiceTile extends StatelessWidget {
       ),
       if (carText.isNotEmpty) Text(carText),
       if (description.toString().isNotEmpty) Text(description),
+      // Customer contact details visible only to mechanics
+      if (role == 'mechanic' &&
+          (data['customerPhone'] ?? '').toString().isNotEmpty)
+        Text('Phone: ${data['customerPhone']}'),
+      if (role == 'mechanic' &&
+          (data['customerEmail'] ?? '').toString().isNotEmpty)
+        Text('Email: ${data['customerEmail']}'),
       if (distance != null) Text('Distance: ${distance.toStringAsFixed(1)} mi'),
       Text('Submitted on ${_formatDate(ts)}'),
     ];
