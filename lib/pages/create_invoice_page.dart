@@ -30,7 +30,35 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   final TextEditingController phoneController = TextEditingController();
 
   bool isSubmitting = false;
+  bool hasActiveRequest = false;
   bool get isAnyTech => widget.mechanicId == 'any';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkActiveRequest();
+  }
+
+  Future<void> _checkActiveRequest() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.customerId)
+        .where('status', isEqualTo: 'active')
+        .limit(1)
+        .get();
+
+    if (mounted) {
+      setState(() {
+        hasActiveRequest = snapshot.docs.isNotEmpty;
+      });
+      if (hasActiveRequest) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('You already have an active service request.')),
+        );
+      }
+    }
+  }
 
   bool get isFormValid =>
       carYearController.text.isNotEmpty &&
@@ -234,7 +262,17 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: isFormValid && !isSubmitting ? _submitInvoice : null,
+              onPressed: !isFormValid || isSubmitting
+                  ? null
+                  : hasActiveRequest
+                      ? () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'You already have an active service request.')),
+                          );
+                        }
+                      : _submitInvoice,
               child: const Text('Submit Invoice'),
             ),
           ],
