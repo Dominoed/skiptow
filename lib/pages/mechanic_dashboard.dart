@@ -119,10 +119,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       'timestamp': DateTime.now(),
     };
 
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .update(data);
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update(data);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('An error occurred. Please try again.')),
+        );
+      }
+      debugPrint('$e');
+      return;
+    }
 
     setState(() {
       isActive = !isActive;
@@ -385,18 +396,29 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       radiusMiles = val;
                     });
                   },
-                  onChangeEnd: (val) {
+                  onChangeEnd: (val) async {
                     if (isActive) {
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(widget.userId)
-                          .update({
-                        'radiusMiles': val,
-                        'role': 'mechanic',
-                        'timestamp': DateTime.now(),
-                      });
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(widget.userId)
+                            .update({
+                          'radiusMiles': val,
+                          'role': 'mechanic',
+                          'timestamp': DateTime.now(),
+                        });
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'An error occurred. Please try again.')),
+                          );
+                        }
+                        debugPrint('$e');
+                      }
                     }
-                 },
+                  },
                 ),
                 Text('Service Radius: ${radiusMiles.toInt()} miles'),
               ],
@@ -431,17 +453,26 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
 
       if (isActive && currentPosition != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.userId)
-            .update({
-          'location': {
-            'lat': currentPosition!.latitude,
-            'lng': currentPosition!.longitude,
-          },
-          'role': 'mechanic',
-          'timestamp': DateTime.now(),
-        });
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(widget.userId)
+              .update({
+            'location': {
+              'lat': currentPosition!.latitude,
+              'lng': currentPosition!.longitude,
+            },
+            'role': 'mechanic',
+            'timestamp': DateTime.now(),
+          });
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('An error occurred. Please try again.')),
+            );
+          }
+          debugPrint('$e');
+        }
       }
     });
   }
