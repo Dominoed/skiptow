@@ -465,6 +465,49 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Widget _buildMessagesIcon() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collectionGroup('threads')
+          .where('recipientId', isEqualTo: widget.userId)
+          .where('isRead', isEqualTo: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final count = snapshot.hasData ? snapshot.data!.size : 0;
+        return Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.mail),
+              tooltip: 'Messages',
+              onPressed: _openMessages,
+            ),
+            if (count > 0)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasAccountData) {
@@ -496,11 +539,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.mail),
-            tooltip: 'Messages',
-            onPressed: _openMessages,
-          ),
+          _buildMessagesIcon(),
         ],
       ),
       body: !_locationPermissionGranted
