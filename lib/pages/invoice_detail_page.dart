@@ -217,6 +217,31 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
           if (widget.role == 'mechanic')
+            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('invoices')
+                  .doc(widget.invoiceId)
+                  .snapshots(),
+              builder: (context, paySnapshot) {
+                if (!paySnapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
+                final pStatus =
+                    paySnapshot.data!.data()?['paymentStatus'] ?? 'pending';
+                final bool isPaid = pStatus == 'paid';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    isPaid ? 'Payment Completed' : 'Payment Pending',
+                    style: TextStyle(
+                      color: isPaid ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (widget.role == 'mechanic')
             (data['customerReview'] ?? '').toString().isNotEmpty
                 ? Text('Customer Review:\n${data['customerReview']}')
                 : const Text('No customer review provided.'),
