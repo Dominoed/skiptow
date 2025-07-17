@@ -131,6 +131,23 @@ class _RequestTile extends StatelessWidget {
                     child: const Text('View Details'),
                   ),
                 ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => InvoiceDetailPage(
+                            invoiceId: invoiceId,
+                            role: 'mechanic',
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('View Invoice'),
+                  ),
+                ),
               ],
             ),
           ),
