@@ -92,6 +92,30 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   void initState() {
     super.initState();
     _invoiceFuture = _loadInvoice();
+    _invoiceFuture.then((data) {
+      if (mounted &&
+          widget.role == 'customer' &&
+          data != null &&
+          data['status'] == 'completed' &&
+          (data['paymentStatus'] ?? 'pending') == 'pending') {
+        Future.microtask(() {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PaymentProcessingPage(
+                invoiceId: widget.invoiceId,
+              ),
+            ),
+          ).then((_) {
+            if (mounted) {
+              setState(() {
+                _invoiceFuture = _loadInvoice();
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
   @override
@@ -481,8 +505,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => PaymentProcessingPage(
@@ -490,6 +514,11 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                       ),
                     ),
                   );
+                  if (context.mounted) {
+                    setState(() {
+                      _invoiceFuture = _loadInvoice();
+                    });
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),

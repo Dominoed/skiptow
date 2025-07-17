@@ -25,6 +25,11 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage> {
         setState(() {
           _done = true;
         });
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
       }
     });
   }
