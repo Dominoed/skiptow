@@ -23,6 +23,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _completedInvoices = 0;
   int _cancelledInvoices = 0;
   int _platformCompletedJobs = 0;
+  int _closedInvoices = 0;
   int _totalActiveUsers = 0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
@@ -100,6 +101,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('status', isEqualTo: 'cancelled')
         .get();
     _cancelledInvoices = cancelledSnap.size;
+
+    final closedSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('status', isEqualTo: 'closed')
+        .get();
+    _closedInvoices = closedSnap.size;
     if (mounted) setState(() {});
   }
 
@@ -108,12 +115,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int active = 0;
     int completed = 0;
     int cancelled = 0;
+    int closed = 0;
     for (final doc in snapshot.docs) {
       final status = doc.data()['status'];
       if (status == 'active') {
         active++;
-      } else if (status == 'completed' || status == 'closed') {
+      } else if (status == 'completed') {
         completed++;
+      } else if (status == 'closed') {
+        completed++;
+        closed++;
       } else if (status == 'cancelled') {
         cancelled++;
       }
@@ -122,12 +133,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _activeInvoices = active;
       _completedInvoices = completed;
       _cancelledInvoices = cancelled;
+      _closedInvoices = closed;
       return;
     }
     setState(() {
       _activeInvoices = active;
       _completedInvoices = completed;
       _cancelledInvoices = cancelled;
+      _closedInvoices = closed;
     });
   }
 
@@ -199,6 +212,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Completed Invoices: $_completedInvoices'),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
+        Text('Total Requests Closed: $_closedInvoices'),
       ],
     );
   }
