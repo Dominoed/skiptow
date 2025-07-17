@@ -6,6 +6,7 @@ import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 
@@ -32,6 +33,8 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _hasAccountData = true;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
+  bool _requestAcceptedBannerVisible = false;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _acceptedInvoiceSub;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -60,6 +63,41 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _locationBannerVisible = false;
   }
 
+  void _showRequestAcceptedBanner() {
+    if (_requestAcceptedBannerVisible || !mounted) return;
+    _requestAcceptedBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      const MaterialBanner(
+        content: Text('✅ Mechanic has accepted your service request!'),
+        actions: [SizedBox.shrink()],
+      ),
+    );
+  }
+
+  void _hideRequestAcceptedBanner() {
+    if (!_requestAcceptedBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _requestAcceptedBannerVisible = false;
+  }
+
+  void _listenForAcceptedInvoices() {
+    _acceptedInvoiceSub?.cancel();
+    _acceptedInvoiceSub = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'accepted')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        _showRequestAcceptedBanner();
+      } else {
+        _hideRequestAcceptedBanner();
+      }
+    }, onError: (e) {
+      logError('Accepted invoice listen error: $e');
+    });
+  }
+
   bool get _hasAvailableMechanics {
     for (var data in mechanicsInRange.values) {
       if (data['withinActive'] == true) return true;
@@ -71,6 +109,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   void initState() {
     super.initState();
     _verifyAccountData();
+    _listenForAcceptedInvoices();
   }
 
   Future<void> _verifyAccountData() async {
@@ -815,5 +854,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               ],
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    _acceptedInvoiceSub?.cancel();
+    mapController?.dispose();
+    super.dispose();
   }
 }
