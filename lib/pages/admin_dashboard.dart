@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
 
@@ -27,6 +28,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _flaggedInvoices = 0;
   int _totalActiveUsers = 0;
   int _paidInvoices = 0;
+  double _totalPaidAmount = 0.0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
@@ -116,6 +118,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('paymentStatus', isEqualTo: 'paid')
         .get();
     _paidInvoices = paidSnap.size;
+    double total = 0.0;
+    for (final doc in paidSnap.docs) {
+      final price = (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+      total += price;
+    }
+    _totalPaidAmount = total;
 
     final flaggedSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -133,6 +141,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int closed = 0;
     int flagged = 0;
     int paid = 0;
+    double total = 0.0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'];
@@ -148,7 +157,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         cancelled++;
       }
       if (data['flagged'] == true) flagged++;
-      if (paymentStatus == 'paid') paid++;
+      if (paymentStatus == 'paid') {
+        paid++;
+        total += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+      }
     }
     if (!mounted) {
       _activeInvoices = active;
@@ -157,6 +169,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
       _paidInvoices = paid;
+      _totalPaidAmount = total;
       return;
     }
     setState(() {
@@ -166,6 +179,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
       _paidInvoices = paid;
+      _totalPaidAmount = total;
     });
   }
 
@@ -236,6 +250,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Total Paid Requests: $_paidInvoices'),
+        Text(
+          'Total Payments Collected: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_totalPaidAmount)}',
+        ),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Flagged Invoices: $_flaggedInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
