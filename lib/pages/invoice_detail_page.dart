@@ -231,8 +231,34 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
 
+        if (widget.role == 'mechanic' && status == 'arrived') {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('invoices')
+                      .doc(widget.invoiceId)
+                      .update({'status': 'in_progress'});
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Work marked as started.')),
+                    );
+                  }
+                },
+                child: const Text('Start Work'),
+              ),
+            ),
+          );
+        }
+
         if (widget.role == 'mechanic' &&
-            (status == 'active' || status == 'accepted' || status == 'arrived')) {
+            (status == 'active' ||
+                status == 'accepted' ||
+                status == 'arrived' ||
+                status == 'in_progress')) {
           children.add(
             Align(
               alignment: Alignment.centerRight,
