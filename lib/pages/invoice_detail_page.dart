@@ -421,7 +421,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                     await FirebaseFirestore.instance
                         .collection('invoices')
                         .doc(widget.invoiceId)
-                        .update({'status': 'closed'});
+                        .update({
+                      'status': 'closed',
+                      'closedAt': FieldValue.serverTimestamp(),
+                    });
 
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
