@@ -91,7 +91,12 @@ class _RequestTile extends StatelessWidget {
           .doc(data['customerId'])
           .get(),
       builder: (context, snapshot) {
-        final customerName = snapshot.data?.data()?['username'] ?? data['customerId'];
+        final userData = snapshot.data?.data();
+        final customerName =
+            userData?['username'] ?? data['customerId'];
+        final phone = data['customerPhone'] ??
+            userData?['phone'] ?? userData?['phoneNumber'];
+        final email = data['customerEmail'] ?? userData?['email'];
 
         return Card(
           margin: const EdgeInsets.all(8),
@@ -102,6 +107,10 @@ class _RequestTile extends StatelessWidget {
               children: [
                 Text('Customer: $customerName'),
                 if (carText.isNotEmpty) Text('Car: $carText'),
+                if (phone != null && phone.toString().isNotEmpty)
+                  Text('Phone: $phone'),
+                if (email != null && email.toString().isNotEmpty)
+                  Text('Email: $email'),
                 if (distance != null)
                   Text('Distance: ${(distance as num).toDouble().toStringAsFixed(1)} mi'),
                 Text('Status: $status'),
