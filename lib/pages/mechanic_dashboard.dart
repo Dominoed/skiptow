@@ -204,6 +204,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     final hasPermission = await _handleLocationPermission();
     if (!hasPermission) return;
 
+    // Determine if the mechanic is going from inactive to active
+    final goingActive = !isActive;
+
     if (!isActive) {
       try {
         currentPosition = await Geolocator.getCurrentPosition();
@@ -259,6 +262,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     } else {
       positionStream?.cancel();
       backgroundTimer?.cancel();
+    }
+
+    // Navigate to the request queue page when activating
+    if (goingActive && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MechanicRequestQueuePage(mechanicId: widget.userId),
+        ),
+      );
     }
   }
 
