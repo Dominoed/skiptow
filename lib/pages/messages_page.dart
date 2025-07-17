@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class MessagesPage extends StatefulWidget {
   final String currentUserId;
@@ -79,6 +80,12 @@ class _MessagesPageState extends State<MessagesPage> {
     }
   }
 
+  String _formatTimestamp(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate().toLocal();
+    return DateFormat('h:mm a on MM/dd/yyyy').format(dt);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -129,16 +136,30 @@ class _MessagesPageState extends State<MessagesPage> {
                     final isMe = data['senderId'] == widget.currentUserId;
                     final alignment = isMe ? Alignment.centerRight : Alignment.centerLeft;
                     final color = isMe ? Colors.blue[100] : Colors.grey[300];
+                    final Timestamp? ts = data['timestamp'];
+                    final formatted = _formatTimestamp(ts);
                     return Align(
                       alignment: alignment,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 2),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(data['text'] ?? ''),
+                      child: Column(
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.symmetric(vertical: 2),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(data['text'] ?? ''),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            formatted,
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          ),
+                        ],
                       ),
                     );
                   },
