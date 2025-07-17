@@ -563,6 +563,26 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             )
           : Column(
               children: [
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('invoices')
+                      .where('mechanicId', isEqualTo: widget.userId)
+                      .where('status', isEqualTo: 'active')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final activeCount = snapshot.data?.size ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        'Active Jobs: $activeCount',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
