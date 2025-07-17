@@ -93,9 +93,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         .where('status', isEqualTo: 'accepted')
         .snapshots()
         .listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
+      final docs = snapshot.docs
+          .where((d) => d.data()['flagged'] != true)
+          .toList();
+      if (docs.isNotEmpty) {
         _showRequestAcceptedBanner();
-        final data = snapshot.docs.first.data();
+        final data = docs.first.data();
         final mechId = data['mechanicId'] as String?;
         if (mechId != null) {
           _startEtaUpdates(mechId);
@@ -145,7 +148,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         .where('status', whereIn: ['completed', 'closed'])
         .snapshots()
         .listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
+      final docs = snapshot.docs
+          .where((d) => d.data()['flagged'] != true)
+          .toList();
+      if (docs.isNotEmpty) {
         _showCompletedBanner();
       } else {
         _hideCompletedBanner();
@@ -612,11 +618,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (docs.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        final data = snapshot.data!.docs.first.data();
+        final data = docs.first.data();
         final car = data['carInfo'] ?? {};
         final year = (car['year'] ?? '').toString();
         final make = (car['make'] ?? '').toString();
@@ -648,7 +659,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (docs.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -675,7 +691,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (docs.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -923,10 +944,15 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                         .limit(1)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      final docs = snapshot.hasData
+                          ? snapshot.data!.docs
+                              .where((d) => d.data()['flagged'] != true)
+                              .toList()
+                          : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+                      if (docs.isEmpty) {
                         return const SizedBox.shrink();
                       }
-                      final data = snapshot.data!.docs.first.data();
+                      final data = docs.first.data();
                       final Timestamp? ts = data['createdAt'];
                       if (ts == null) return const SizedBox.shrink();
                       final timeStr =

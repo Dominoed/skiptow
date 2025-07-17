@@ -129,7 +129,9 @@ class _InvoicesPageState extends State<InvoicesPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    final docs = snapshot.data?.docs ?? [];
+                    final docs = (snapshot.data?.docs ?? [])
+                        .where((d) => d.data()['flagged'] != true)
+                        .toList();
                     if (docs.isEmpty) {
                       return const Center(child: Text('No invoices found'));
                     }

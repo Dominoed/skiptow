@@ -24,6 +24,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _cancelledInvoices = 0;
   int _platformCompletedJobs = 0;
   int _closedInvoices = 0;
+  int _flaggedInvoices = 0;
   int _totalActiveUsers = 0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
@@ -107,6 +108,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('status', isEqualTo: 'closed')
         .get();
     _closedInvoices = closedSnap.size;
+
+    final flaggedSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('flagged', isEqualTo: true)
+        .get();
+    _flaggedInvoices = flaggedSnap.size;
     if (mounted) setState(() {});
   }
 
@@ -116,8 +123,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int completed = 0;
     int cancelled = 0;
     int closed = 0;
+    int flagged = 0;
     for (final doc in snapshot.docs) {
-      final status = doc.data()['status'];
+      final data = doc.data();
+      final status = data['status'];
       if (status == 'active') {
         active++;
       } else if (status == 'completed') {
@@ -128,12 +137,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       } else if (status == 'cancelled') {
         cancelled++;
       }
+      if (data['flagged'] == true) flagged++;
     }
     if (!mounted) {
       _activeInvoices = active;
       _completedInvoices = completed;
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
+      _flaggedInvoices = flagged;
       return;
     }
     setState(() {
@@ -141,6 +152,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _completedInvoices = completed;
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
+      _flaggedInvoices = flagged;
     });
   }
 
@@ -211,6 +223,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Cancelled Invoices: $_cancelledInvoices'),
+        Text('Flagged Invoices: $_flaggedInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
         Text('Total Requests Closed: $_closedInvoices'),
       ],

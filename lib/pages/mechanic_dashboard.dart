@@ -331,7 +331,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         return;
       }
       for (final change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added) {
+        if (change.type == DocumentChangeType.added &&
+            change.doc.data()?['flagged'] != true) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('New service request received')),
@@ -585,7 +586,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       .where('status', isEqualTo: 'active')
                       .snapshots(),
                   builder: (context, snapshot) {
-                    final activeCount = snapshot.data?.size ?? 0;
+                    final activeCount = snapshot.hasData ? snapshot.data!.docs.where((d) => d.data()["flagged"] != true).length : 0;
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
