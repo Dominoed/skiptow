@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
 /// Simple admin dashboard for monitoring the platform.
-/// Access is granted only if the [userId] matches [_adminUserId].
 class AdminDashboardPage extends StatefulWidget {
   final String userId;
   const AdminDashboardPage({super.key, required this.userId});
@@ -13,8 +12,6 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  /// TODO: Replace with your real admin UID.
-  static const String _adminUserId = 'ADMIN_USER_ID';
 
   int _totalUsers = 0;
   int _activeMechanics = 0;
@@ -25,6 +22,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
+
+  Future<String?> _getRole() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .get();
+    return doc.data()?['role'] as String?;
+  }
 
   @override
   void initState() {
@@ -241,32 +246,43 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.userId != _adminUserId) {
-      return const Scaffold(
-        body: Center(child: Text('Access denied')),
-      );
-    }
+    return FutureBuilder<String?>(
+      future: _getRole(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Admin Dashboard')),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStats(),
-              const SizedBox(height: 16),
-              const Divider(),
-              const Text('Invoices', style: TextStyle(fontSize: 16)),
-              _buildInvoices(),
-              _buildActiveMechanics(),
-            ],
+        if (snapshot.data != 'admin') {
+          return const Scaffold(
+            body: Center(child: Text('Access denied')),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('Admin Dashboard')),
+          body: RefreshIndicator(
+            onRefresh: _refresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStats(),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const Text('Invoices', style: TextStyle(fontSize: 16)),
+                  _buildInvoices(),
+                  _buildActiveMechanics(),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

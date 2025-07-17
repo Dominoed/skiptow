@@ -13,8 +13,6 @@ class DashboardPage extends StatelessWidget {
   final String userId;
   const DashboardPage({super.key, required this.userId});
 
-  /// TODO: Replace with your real admin UID.
-  static const String _adminUserId = 'ADMIN_USER_ID';
 
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
@@ -63,16 +61,33 @@ class DashboardPage extends StatelessWidget {
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (userId == _adminUserId) ...[
+              if (role == 'admin') ...[
                 FloatingActionButton.extended(
                   heroTag: 'admin_button',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AdminDashboardPage(userId: userId),
-                      ),
-                    );
+                  onPressed: () async {
+                    final doc = await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(userId)
+                        .get();
+                    final currentRole = doc.data()?['role'];
+                    if (currentRole == 'admin') {
+                      // User confirmed as admin. Navigate to dashboard.
+                      if (context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminDashboardPage(userId: userId),
+                          ),
+                        );
+                      }
+                    } else {
+                      // Role changed or user not admin.
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Access denied.')),
+                        );
+                      }
+                    }
                   },
                   label: const Text('Admin Dashboard'),
                   icon: const Icon(Icons.admin_panel_settings),
