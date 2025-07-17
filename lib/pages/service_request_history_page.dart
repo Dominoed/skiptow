@@ -60,6 +60,12 @@ class ServiceRequestHistoryPage extends StatelessWidget {
 
               return Card(
                 margin: const EdgeInsets.all(8),
+                shape: status == 'cancelled'
+                    ? RoundedRectangleBorder(
+                        side: const BorderSide(color: Colors.red, width: 2),
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    : null,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
