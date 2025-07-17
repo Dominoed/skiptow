@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
+import 'package:intl/intl.dart';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 
@@ -615,6 +616,42 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  right: 10,
+                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('invoices')
+                        .where('customerId', isEqualTo: widget.userId)
+                        .where('status', isEqualTo: 'active')
+                        .limit(1)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final data = snapshot.data!.docs.first.data();
+                      final Timestamp? ts = data['createdAt'];
+                      if (ts == null) return const SizedBox.shrink();
+                      final timeStr =
+                          DateFormat('h:mm a').format(ts.toDate().toLocal());
+                      return Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Service request submitted at $timeStr',
+                          style: const TextStyle(color: Colors.white),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 Positioned(
                   bottom: 16,
