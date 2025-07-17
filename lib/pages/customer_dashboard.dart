@@ -30,6 +30,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _locationPermissionGranted = false;
   bool _locationBannerVisible = false;
   bool _hasAccountData = true;
+  int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
 
   void _showLocationBanner() {
@@ -254,6 +255,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     Set<Marker> tempMarkers = {};
     bool insideActive = false;
     bool insideExtended = false;
+    int count = 0;
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
@@ -279,6 +281,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             insideActive = true;
           } else if (distance <= extendedRadius) {
             insideExtended = true;
+          }
+          if (distance <= extendedRadius) {
+            count++;
           }
         }
 
@@ -391,6 +396,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           : insideExtended
               ? "❗❓Mechanic nearby, but you're ${inRange.values.first['distance'].toStringAsFixed(1)} mi outside their range"
               : "❌ No active mechanics nearby";
+      availableMechanicCount = count;
     });
 
     if (noMechanics && !_noMechanicsSnackbarShown && mounted) {
@@ -531,6 +537,20 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           child: Text('Your Request: $vehicle'),
         );
       },
+    );
+  }
+
+  Widget _buildMechanicCountOverlay() {
+    final text = availableMechanicCount > 0
+        ? 'Available Mechanics Nearby: ' + availableMechanicCount.toString()
+        : 'No mechanics currently available.';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(text),
     );
   }
 
@@ -699,6 +719,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       );
                     },
                   ),
+                ),
+                Positioned(
+                  top: 60,
+                  left: 10,
+                  right: 10,
+                  child: _buildMechanicCountOverlay(),
                 ),
                 Positioned(
                   bottom: 16,
