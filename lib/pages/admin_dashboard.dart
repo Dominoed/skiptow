@@ -33,6 +33,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
+  String _paymentStatusFilter = 'all';
 
   String _appVersion = '1.0.0';
 
@@ -356,7 +357,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) {
+        final filteredDocs = docs.where((d) {
+          final payment = (d.data()['paymentStatus'] ?? 'pending') as String;
+          return _paymentStatusFilter == 'all' || payment == _paymentStatusFilter;
+        }).toList();
+        if (filteredDocs.isEmpty) {
           return const Text('No invoices');
         }
 
@@ -364,7 +369,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final List<QueryDocumentSnapshot<Map<String, dynamic>>> completed = [];
         final List<QueryDocumentSnapshot<Map<String, dynamic>>> cancelled = [];
 
-        for (final d in docs) {
+        for (final d in filteredDocs) {
           final status = d.data()['status'];
           if (status == 'active') {
             active.add(d);
@@ -503,6 +508,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const SizedBox(height: 16),
                   const Divider(),
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
+                  Row(
+                    children: [
+                      const Text('Filter by Payment Status: '),
+                      DropdownButton<String>(
+                        value: _paymentStatusFilter,
+                        items: const [
+                          DropdownMenuItem(value: 'all', child: Text('All')),
+                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                          DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _paymentStatusFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                   _buildInvoices(),
                   _buildActiveMechanics(),
                   const SizedBox(height: 16),
