@@ -176,6 +176,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           'notes': notesController.text.trim(),
         'customerPhone': phoneController.text.trim(),
         'customerEmail': userEmail,
+        'createdAt': FieldValue.serverTimestamp(),
         'timestamp': DateTime.now(),
         'status': 'active',
       });
