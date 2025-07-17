@@ -261,17 +261,23 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         final double radius = data['radiusMiles'];
         final double extendedRadius = radius + 2;
 
-        final double distance = Geolocator.distanceBetween(
-          currentPosition!.latitude,
-          currentPosition!.longitude,
-          lat,
-          lng,
-        ) / 1609.34; // meters to miles
+        double? distance;
+        if (currentPosition != null) {
+          distance = Geolocator.distanceBetween(
+                currentPosition!.latitude,
+                currentPosition!.longitude,
+                lat,
+                lng,
+              ) /
+              1609.34; // meters to miles
+        }
 
-        if (distance <= radius) {
-          insideActive = true;
-        } else if (distance <= extendedRadius) {
-          insideExtended = true;
+        if (distance != null) {
+          if (distance <= radius) {
+            insideActive = true;
+          } else if (distance <= extendedRadius) {
+            insideExtended = true;
+          }
         }
 
         tempMarkers.add(
@@ -280,14 +286,16 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             position: LatLng(lat, lng),
             icon: wrenchIcon ??
                 BitmapDescriptor.defaultMarkerWithHue(
-                  distance <= radius
+                  distance != null && distance <= radius
                       ? BitmapDescriptor.hueGreen
                       : BitmapDescriptor.hueAzure,
                 ),
             anchor: const Offset(0.5, 0.5),
             infoWindow: InfoWindow(
               title: data['username'] ?? 'Unnamed',
-              snippet: data['isActive'] == true ? 'Active' : 'Inactive',
+              snippet: distance != null
+                  ? 'You are ${distance.toStringAsFixed(1)} miles from this mechanic.'
+                  : 'Distance unknown.',
             ),
             onTap: () {
               mapController?.showMarkerInfoWindow(MarkerId(doc.id));
@@ -315,7 +323,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       customerId: widget.userId,
                       mechanicId: doc.id,
                       mechanicUsername: data['username'] ?? 'Unnamed',
-                      distance: distance,
+                      distance: distance ?? 0,
                     ),
                   ),
                 );
@@ -338,7 +346,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         inRange[doc.id] = {
           'username': data['username'] ?? 'Unnamed',
           'distance': distance,
-          'withinActive': distance <= radius,
+          'withinActive': distance != null && distance <= radius,
         };
       }
     }
