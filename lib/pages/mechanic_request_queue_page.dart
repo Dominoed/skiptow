@@ -3,6 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'invoice_detail_page.dart';
 import 'mechanic_dashboard.dart';
 
+/// Helper to hold mechanic role and timestamp field info.
+class _RoleAndField {
+  final String? role;
+  final String field;
+
+  _RoleAndField({required this.role, required this.field});
+}
+
 /// Page to view active service requests assigned to a mechanic.
 class MechanicRequestQueuePage extends StatefulWidget {
   final String mechanicId;
@@ -16,6 +24,13 @@ class MechanicRequestQueuePage extends StatefulWidget {
 
 class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
   String _selectedFilter = 'active';
+  late Future<_RoleAndField> _initialData;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialData = _getInitialData();
+  }
 
   Widget _filterButton(String value, String label) {
     final bool selected = _selectedFilter == value;
@@ -32,18 +47,35 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
     );
   }
 
-  Future<String?> _getRole() async {
-    final doc = await FirebaseFirestore.instance
+  Future<_RoleAndField> _getInitialData() async {
+    final userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.mechanicId)
         .get();
-    return doc.data()?['role'] as String?;
+    final role = userDoc.data()?['role'] as String?;
+
+    final invoiceSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .limit(1)
+        .get();
+
+    String field = 'timestamp';
+    if (invoiceSnap.docs.isNotEmpty) {
+      final data = invoiceSnap.docs.first.data();
+      if (data.containsKey('submittedAt')) {
+        field = 'submittedAt';
+      } else if (data.containsKey('createdAt')) {
+        field = 'createdAt';
+      }
+    }
+
+    return _RoleAndField(role: role, field: field);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String?>(
-      future: _getRole(),
+    return FutureBuilder<_RoleAndField>(
+      future: _initialData,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Scaffold(
@@ -51,7 +83,10 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
           );
         }
 
-        if (snapshot.data != 'mechanic') {
+        final role = snapshot.data!.role;
+        final tsField = snapshot.data!.field;
+
+        if (role != 'mechanic') {
           return const Scaffold(
             body: Center(child: Text('Access denied')),
           );
@@ -63,7 +98,9 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
         if (_selectedFilter.isNotEmpty) {
           query = query.where('status', isEqualTo: _selectedFilter);
         }
-        query = query.orderBy('timestamp', descending: true);
+        if (_selectedFilter == 'active') {
+          query = query.orderBy(tsField, descending: true);
+        }
 
         final stream = query.snapshots();
 
