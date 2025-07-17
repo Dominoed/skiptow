@@ -36,6 +36,25 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   bool hasActiveRequest = false;
   bool get isAnyTech => widget.mechanicId == 'any';
 
+  /// Generate the next sequential invoice number using a Firestore transaction.
+  Future<String> _generateInvoiceNumber() async {
+    final counterRef =
+        FirebaseFirestore.instance.collection('counters').doc('invoices');
+
+    return FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(counterRef);
+      int next = 1;
+      if (snapshot.exists) {
+        final data = snapshot.data();
+        if (data != null && data['next'] is int) {
+          next = data['next'] as int;
+        }
+      }
+      transaction.set(counterRef, {'next': next + 1});
+      return 'INV-${next.toString().padLeft(6, '0')}';
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -163,6 +182,9 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     try {
       final position = await Geolocator.getCurrentPosition();
 
+      // Generate a unique incremental invoice number
+      final invoiceNumber = await _generateInvoiceNumber();
+
       // Re-check for any active invoice before submitting to avoid duplicates
       final uidCheck = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
       final dupSnapshot = await FirebaseFirestore.instance
@@ -189,6 +211,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       await FirebaseFirestore.instance.collection('invoices').add({
         'mechanicId': widget.mechanicId,
         'customerId': widget.customerId,
+        'invoiceNumber': invoiceNumber,
         'mechanicUsername': widget.mechanicUsername,
         if (!isAnyTech) 'distance': widget.distance,
         'location': {
