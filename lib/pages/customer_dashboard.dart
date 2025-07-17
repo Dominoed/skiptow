@@ -28,6 +28,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _locationPermissionGranted = false;
   bool _hasAccountData = true;
 
+  bool get _hasAvailableMechanics {
+    for (var data in mechanicsInRange.values) {
+      if (data['withinActive'] == true) return true;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -249,6 +256,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             anchor: const Offset(0.5, 0.5),
             onTap: () {
               if (chooseTechMode) {
+                if (!_hasAvailableMechanics) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No mechanics available nearby.')),
+                  );
+                  return;
+                }
+
                 setState(() {
                   selectedMechanicId = doc.id;
                   chooseTechMode = false;
@@ -369,9 +383,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       }
     });
 
-    if (activeMechanics.isEmpty) {
+    if (!_hasAvailableMechanics) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No mechanics in range')),
+        const SnackBar(content: Text('No mechanics available nearby.')),
       );
       return;
     }
