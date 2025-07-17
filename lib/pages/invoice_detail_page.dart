@@ -184,12 +184,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   ? 'Final Total: \$${finalPrice.toStringAsFixed(2)}'
                   : 'Final Total: Pending',
             ),
-          if (widget.role == 'customer' &&
-              (data['postJobNotes'] ?? '').toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('Post-Job Notes:\n${data['postJobNotes']}'),
-            ),
+          if (widget.role == 'customer')
+            (data['postJobNotes'] ?? '').toString().isNotEmpty
+                ? Text('Mechanic Notes:\n${data['postJobNotes']}')
+                : const Text('No mechanic notes provided.'),
           // Show customer contact info only to mechanics
           if (widget.role == 'mechanic' &&
               (data['customerPhone'] ?? '').toString().isNotEmpty)
