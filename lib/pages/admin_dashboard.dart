@@ -29,6 +29,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _totalActiveUsers = 0;
   int _paidInvoices = 0;
   double _totalPaidAmount = 0.0;
+  double _averagePaidAmount = 0.0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
@@ -124,6 +125,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       total += price;
     }
     _totalPaidAmount = total;
+    _averagePaidAmount =
+        _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
 
     final flaggedSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -162,6 +165,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         total += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       }
     }
+    final avg = paid > 0 ? total / paid : 0.0;
     if (!mounted) {
       _activeInvoices = active;
       _completedInvoices = completed;
@@ -170,6 +174,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _flaggedInvoices = flagged;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _averagePaidAmount = avg;
       return;
     }
     setState(() {
@@ -180,6 +185,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _flaggedInvoices = flagged;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _averagePaidAmount = avg;
     });
   }
 
@@ -253,6 +259,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Total Payments Collected: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_totalPaidAmount)}',
+        ),
+        Text(
+          'Average Payment Per Job: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_averagePaidAmount)}',
         ),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Flagged Invoices: $_flaggedInvoices'),
