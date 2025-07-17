@@ -5,11 +5,13 @@ import 'package:intl/intl.dart';
 class MessagesPage extends StatefulWidget {
   final String currentUserId;
   final String otherUserId;
+  final String? initialMessage;
 
   const MessagesPage({
     super.key,
     required this.currentUserId,
     required this.otherUserId,
+    this.initialMessage,
   });
 
   @override
@@ -20,10 +22,14 @@ class _MessagesPageState extends State<MessagesPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _conversationId;
+  String? _otherUsername;
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialMessage != null) {
+      _controller.text = widget.initialMessage!;
+    }
     _initConversation();
   }
 
@@ -32,6 +38,7 @@ class _MessagesPageState extends State<MessagesPage> {
         await FirebaseFirestore.instance.collection('users').doc(widget.currentUserId).get();
     final otherDoc =
         await FirebaseFirestore.instance.collection('users').doc(widget.otherUserId).get();
+    final username = otherDoc.data()?['username'];
     final userRole = userDoc.data()?['role'];
     final otherRole = otherDoc.data()?['role'];
 
@@ -47,6 +54,7 @@ class _MessagesPageState extends State<MessagesPage> {
 
     setState(() {
       _conversationId = convId;
+      _otherUsername = username;
     });
 
     await _markMessagesAsRead();
@@ -125,7 +133,7 @@ class _MessagesPageState extends State<MessagesPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Messages'),
+        title: Text('To: ${_otherUsername ?? ''}'),
       ),
       body: Column(
         children: [

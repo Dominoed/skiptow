@@ -319,6 +319,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     ),
                   ),
                 );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MessagesPage(
+                      currentUserId: widget.userId,
+                      otherUserId: doc.id,
+                      initialMessage: "I'm nearby your radius. Are you available for service?",
+                    ),
+                  ),
+                );
               }
             },
           ),
