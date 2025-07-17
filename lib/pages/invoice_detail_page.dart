@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Page to show full invoice details.
 class InvoiceDetailPage extends StatefulWidget {
@@ -368,10 +369,17 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             .collection('invoices')
                             .doc(widget.invoiceId)
                             .update({
-                          'status': 'completed',
-                          'finalPrice': price,
-                          'postJobNotes': notes,
-                        });
+                              'status': 'completed',
+                              'finalPrice': price,
+                              'postJobNotes': notes,
+                            });
+                        final uid = FirebaseAuth.instance.currentUser?.uid;
+                        if (uid != null) {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .update({'completedJobs': FieldValue.increment(1)});
+                        }
 
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

@@ -266,6 +266,10 @@ class _InvoiceTile extends StatelessWidget {
                   .collection('invoices')
                   .doc(invoiceId)
                   .update({'status': 'completed'});
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(currentUserId)
+                  .update({'completedJobs': FieldValue.increment(1)});
             },
             child: const Text('Mark Completed'),
           ),
