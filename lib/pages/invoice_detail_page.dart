@@ -110,6 +110,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             '${car['year'] ?? ''} ${car['make'] ?? ''} ${car['model'] ?? ''}'.trim();
         final location = data['location'];
         final status = data['status'] ?? 'active';
+        final finalPrice = data['finalPrice'];
 
         final children = <Widget>[
           Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
@@ -169,6 +170,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Distance: ${data['distance'].toStringAsFixed(1)} mi'),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           Text('Status: $status'),
+          if (finalPrice != null)
+            Text('Final Price: \$${finalPrice.toString()}'),
         ];
 
         if (widget.role == 'mechanic' && status == 'active') {
@@ -176,45 +179,53 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Mark as Completed'),
-                        content: const Text(
-                          'Are you sure you want to mark this job as completed?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
+                  onPressed: () async {
+                    final controller = TextEditingController();
+                    final price = await showDialog<double>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Mark as Completed'),
+                          content: TextField(
+                            controller: controller,
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Enter final total price (in USD):',
+                            ),
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Confirm'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                final val = double.tryParse(controller.text);
+                                Navigator.of(context).pop(val);
+                              },
+                              child: const Text('Submit'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (price != null) {
+                      await FirebaseFirestore.instance
+                          .collection('invoices')
+                          .doc(widget.invoiceId)
+                          .update({'status': 'completed', 'finalPrice': price});
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Invoice marked as completed.'),
                           ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirmed == true) {
-                    await FirebaseFirestore.instance
-                        .collection('invoices')
-                        .doc(widget.invoiceId)
-                        .update({'status': 'completed'});
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Job marked as completed.'),
-                        ),
-                      );
-                      Navigator.pop(context);
+                        );
+                        Navigator.pop(context);
+                      }
                     }
-                  }
-                },
+                  },
                 child: const Text('Mark as Completed'),
               ),
             ),
