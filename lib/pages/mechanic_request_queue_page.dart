@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'invoice_detail_page.dart';
+import 'mechanic_dashboard.dart';
 
 /// Page to view active service requests assigned to a mechanic.
 class MechanicRequestQueuePage extends StatefulWidget {
@@ -67,7 +68,26 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
         final stream = query.snapshots();
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Request Queue')),
+          appBar: AppBar(
+            title: const Text('Request Queue'),
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                setState(() {
+                  _selectedFilter = 'active';
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MechanicDashboard(
+                      userId: widget.mechanicId,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           body: Column(
             children: [
               Padding(
