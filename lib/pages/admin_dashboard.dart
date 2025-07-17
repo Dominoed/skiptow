@@ -384,6 +384,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Invoice #: ${data['invoiceNumber'] ?? doc.id}'),
             Text('Customer: ${data['customerId']}'),
             Text('Status: ${data['status']}'),
             Row(

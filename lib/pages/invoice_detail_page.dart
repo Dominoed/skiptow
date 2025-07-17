@@ -145,6 +145,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final paymentStatus = data['paymentStatus'] ?? 'pending';
 
         final children = <Widget>[];
+        final invoiceNum = data['invoiceNumber'] ?? widget.invoiceId;
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Invoice #: ' + invoiceNum,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
         if (widget.role == 'mechanic') {
           final name = data['customerName'] ?? data['customerUsername'];
           children.add(
