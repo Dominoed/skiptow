@@ -223,7 +223,46 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return dt.toString().split('.').first;
   }
 
-  Widget _invoiceTile(Map<String, dynamic> data) {
+  Future<void> _flagInvoice(String id) async {
+    await FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(id)
+        .update({'flagged': true});
+  }
+
+  Future<void> _confirmDeleteInvoice(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Invoice'),
+        content: const Text(
+            'Are you sure? This will permanently delete the invoice.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(id)
+          .delete();
+    }
+  }
+
+  Widget _invoiceTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final flagged = data['flagged'] == true;
     return ListTile(
       title: Text('Mechanic: ${data['mechanicId']}'),
       subtitle: Column(
@@ -234,10 +273,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           if (data['closedAt'] != null)
             Text('Closed: ${_formatDate(data['closedAt'])}'),
+          Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
           if ((data['customerReview'] ?? '').toString().isNotEmpty)
             Text('Customer Review: ${data['customerReview']}')
           else
             const Text('No review.'),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.flag),
+            onPressed: flagged ? null : () => _flagInvoice(doc.id),
+            tooltip: 'Flag Invoice',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _confirmDeleteInvoice(doc.id),
+            tooltip: 'Delete Invoice',
+          ),
         ],
       ),
     );
@@ -279,7 +334,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Text(title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
-            ...items.map((e) => _invoiceTile(e.data())),
+            ...items.map((e) => _invoiceTile(e)),
             const Divider(),
           ];
         }
