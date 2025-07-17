@@ -391,6 +391,54 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
 
+        if (widget.role == 'customer' && status == 'completed') {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Close Request'),
+                        content: const Text('Mark this service request as closed?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Confirm'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmed == true) {
+                    await FirebaseFirestore.instance
+                        .collection('invoices')
+                        .doc(widget.invoiceId)
+                        .update({'status': 'closed'});
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Request closed. Thank you for using SkipTow.'),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+                child: const Text('Close Request'),
+              ),
+            ),
+          );
+        }
+
         return Scaffold(
           appBar: AppBar(title: const Text('Invoice Details')),
           body: Padding(

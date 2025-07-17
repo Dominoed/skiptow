@@ -11,6 +11,8 @@ class ServiceRequestHistoryPage extends StatelessWidget {
     switch (status) {
       case 'completed':
         return Colors.green;
+      case 'closed':
+        return Colors.blueGrey;
       case 'cancelled':
         return Colors.red;
       default:

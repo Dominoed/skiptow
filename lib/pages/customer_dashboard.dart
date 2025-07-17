@@ -142,7 +142,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _completedInvoiceSub = FirebaseFirestore.instance
         .collection('invoices')
         .where('customerId', isEqualTo: widget.userId)
-        .where('status', isEqualTo: 'completed')
+        .where('status', whereIn: ['completed', 'closed'])
         .snapshots()
         .listen((snapshot) {
       if (snapshot.docs.isNotEmpty) {

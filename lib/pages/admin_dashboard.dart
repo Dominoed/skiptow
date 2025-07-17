@@ -51,7 +51,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _invoiceSub = _invoiceStream.listen(_updateInvoiceCounts);
     _completedJobsSub = FirebaseFirestore.instance
         .collection('invoices')
-        .where('status', isEqualTo: 'completed')
+        .where('status', whereIn: ['completed', 'closed'])
         .snapshots()
         .listen((snapshot) {
       if (mounted) {
@@ -90,7 +90,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
     final completedSnap = await FirebaseFirestore.instance
         .collection('invoices')
-        .where('status', isEqualTo: 'completed')
+        .where('status', whereIn: ['completed', 'closed'])
         .get();
     _completedInvoices = completedSnap.size;
     _platformCompletedJobs = completedSnap.size;
@@ -112,7 +112,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final status = doc.data()['status'];
       if (status == 'active') {
         active++;
-      } else if (status == 'completed') {
+      } else if (status == 'completed' || status == 'closed') {
         completed++;
       } else if (status == 'cancelled') {
         cancelled++;
@@ -243,7 +243,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           final status = d.data()['status'];
           if (status == 'active') {
             active.add(d);
-          } else if (status == 'completed') {
+          } else if (status == 'completed' || status == 'closed') {
             completed.add(d);
           } else if (status == 'cancelled') {
             cancelled.add(d);

@@ -600,7 +600,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   stream: FirebaseFirestore.instance
                       .collection('invoices')
                       .where('mechanicId', isEqualTo: widget.userId)
-                      .where('status', isEqualTo: 'completed')
+                      .where('status', whereIn: ['completed', 'closed'])
                       .snapshots(),
                   builder: (context, snapshot) {
                     final completedCount = snapshot.data?.size ?? 0;

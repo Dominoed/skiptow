@@ -97,7 +97,11 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
             .collection('invoices')
             .where('mechanicId', isEqualTo: widget.mechanicId);
         if (_selectedFilter.isNotEmpty) {
-          query = query.where('status', isEqualTo: _selectedFilter);
+          if (_selectedFilter == 'completed') {
+            query = query.where('status', whereIn: ['completed', 'closed']);
+          } else {
+            query = query.where('status', isEqualTo: _selectedFilter);
+          }
         }
         if (_selectedFilter == 'active') {
           query = query.orderBy(tsField, descending: true);
