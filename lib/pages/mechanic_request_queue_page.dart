@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'invoice_detail_page.dart';
 import 'mechanic_dashboard.dart';
 
@@ -142,6 +143,14 @@ class _RequestTile extends StatelessWidget {
 
   const _RequestTile({required this.invoiceId, required this.data});
 
+  String _formatTimestamp(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate().toLocal();
+    final date = DateFormat('MM/dd/yyyy').format(dt);
+    final time = DateFormat('h:mm a').format(dt);
+    return '$date at $time';
+  }
+
   @override
   Widget build(BuildContext context) {
     final car = data['carInfo'] ?? {};
@@ -162,6 +171,7 @@ class _RequestTile extends StatelessWidget {
         final phone = data['customerPhone'] ??
             userData?['phone'] ?? userData?['phoneNumber'];
         final email = data['customerEmail'] ?? userData?['email'];
+        final Timestamp? ts = data['timestamp'];
 
         return Card(
           margin: const EdgeInsets.all(8),
@@ -172,6 +182,8 @@ class _RequestTile extends StatelessWidget {
               children: [
                 Text('Customer: $customerName'),
                 if (carText.isNotEmpty) Text('Car: $carText'),
+                if (ts != null)
+                  Text('Submitted: ${_formatTimestamp(ts)}'),
                 if (phone != null && phone.toString().isNotEmpty)
                   Text('Phone: $phone'),
                 if (email != null && email.toString().isNotEmpty)
