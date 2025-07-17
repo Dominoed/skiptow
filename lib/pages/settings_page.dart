@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'login_page.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,12 +15,13 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String? _role;
   String? _username;
-  final String _appVersion = '1.0.0';
+  String _appVersion = '1.0.0';
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadAppVersion();
   }
 
   Future<void> _loadUserInfo() async {
@@ -34,6 +36,19 @@ class _SettingsPageState extends State<SettingsPage> {
           _username = data?['username'];
         });
       }
+    }
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = info.version;
+        });
+      }
+    } catch (_) {
+      // Keep default version on failure
     }
   }
 

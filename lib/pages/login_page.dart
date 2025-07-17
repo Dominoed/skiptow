@@ -5,6 +5,7 @@ import 'package:skiptow/pages/dashboard_page.dart';
 import 'package:skiptow/pages/signup_page.dart';
 import 'package:skiptow/pages/terms_of_service_page.dart';
 import 'package:skiptow/pages/privacy_policy_page.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +19,26 @@ class _LoginPageState extends State<LoginPage> {
   String _status = '';
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String _appVersion = '1.0.0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = info.version;
+        });
+      }
+    } catch (_) {
+      // Keep default version on failure
+    }
+  }
 
   Future<void> _login() async {
     setState(() { _status = 'Signing in...'; });
@@ -91,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
           const Spacer(),
           Center(
             child: Text(
-              'App Version 1.0.0',
+              'App Version: $_appVersion',
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
