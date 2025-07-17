@@ -26,7 +26,35 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool chooseTechMode = false;
   String? selectedMechanicId;
   bool _locationPermissionGranted = false;
+  bool _locationBannerVisible = false;
   bool _hasAccountData = true;
+
+  void _showLocationBanner() {
+    if (_locationBannerVisible || !mounted) return;
+    _locationBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: const Text(
+            'Location access is required for real-time updates. Please enable location.'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              _hideLocationBanner();
+              await Geolocator.requestPermission();
+              _checkLocationPermissionOnLoad();
+            },
+            child: const Text('Grant'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _hideLocationBanner() {
+    if (!_locationBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _locationBannerVisible = false;
+  }
 
   bool get _hasAvailableMechanics {
     for (var data in mechanicsInRange.values) {
@@ -100,22 +128,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     final granted =
         permission == LocationPermission.always || permission == LocationPermission.whileInUse;
     if (!granted) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                const Text('Location permission is required for map features.'),
-            action: SnackBarAction(
-              label: 'Grant',
-              onPressed: () async {
-                await Geolocator.requestPermission();
-                _checkLocationPermissionOnLoad();
-              },
-            ),
-          ),
-        );
-      }
+      setState(() {
+        _locationPermissionGranted = false;
+      });
+      _showLocationBanner();
     } else {
+      _hideLocationBanner();
       setState(() {
         _locationPermissionGranted = true;
       });
@@ -175,21 +193,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              const Text('Location permission is required for map features.'),
-          action: SnackBarAction(
-            label: 'Grant',
-            onPressed: () async {
-              await Geolocator.requestPermission();
-            },
-          ),
-        ),
-      );
       setState(() {
         _locationPermissionGranted = false;
       });
+      _showLocationBanner();
       return false;
     }
 
@@ -197,6 +204,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     setState(() {
       _locationPermissionGranted = true;
     });
+    _hideLocationBanner();
     if (!wasGranted && requested && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location permission granted.')),
