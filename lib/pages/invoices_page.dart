@@ -239,6 +239,12 @@ class _InvoiceTile extends StatelessWidget {
       ),
       if (carText.isNotEmpty) Text(carText),
       if (description.toString().isNotEmpty) Text(description),
+      if (role == 'customer' && status == 'completed')
+        Text(
+          data['finalPrice'] != null
+              ? 'Total Paid: \$${(data['finalPrice'] as num).toStringAsFixed(2)}'
+              : 'Payment amount unavailable.',
+        ),
       // Customer contact details visible only to mechanics
       if (role == 'mechanic' &&
           (data['customerPhone'] ?? '').toString().isNotEmpty)
