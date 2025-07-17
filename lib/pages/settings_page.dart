@@ -14,7 +14,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String? _role;
   String? _username;
-  String _appVersion = '1.0.0+1';
+  final String _appVersion = '1.0.0';
 
   @override
   void initState() {
@@ -109,7 +109,15 @@ class _SettingsPageState extends State<SettingsPage> {
               child: const Text('Delete My Account'),
             ),
             const Spacer(),
-            Center(child: Text('App Version: $_appVersion')),
+            Center(
+              child: Text(
+                'App Version: $_appVersion',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey),
+              ),
+            ),
           ],
         ),
       ),
