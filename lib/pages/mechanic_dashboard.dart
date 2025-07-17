@@ -203,7 +203,20 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     if (!hasPermission) return;
 
     if (!isActive) {
-      currentPosition = await Geolocator.getCurrentPosition();
+      try {
+        currentPosition = await Geolocator.getCurrentPosition();
+      } catch (_) {
+        currentPosition = null;
+      }
+      if (currentPosition == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Cannot go active. Location unavailable.')),
+          );
+        }
+        return;
+      }
     }
 
     final data = {
