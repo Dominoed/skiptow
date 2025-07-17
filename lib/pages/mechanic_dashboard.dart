@@ -33,6 +33,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _locationPermissionGranted = false;
   bool _locationBannerVisible = false;
   bool _hasAccountData = true;
+  int completedJobs = 0;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -176,6 +177,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       setState(() {
         isActive = data['isActive'] ?? false;
         radiusMiles = (data['radiusMiles'] ?? 5).toDouble();
+        completedJobs = data['completedJobs'] ?? 0;
         if (data.containsKey('location')) {
           currentPosition = Position(
             latitude: data['location']['lat'],
@@ -596,18 +598,18 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     );
                   },
                 ),
-                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                   stream: FirebaseFirestore.instance
-                      .collection('invoices')
-                      .where('mechanicId', isEqualTo: widget.userId)
-                      .where('status', whereIn: ['completed', 'closed'])
+                      .collection('users')
+                      .doc(widget.userId)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    final completedCount = snapshot.data?.size ?? 0;
+                    final data = snapshot.data?.data();
+                    final completedCount = data?['completedJobs'] ?? completedJobs;
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
-                        'Completed Jobs: $completedCount',
+                        'Total Completed Jobs: $completedCount',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
