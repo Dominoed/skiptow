@@ -35,6 +35,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _noMechanicsSnackbarShown = false;
   bool _requestAcceptedBannerVisible = false;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _acceptedInvoiceSub;
+  Timer? _etaTimer;
+  String _etaText = '';
+  String? _acceptedMechanicId;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -90,8 +93,24 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         .listen((snapshot) {
       if (snapshot.docs.isNotEmpty) {
         _showRequestAcceptedBanner();
+        final data = snapshot.docs.first.data();
+        final mechId = data['mechanicId'] as String?;
+        if (mechId != null) {
+          _startEtaUpdates(mechId);
+        } else {
+          _etaTimer?.cancel();
+          setState(() {
+            _etaText = 'ETA unavailable';
+            _acceptedMechanicId = null;
+          });
+        }
       } else {
         _hideRequestAcceptedBanner();
+        _etaTimer?.cancel();
+        setState(() {
+          _etaText = '';
+          _acceptedMechanicId = null;
+        });
       }
     }, onError: (e) {
       logError('Accepted invoice listen error: $e');
@@ -593,6 +612,82 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Widget _buildEtaOverlay() {
+    if (_etaText.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        _etaText,
+        style: const TextStyle(color: Colors.white),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  void _startEtaUpdates(String mechanicId) {
+    _acceptedMechanicId = mechanicId;
+    _etaTimer?.cancel();
+    _updateEta();
+    _etaTimer = Timer.periodic(const Duration(seconds: 15), (_) => _updateEta());
+  }
+
+  Future<void> _updateEta() async {
+    if (_acceptedMechanicId == null || currentPosition == null) {
+      if (mounted) {
+        setState(() {
+          _etaText = 'ETA unavailable';
+        });
+      }
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_acceptedMechanicId)
+          .get();
+      final data = doc.data();
+      final loc = data?['location'];
+      if (loc == null || loc['lat'] == null || loc['lng'] == null) {
+        if (mounted) {
+          setState(() {
+            _etaText = 'ETA unavailable';
+          });
+        }
+        return;
+      }
+
+      final meters = Geolocator.distanceBetween(
+        currentPosition!.latitude,
+        currentPosition!.longitude,
+        (loc['lat'] as num).toDouble(),
+        (loc['lng'] as num).toDouble(),
+      );
+      final miles = meters / 1609.34;
+      final etaMinutes = (miles / 30) * 60;
+      final eta = etaMinutes.isFinite ? etaMinutes.ceil() : null;
+
+      if (mounted) {
+        setState(() {
+          _etaText = eta != null
+              ? 'Estimated arrival: ${eta.toString()} minutes'
+              : 'ETA unavailable';
+        });
+      }
+    } catch (e) {
+      logError('ETA update error: $e');
+      if (mounted) {
+        setState(() {
+          _etaText = 'ETA unavailable';
+        });
+      }
+    }
+  }
+
   void _handleAnyTech() {
     final activeMechanics = <Map<String, dynamic>>[];
     mechanicsInRange.forEach((id, data) {
@@ -766,6 +861,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   child: _buildMechanicCountOverlay(),
                 ),
                 Positioned(
+                  top: 100,
+                  left: 10,
+                  right: 10,
+                  child: _buildEtaOverlay(),
+                ),
+                Positioned(
                   bottom: 16,
                   left: 16,
                   child: FloatingActionButton(
@@ -859,6 +960,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   @override
   void dispose() {
     _acceptedInvoiceSub?.cancel();
+    _etaTimer?.cancel();
     mapController?.dispose();
     super.dispose();
   }
