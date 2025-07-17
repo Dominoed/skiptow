@@ -47,7 +47,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           .doc(data['mechanicId'])
           .get();
       final mechData = mechDoc.data();
-      data['mechanicIsActive'] = mechData?['isActive'] ?? false;
+      // Preserve null if mechanic status isn't available so UI can show
+      // "Unknown" rather than assuming inactive.
+      data['mechanicIsActive'] = mechData?['isActive'];
 
       final mechLocation = mechData?['location'];
       final invoiceLocation = data['location'];
@@ -142,17 +144,23 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           } else {
             children.add(const Text('Distance unavailable.'));
           }
-        }
 
-        final bool? mechActive = data['mechanicIsActive'] as bool?;
-        if (mechActive != null) {
+          // Show mechanic availability status to customers
+          final bool? mechActive = data['mechanicIsActive'] as bool?;
+          String statusText = 'Mechanic Status: Unknown';
+          Color? statusColor;
+          if (mechActive != null) {
+            statusText =
+                'Mechanic Status: ${mechActive ? 'Active' : 'Inactive'}';
+            statusColor = mechActive ? Colors.green : Colors.red;
+          }
           children.add(
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                mechActive ? 'Active' : 'Inactive',
+                statusText,
                 style: TextStyle(
-                  color: mechActive ? Colors.green : Colors.red,
+                  color: statusColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
