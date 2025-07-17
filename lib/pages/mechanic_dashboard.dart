@@ -263,6 +263,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   Future<void> _onTogglePressed() async {
     if (!isActive) {
+      if (!_locationPermissionGranted || currentPosition == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Enable location access to go active.')),
+          );
+        }
+        return;
+      }
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) {
