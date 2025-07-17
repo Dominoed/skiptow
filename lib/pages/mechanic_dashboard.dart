@@ -305,7 +305,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     invoiceSubscription?.cancel();
     invoiceSubscription = FirebaseFirestore.instance
         .collection('invoices')
-        .where('mechanicId', whereIn: [widget.userId, 'any'])
+        // Monitor only invoices assigned to this mechanic
+        .where('mechanicId', isEqualTo: widget.userId)
         .where('status', isEqualTo: 'active')
         .snapshots()
         .listen((snapshot) {

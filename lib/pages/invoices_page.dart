@@ -76,12 +76,13 @@ class _InvoicesPageState extends State<InvoicesPage> {
           );
         }
 
-        Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-            .collection('invoices');
+        Query<Map<String, dynamic>> query =
+            FirebaseFirestore.instance.collection('invoices');
         if (role == 'customer') {
           query = query.where('customerId', isEqualTo: widget.userId);
         } else {
-          query = query.where('mechanicId', whereIn: [widget.userId, 'any']);
+          // Mechanics only view invoices assigned to them
+          query = query.where('mechanicId', isEqualTo: widget.userId);
         }
         if (_selectedFilter == 'active' ||
             _selectedFilter == 'completed' ||
