@@ -13,22 +13,25 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String? _role;
+  String? _username;
   final String _appVersion = '1.0.0';
 
   @override
   void initState() {
     super.initState();
-    _loadRole();
+    _loadUserInfo();
   }
 
-  Future<void> _loadRole() async {
+  Future<void> _loadUserInfo() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final doc =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (mounted) {
         setState(() {
-          _role = doc.data()?['role'];
+          final data = doc.data();
+          _role = data?['role'];
+          _username = data?['username'];
         });
       }
     }
@@ -96,6 +99,7 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Email: ${user?.email ?? 'N/A'}'),
+            Text('Username: ${_username ?? 'Loading...'}'),
             Text('Role: ${_role ?? 'Loading...'}'),
             Text('User ID: ${user?.uid ?? 'N/A'}'),
             const SizedBox(height: 20),
