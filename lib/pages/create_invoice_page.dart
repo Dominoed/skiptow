@@ -88,6 +88,12 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       isSubmitting = true;
     });
 
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     try {
       final position = await Geolocator.getCurrentPosition();
       final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
@@ -120,14 +126,15 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       phoneController.clear();
 
       if (mounted) {
+        Navigator.of(context).pop(); // hide loading
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invoice submitted')),
         );
+        Navigator.pop(context);
       }
-
-      if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        Navigator.of(context).pop(); // hide loading
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('An error occurred. Please try again.')),
