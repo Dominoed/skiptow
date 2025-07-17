@@ -150,6 +150,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
             Text('Problem: ${data['description']}'),
+          if ((data['notes'] ?? '').toString().isNotEmpty)
+            Text('Customer Notes:\n${data['notes']}')
+          else
+            const Text('No additional notes.'),
           if (widget.role == 'customer')
             Text(
               finalPrice != null
