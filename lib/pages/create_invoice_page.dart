@@ -129,9 +129,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Submission failed')),
+          const SnackBar(
+              content: Text('An error occurred. Please try again.')),
         );
       }
+      debugPrint('$e');
     } finally {
       if (mounted) {
         setState(() {
