@@ -37,16 +37,21 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         customerData?['phone'] ?? customerData?['phoneNumber'];
     data['customerEmail'] = customerData?['email'];
 
-    // Fetch mechanic contact info for non-customer views
-    if (widget.role != 'customer') {
+    // Fetch mechanic info
+    if (data['mechanicId'] != 'any') {
       final mechDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(data['mechanicId'])
           .get();
       final mechData = mechDoc.data();
-      data['mechanicPhone'] =
-          mechData?['phone'] ?? mechData?['phoneNumber'];
-      data['mechanicEmail'] = mechData?['email'];
+      data['mechanicIsActive'] = mechData?['isActive'] ?? false;
+
+      // Contact details only for non-customer views
+      if (widget.role != 'customer') {
+        data['mechanicPhone'] =
+            mechData?['phone'] ?? mechData?['phoneNumber'];
+        data['mechanicEmail'] = mechData?['email'];
+      }
     }
     return data;
   }
@@ -89,6 +94,25 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
         final children = <Widget>[
           Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
+        ];
+
+        final bool? mechActive = data['mechanicIsActive'] as bool?;
+        if (mechActive != null) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                mechActive ? 'Active' : 'Inactive',
+                style: TextStyle(
+                  color: mechActive ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }
+
+        children.addAll([
           Text('Customer: ${data['customerUsername'] ?? 'Unknown'}'),
           if (carText.isNotEmpty) Text('Car: $carText'),
           if ((data['description'] ?? '').toString().isNotEmpty)
