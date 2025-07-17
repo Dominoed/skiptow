@@ -48,6 +48,23 @@ class _MessagesPageState extends State<MessagesPage> {
     setState(() {
       _conversationId = convId;
     });
+
+    await _markMessagesAsRead();
+  }
+
+  Future<void> _markMessagesAsRead() async {
+    if (_conversationId == null) return;
+    final query = await FirebaseFirestore.instance
+        .collection('messages')
+        .doc(_conversationId)
+        .collection('threads')
+        .where('recipientId', isEqualTo: widget.currentUserId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    for (final doc in query.docs) {
+      await doc.reference.update({'isRead': true});
+    }
   }
 
   Future<void> _sendMessage() async {
