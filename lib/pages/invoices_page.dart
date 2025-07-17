@@ -87,7 +87,11 @@ class _InvoicesPageState extends State<InvoicesPage> {
         if (_selectedFilter == 'active' ||
             _selectedFilter == 'completed' ||
             _selectedFilter == 'cancelled') {
-          query = query.where('status', isEqualTo: _selectedFilter);
+          if (_selectedFilter == 'completed') {
+            query = query.where('status', whereIn: ['completed', 'closed']);
+          } else {
+            query = query.where('status', isEqualTo: _selectedFilter);
+          }
         }
         query = query.orderBy('timestamp', descending: true);
 
@@ -178,6 +182,8 @@ class _InvoiceTile extends StatelessWidget {
     switch (status) {
       case 'completed':
         return Colors.green;
+      case 'closed':
+        return Colors.blueGrey;
       case 'cancelled':
         return Colors.red;
       default:

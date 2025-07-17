@@ -65,16 +65,22 @@ class NotificationsPage extends StatelessWidget {
                                     ? "New request received from ${data['customerId']}"
                                     : status == 'completed'
                                         ? 'Request marked as completed.'
-                                        : "Status updated: $status";
+                                        : status == 'closed'
+                                            ? 'Request closed.'
+                                            : "Status updated: $status";
                                 final unread = !readIds.contains(doc.id);
                                 return ListTile(
                                   leading: Icon(
                                     status == 'completed'
                                         ? Icons.check_circle
-                                        : Icons.notifications,
+                                        : status == 'closed'
+                                            ? Icons.archive
+                                            : Icons.notifications,
                                     color: status == 'completed'
                                         ? Colors.green
-                                        : Colors.blue,
+                                        : status == 'closed'
+                                            ? Colors.blueGrey
+                                            : Colors.blue,
                                   ),
                                   title: Text(message),
                                   tileColor:
