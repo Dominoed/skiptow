@@ -237,18 +237,45 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                     );
 
                     if (price != null) {
-                      await FirebaseFirestore.instance
-                          .collection('invoices')
-                          .doc(widget.invoiceId)
-                          .update({'status': 'completed', 'finalPrice': price});
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Confirm Final Price'),
+                            content: Text(
+                              'Confirm final price of \$${price.toStringAsFixed(2)}? This cannot be changed later.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('Confirm'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Invoice marked as completed.'),
-                          ),
-                        );
-                        Navigator.pop(context);
+                      if (confirmed == true) {
+                        await FirebaseFirestore.instance
+                            .collection('invoices')
+                            .doc(widget.invoiceId)
+                            .update({
+                          'status': 'completed',
+                          'finalPrice': price,
+                        });
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Invoice marked as completed.'),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        }
                       }
                     }
                   },
