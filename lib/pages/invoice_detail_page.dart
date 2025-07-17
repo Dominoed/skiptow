@@ -117,6 +117,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final location = data['location'];
         final status = data['status'] ?? 'active';
         final finalPrice = data['finalPrice'];
+        final paymentStatus = data['paymentStatus'] ?? 'pending';
 
         final children = <Widget>[];
         if (widget.role == 'mechanic') {
@@ -186,6 +187,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   ? 'Final Total: \$${finalPrice.toStringAsFixed(2)}'
                   : 'Final Total: Pending',
             ),
+          if (widget.role == 'customer')
+            Text('Payment Status: $paymentStatus'),
           if (widget.role == 'customer')
             (data['postJobNotes'] ?? '').toString().isNotEmpty
                 ? Text('Mechanic Notes:\n${data['postJobNotes']}')
@@ -452,7 +455,11 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('invoices')
+                      .doc(widget.invoiceId)
+                      .update({'paymentStatus': 'paid'});
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Payment system not yet implemented.'),

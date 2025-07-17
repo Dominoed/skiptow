@@ -208,6 +208,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         'createdAt': FieldValue.serverTimestamp(),
         'timestamp': DateTime.now(),
         'status': 'active',
+        'paymentStatus': 'pending',
       });
 
       // Save the vehicle to the user's profile for future reference
