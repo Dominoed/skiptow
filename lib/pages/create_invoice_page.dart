@@ -28,6 +28,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   final TextEditingController carModelController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
 
   bool isSubmitting = false;
   bool hasActiveRequest = false;
@@ -171,6 +172,8 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           'model': carModelController.text,
         },
         'description': descriptionController.text,
+        if (notesController.text.trim().isNotEmpty)
+          'notes': notesController.text.trim(),
         'customerPhone': phoneController.text.trim(),
         'customerEmail': userEmail,
         'timestamp': DateTime.now(),
@@ -182,6 +185,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       carModelController.clear();
       descriptionController.clear();
       phoneController.clear();
+      notesController.clear();
 
       if (mounted) {
         Navigator.of(context).pop(); // hide loading
@@ -216,6 +220,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
     carModelController.dispose();
     descriptionController.dispose();
     phoneController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -257,6 +262,12 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             TextField(
               controller: descriptionController,
               decoration: const InputDecoration(labelText: 'Problem Description'),
+              maxLines: 4,
+              onChanged: (_) => setState(() {}),
+            ),
+            TextField(
+              controller: notesController,
+              decoration: const InputDecoration(labelText: 'Additional Notes (optional)'),
               maxLines: 4,
               onChanged: (_) => setState(() {}),
             ),
