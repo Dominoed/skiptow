@@ -26,6 +26,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _closedInvoices = 0;
   int _flaggedInvoices = 0;
   int _totalActiveUsers = 0;
+  int _paidInvoices = 0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
@@ -109,6 +110,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .get();
     _closedInvoices = closedSnap.size;
 
+    final paidSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('paymentStatus', isEqualTo: 'paid')
+        .get();
+    _paidInvoices = paidSnap.size;
+
     final flaggedSnap = await FirebaseFirestore.instance
         .collection('invoices')
         .where('flagged', isEqualTo: true)
@@ -124,9 +131,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int cancelled = 0;
     int closed = 0;
     int flagged = 0;
+    int paid = 0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'];
+      final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
       if (status == 'active') {
         active++;
       } else if (status == 'completed') {
@@ -138,6 +147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         cancelled++;
       }
       if (data['flagged'] == true) flagged++;
+      if (paymentStatus == 'paid') paid++;
     }
     if (!mounted) {
       _activeInvoices = active;
@@ -145,6 +155,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
+      _paidInvoices = paid;
       return;
     }
     setState(() {
@@ -153,6 +164,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _cancelledInvoices = cancelled;
       _closedInvoices = closed;
       _flaggedInvoices = flagged;
+      _paidInvoices = paid;
     });
   }
 
@@ -222,6 +234,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Total Active Users: $_totalActiveUsers'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
+        Text('Total Paid Requests: $_paidInvoices'),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Flagged Invoices: $_flaggedInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
