@@ -34,7 +34,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
   bool _requestAcceptedBannerVisible = false;
+  bool _completedBannerVisible = false;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _acceptedInvoiceSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedInvoiceSub;
   Timer? _etaTimer;
   String _etaText = '';
   String? _acceptedMechanicId;
@@ -117,6 +119,42 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     });
   }
 
+  void _showCompletedBanner() {
+    if (_completedBannerVisible || !mounted) return;
+    _completedBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      const MaterialBanner(
+        content: Text('✅ Work completed. Please verify payment and service outcome.'),
+        backgroundColor: Colors.green,
+        actions: [SizedBox.shrink()],
+      ),
+    );
+  }
+
+  void _hideCompletedBanner() {
+    if (!_completedBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _completedBannerVisible = false;
+  }
+
+  void _listenForCompletedInvoices() {
+    _completedInvoiceSub?.cancel();
+    _completedInvoiceSub = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', isEqualTo: 'completed')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        _showCompletedBanner();
+      } else {
+        _hideCompletedBanner();
+      }
+    }, onError: (e) {
+      logError('Completed invoice listen error: $e');
+    });
+  }
+
   bool get _hasAvailableMechanics {
     for (var data in mechanicsInRange.values) {
       if (data['withinActive'] == true) return true;
@@ -129,6 +167,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     super.initState();
     _verifyAccountData();
     _listenForAcceptedInvoices();
+    _listenForCompletedInvoices();
   }
 
   Future<void> _verifyAccountData() async {
@@ -992,6 +1031,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   @override
   void dispose() {
     _acceptedInvoiceSub?.cancel();
+    _completedInvoiceSub?.cancel();
     _etaTimer?.cancel();
     mapController?.dispose();
     super.dispose();
