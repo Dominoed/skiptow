@@ -21,8 +21,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _activeInvoices = 0;
   int _completedInvoices = 0;
   int _cancelledInvoices = 0;
+  int _platformCompletedJobs = 0;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
 
@@ -44,6 +46,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .orderBy('timestamp', descending: true)
         .snapshots();
     _invoiceSub = _invoiceStream.listen(_updateInvoiceCounts);
+    _completedJobsSub = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('status', isEqualTo: 'completed')
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _platformCompletedJobs = snapshot.size;
+        });
+      } else {
+        _platformCompletedJobs = snapshot.size;
+      }
+    });
     _loadStats();
     _loadAppVersion();
   }
@@ -66,6 +81,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('status', isEqualTo: 'completed')
         .get();
     _completedInvoices = completedSnap.size;
+    _platformCompletedJobs = completedSnap.size;
 
     final cancelledSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -148,6 +164,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Cancelled Invoices: $_cancelledInvoices'),
+        Text('Platform Completed Jobs: $_platformCompletedJobs'),
       ],
     );
   }
@@ -271,6 +288,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void dispose() {
     _invoiceSub?.cancel();
+    _completedJobsSub?.cancel();
     super.dispose();
   }
 
