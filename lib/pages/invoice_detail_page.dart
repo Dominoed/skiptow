@@ -274,6 +274,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           Text('Status: $status'),
           if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
+          if (widget.role == 'admin' && data['platformFee'] != null)
+            Text(
+              "Platform Fee: \$${(data['platformFee'] as num).toStringAsFixed(2)}",
+            ),
           if (widget.role == 'mechanic')
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
@@ -453,6 +457,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                       );
 
                       if (confirmed == true) {
+                        final double fee =
+                            double.parse((price * 0.15).toStringAsFixed(2));
                         await FirebaseFirestore.instance
                             .collection('invoices')
                             .doc(widget.invoiceId)
@@ -460,6 +466,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                               'status': 'completed',
                               'finalPrice': price,
                               'postJobNotes': notes,
+                              'platformFee': fee,
                             });
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid != null) {
