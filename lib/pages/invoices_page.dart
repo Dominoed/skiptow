@@ -264,14 +264,115 @@ class _InvoiceTile extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('invoices')
-                  .doc(invoiceId)
-                  .update({'status': 'completed'});
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(currentUserId)
-                  .update({'completedJobs': FieldValue.increment(1)});
+              final priceController = TextEditingController();
+              final notesController = TextEditingController();
+              final result = await showDialog<Map<String, dynamic>?>(
+                context: context,
+                builder: (context) {
+                  String? errorText;
+                  return StatefulBuilder(
+                    builder: (context, setState) {
+                      return AlertDialog(
+                        title: const Text('Mark as Completed'),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: priceController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(decimal: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Enter final total price (in USD):',
+                                ),
+                              ),
+                              TextField(
+                                controller: notesController,
+                                minLines: 3,
+                                maxLines: 5,
+                                decoration: const InputDecoration(
+                                  labelText: 'Post-Job Notes (required)',
+                                ),
+                              ),
+                              if (errorText != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    errorText!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              final price = double.tryParse(priceController.text);
+                              final notes = notesController.text.trim();
+                              if (price == null || notes.isEmpty) {
+                                setState(() {
+                                  errorText = 'Please enter a valid price and notes.';
+                                });
+                              } else {
+                                Navigator.of(context).pop({'price': price, 'notes': notes});
+                              }
+                            },
+                            child: const Text('Submit'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+
+              if (result != null) {
+                final double price = result['price'] as double;
+                final String notes = result['notes'] as String;
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Confirm Final Price'),
+                      content: Text(
+                        'Confirm final price of \$${price.toStringAsFixed(2)}? This cannot be changed later.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Confirm'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirmed == true) {
+                  final double fee = double.parse((price * 0.15).toStringAsFixed(2));
+                  await FirebaseFirestore.instance
+                      .collection('invoices')
+                      .doc(invoiceId)
+                      .update({
+                    'status': 'completed',
+                    'finalPrice': price,
+                    'postJobNotes': notes,
+                    'platformFee': fee,
+                  });
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(currentUserId)
+                      .update({'completedJobs': FieldValue.increment(1)});
+                }
+              }
             },
             child: const Text('Mark Completed'),
           ),
