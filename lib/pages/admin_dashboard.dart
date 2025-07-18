@@ -27,6 +27,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _closedInvoices = 0;
   int _flaggedInvoices = 0;
   int _overdueInvoices = 0;
+  int _blockedMechanics = 0;
+  int _flaggedMechanics = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
   int _newMechanics = 0;
@@ -151,6 +153,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       nameMap[d.id] = username;
     }
     _usernames = nameMap;
+    _blockedMechanics = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'mechanic' && d.data()['blocked'] == true)
+        .length;
+    _flaggedMechanics = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'mechanic' && d.data()['flagged'] == true)
+        .length;
 
     final activeSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -400,6 +410,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int count = 0;
     int mechCount = 0;
     int newCount = 0;
+    int blockedCount = 0;
+    int flaggedCount = 0;
     final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -411,6 +423,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           count++;
           mechCount++;
         }
+        if (data['blocked'] == true) blockedCount++;
+        if (data['flagged'] == true) flaggedCount++;
       } else if (role == 'customer') {
         count++;
         final Timestamp? ts = data['createdAt'];
@@ -428,6 +442,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _activeMechanics = mechCount;
       _usernames = nameMap;
       _newCustomers = newCount;
+      _blockedMechanics = blockedCount;
+      _flaggedMechanics = flaggedCount;
       return;
     }
     setState(() {
@@ -435,6 +451,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _activeMechanics = mechCount;
       _usernames = nameMap;
       _newCustomers = newCount;
+      _blockedMechanics = blockedCount;
+      _flaggedMechanics = flaggedCount;
     });
   }
 
@@ -545,6 +563,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       children: [
         Text('Total Users: $_totalUsers'),
         Text('Active Mechanics Right Now: $_activeMechanics'),
+        Text('Blocked Mechanics: $_blockedMechanics'),
+        Text('Flagged Mechanics: $_flaggedMechanics'),
         Text('Total Active Users: $_totalActiveUsers'),
         Text('New Customers This Month: $_newCustomers'),
         Text('New Mechanics This Month: $_newMechanics'),
