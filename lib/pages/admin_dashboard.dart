@@ -32,6 +32,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _blockedMechanics = 0;
   int _flaggedMechanics = 0;
   int _flaggedCustomers = 0;
+  int _flaggedUsers = 0;
   int _blockedUsers = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
@@ -184,6 +185,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where((d) =>
             d.data()['role'] == 'customer' && d.data()['flagged'] == true)
         .length;
+    _flaggedUsers = _flaggedMechanics + _flaggedCustomers;
 
     final activeSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -469,6 +471,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
     }
     final totalBlocked = blockedCount + blockedCustomerCount;
+    final totalFlagged = flaggedCount + flaggedCustomerCount;
     if (!mounted) {
       _totalActiveUsers = count;
       _activeMechanics = mechCount;
@@ -478,6 +481,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
+      _flaggedUsers = totalFlagged;
       _totalCustomers = customerCount;
       _totalMechanics = mechanicCount;
       return;
@@ -491,6 +495,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
+      _flaggedUsers = totalFlagged;
       _totalCustomers = customerCount;
       _totalMechanics = mechanicCount;
     });
@@ -605,6 +610,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Mechanics Right Now: $_activeMechanics'),
         Text('Blocked Mechanics: $_blockedMechanics'),
         Text('Blocked Accounts: $_blockedUsers'),
+        Text('Flagged Accounts: $_flaggedUsers'),
         Text('Flagged Mechanics: $_flaggedMechanics'),
         Text('Flagged Customers: $_flaggedCustomers'),
         Text('Total Active Users: $_totalActiveUsers'),
