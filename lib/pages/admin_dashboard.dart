@@ -476,6 +476,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _unflagMechanic(String mechId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(mechId)
+        .update({'flagged': false});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Flag removed')),
+      );
+    }
+  }
+
   Future<void> _flagCustomer(String customerId) async {
     await FirebaseFirestore.instance
         .collection('users')
@@ -904,6 +917,50 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  Widget _buildFlaggedMechanics() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'mechanic')
+          .where('flagged', isEqualTo: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 16, bottom: 8),
+              child: Text('Flagged Mechanics'),
+            ),
+            ...docs.map((d) {
+              final data = d.data();
+              return ListTile(
+                title: Text(data['username'] ?? d.id),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(d.id),
+                    if (data['createdAt'] != null)
+                      Text('Registered: ${_formatDate(data['createdAt'])}'),
+                  ],
+                ),
+                trailing: TextButton(
+                  onPressed: () => _unflagMechanic(d.id),
+                  child: const Text('Remove Flag'),
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildCustomers() {
     return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
@@ -1093,6 +1150,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   _buildInvoices(),
                   _buildActiveMechanics(),
                   _buildBlockedMechanics(),
+                  _buildFlaggedMechanics(),
                   _buildCustomers(),
                   _buildFlaggedCustomers(),
                   const SizedBox(height: 16),
