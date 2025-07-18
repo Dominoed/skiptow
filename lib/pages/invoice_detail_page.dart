@@ -143,8 +143,29 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final status = data['status'] ?? 'active';
         final finalPrice = data['finalPrice'];
         final paymentStatus = data['paymentStatus'] ?? 'pending';
+        final Timestamp? createdAtTs = data['createdAt'];
 
         final children = <Widget>[];
+        final bool isOverdue =
+            widget.role == 'customer' &&
+                paymentStatus == 'pending' &&
+                createdAtTs != null &&
+                DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+        if (isOverdue) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '⚠️ Your payment is overdue. Please complete payment immediately.',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          );
+        }
         final invoiceNum = data['invoiceNumber'] ?? widget.invoiceId;
         children.add(
           Padding(
