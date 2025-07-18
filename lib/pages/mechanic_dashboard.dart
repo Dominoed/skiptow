@@ -598,6 +598,45 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   stream: FirebaseFirestore.instance
                       .collection('invoices')
                       .where('mechanicId', isEqualTo: widget.userId)
+                      .where('paymentStatus', isEqualTo: 'paid')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final docs = snapshot.data?.docs ?? [];
+                    final jobs = docs.length;
+                    double earnings = 0.0;
+                    for (final doc in docs) {
+                      earnings += (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Total Jobs Completed: $jobs',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Total Earnings (Paid Invoices): \$${earnings.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('invoices')
+                      .where('mechanicId', isEqualTo: widget.userId)
                       .where('status', isEqualTo: 'active')
                       .snapshots(),
                   builder: (context, snapshot) {
