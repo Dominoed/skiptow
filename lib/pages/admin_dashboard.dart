@@ -489,6 +489,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _unflagCustomer(String customerId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(customerId)
+        .update({'flagged': false});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Flag removed')),
+      );
+    }
+  }
+
   Future<void> _loadAppVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -938,6 +951,50 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  Widget _buildFlaggedCustomers() {
+    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'customer')
+          .where('flagged', isEqualTo: true)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 16, bottom: 8),
+              child: Text('Flagged Customers'),
+            ),
+            ...docs.map((d) {
+              final data = d.data();
+              return ListTile(
+                title: Text(data['username'] ?? d.id),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(d.id),
+                    if (data['createdAt'] != null)
+                      Text('Registered: ${_formatDate(data['createdAt'])}'),
+                  ],
+                ),
+                trailing: TextButton(
+                  onPressed: () => _unflagCustomer(d.id),
+                  child: const Text('Remove Flag'),
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _invoiceSub?.cancel();
@@ -1037,6 +1094,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   _buildActiveMechanics(),
                   _buildBlockedMechanics(),
                   _buildCustomers(),
+                  _buildFlaggedCustomers(),
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
