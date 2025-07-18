@@ -829,6 +829,42 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  Widget _buildBlockedMechanics() {
+    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'mechanic')
+          .where('blocked', isEqualTo: true)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 16, bottom: 8),
+              child: Text('Blocked Mechanics'),
+            ),
+            ...docs.map((d) {
+              return ListTile(
+                title: Text(d.data()['username'] ?? d.id),
+                subtitle: Text(d.id),
+                trailing: TextButton(
+                  onPressed: null, // TODO: implement unblocking
+                  child: const Text('Unblock'),
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _invoiceSub?.cancel();
@@ -926,6 +962,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   _buildInvoices(),
                   _buildActiveMechanics(),
+                  _buildBlockedMechanics(),
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
