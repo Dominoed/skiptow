@@ -601,8 +601,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final Timestamp? createdAtTs = data['createdAt'];
     final double? finalPrice = (data['finalPrice'] as num?)?.toDouble();
     double? platformFee = (data['platformFee'] as num?)?.toDouble();
+    bool estimatedFee = false;
     if (platformFee == null && finalPrice != null) {
       platformFee = double.parse((finalPrice * 0.15).toStringAsFixed(2));
+      estimatedFee = true;
     }
     final bool overdue = paymentStatus == 'pending' &&
         createdAtTs != null &&
@@ -653,7 +655,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               Text('Closed: ${_formatDate(data['closedAt'])}'),
             Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
             if (platformFee != null)
-            Text('Platform Fee: \$${platformFee.toStringAsFixed(2)}'),
+            Text(
+              'Platform Fee for This Invoice: \$${platformFee.toStringAsFixed(2)}' +
+                  (estimatedFee ? ' (est.)' : ''),
+            ),
             if ((data['customerReview'] ?? '').toString().isNotEmpty)
               Text('Customer Review: ${data['customerReview']}')
             else
