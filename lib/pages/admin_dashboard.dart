@@ -37,6 +37,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _overdueBalance = 0.0;
   double _monthlyCollected = 0.0;
   double _monthlyServiceTotal = 0.0;
+  double _monthlyPayoutEstimate = 0.0;
   int _monthlyInvoices = 0;
 
   // Cache of userId to username for quick lookups
@@ -214,6 +215,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
     _totalPaidAmount = total;
     _monthlyCollected = monthlyTotal;
+    _monthlyPayoutEstimate = monthlyTotal * 0.85;
     _averagePaidAmount =
         _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
 
@@ -267,6 +269,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int monthlyInvoices = 0;
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
+    double monthlyPayout = 0.0;
     final now = DateTime.now();
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -313,6 +316,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           final dt = closedTs.toDate();
           if (dt.year == now.year && dt.month == now.month) {
             monthlyTotal += price;
+            monthlyPayout += price;
           }
         }
       } else if (paymentStatus == 'pending') {
@@ -331,6 +335,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _totalPaidAmount = total;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
+      _monthlyPayoutEstimate = monthlyPayout * 0.85;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -348,6 +353,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _totalPaidAmount = total;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
+      _monthlyPayoutEstimate = monthlyPayout * 0.85;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -454,6 +460,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Payments Collected This Month: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyCollected)}',
+        ),
+        Text(
+          'Estimated Payout to Mechanics: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyPayoutEstimate)}',
         ),
         Text(
           'Total Service Value This Month: '
