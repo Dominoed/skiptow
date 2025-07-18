@@ -29,6 +29,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _overdueInvoices = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
+  int _newMechanics = 0;
   int _paidInvoices = 0;
   double _totalPaidAmount = 0.0;
   double _averagePaidAmount = 0.0;
@@ -45,6 +46,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _newMechanicsSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _paymentStatusFilter = 'all';
@@ -84,6 +86,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .collection('users')
         .snapshots()
         .listen(_updateActiveUsers);
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 1);
+    _newMechanicsSub = FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'mechanic')
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+        .where('createdAt', isLessThan: Timestamp.fromDate(endOfMonth))
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _newMechanics = snapshot.size;
+        });
+      } else {
+        _newMechanics = snapshot.size;
+      }
+    });
     _loadStats();
     _loadAppVersion();
   }
@@ -109,6 +129,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final dt = ts.toDate();
       return dt.year == now.year && dt.month == now.month;
     }).length;
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 1);
+    final newMechSnap = await FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'mechanic')
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+        .where('createdAt', isLessThan: Timestamp.fromDate(endOfMonth))
+        .get();
+    _newMechanics = newMechSnap.size;
     for (final d in usersSnapshot.docs) {
       final data = d.data();
       final username = (data['username'] ?? data['displayName'] ?? '').toString();
@@ -365,6 +394,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Mechanics: $_activeMechanics'),
         Text('Total Active Users: $_totalActiveUsers'),
         Text('New Customers This Month: $_newCustomers'),
+        Text('New Mechanics This Month: $_newMechanics'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Total Paid Requests: $_paidInvoices'),
@@ -657,6 +687,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _invoiceSub?.cancel();
     _completedJobsSub?.cancel();
     _usersSub?.cancel();
+    _newMechanicsSub?.cancel();
     super.dispose();
   }
 
