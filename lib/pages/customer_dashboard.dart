@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
+import 'customer_invoices_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -903,6 +904,23 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 ),
               );
             },
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CustomerInvoicesPage(
+                    userId: widget.userId,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.receipt, color: Colors.white),
+            label: const Text(
+              'My Invoices',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           _buildMessagesIcon(),
         ],
