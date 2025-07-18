@@ -41,6 +41,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _platformRevenueEstimate = 0.0;
   double _totalPlatformRevenue = 0.0;
   int _monthlyInvoices = 0;
+  double _monthlyPlatformFees = 0.0;
 
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
@@ -182,6 +183,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .get();
     _closedInvoices = closedSnap.size;
     double monthlyServiceTotal = 0.0;
+    double monthlyPlatformFees = 0.0;
     for (final doc in closedSnap.docs) {
       final data = doc.data();
       final Timestamp? closedTs = data['closedAt'];
@@ -190,11 +192,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (dt.year == now.year && dt.month == now.month) {
           monthlyServiceTotal +=
               (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+          monthlyPlatformFees +=
+              (data['platformFee'] as num?)?.toDouble() ?? 0.0;
         }
       }
     }
     _monthlyServiceTotal = monthlyServiceTotal;
     _platformRevenueEstimate = monthlyServiceTotal * 0.15;
+    _monthlyPlatformFees = monthlyPlatformFees;
 
     final paidSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -270,6 +275,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     double total = 0.0;
     double monthlyTotal = 0.0;
     double monthlyServiceTotal = 0.0;
+    double monthlyPlatformFees = 0.0;
     int monthlyInvoices = 0;
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
@@ -279,6 +285,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final data = doc.data();
       final status = data['status'];
       final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
+      final Timestamp? closedTs = data['closedAt'];
       if (status == 'active') {
         active++;
       } else if (status == 'completed') {
@@ -286,7 +293,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       } else if (status == 'closed') {
         completed++;
         closed++;
-        final Timestamp? closedTs = data['closedAt'];
         if (closedTs != null) {
           final dt = closedTs.toDate();
           if (dt.year == now.year && dt.month == now.month) {
@@ -298,6 +304,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         cancelled++;
       }
       if (data['flagged'] == true) flagged++;
+      if (closedTs != null) {
+        final dt = closedTs.toDate();
+        if (dt.year == now.year && dt.month == now.month) {
+          monthlyPlatformFees +=
+              (data['platformFee'] as num?)?.toDouble() ?? 0.0;
+        }
+      }
       final Timestamp? createdAtTs = data['createdAt'];
       if (createdAtTs != null) {
         final createdDt = createdAtTs.toDate();
@@ -346,6 +359,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
       _monthlyInvoices = monthlyInvoices;
+      _monthlyPlatformFees = monthlyPlatformFees;
       return;
     }
     setState(() {
@@ -366,6 +380,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
       _monthlyInvoices = monthlyInvoices;
+      _monthlyPlatformFees = monthlyPlatformFees;
     });
   }
 
@@ -468,6 +483,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Payments Collected This Month: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyCollected)}',
+        ),
+        Text(
+          'Platform Fees Collected This Month: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyPlatformFees)}',
         ),
         Text(
           'Estimated Payout to Mechanics: '
