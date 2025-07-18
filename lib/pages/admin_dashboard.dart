@@ -647,6 +647,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return dt.toString().split('.').first;
   }
 
+  String _formatMonthYear(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate();
+    return DateFormat('MMMM yyyy').format(dt);
+  }
+
   Color _paymentStatusColor(String status) {
     switch (status) {
       case 'paid':
@@ -899,8 +905,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Text('Active Mechanics'),
             ),
             ...filteredDocs.map((d) {
+              final data = d.data();
               return ListTile(
-                title: Text(d.data()['username'] ?? d.id),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'mechanic'})',
+                      ),
+                    ),
+                    if (data['createdAt'] != null)
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
                 subtitle: Text(d.id),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -952,8 +973,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Text('Blocked Mechanics'),
             ),
             ...filteredDocs.map((d) {
+              final data = d.data();
               return ListTile(
-                title: Text(d.data()['username'] ?? d.id),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'mechanic'})',
+                      ),
+                    ),
+                    if (data['createdAt'] != null)
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
                 subtitle: Text(d.id),
                 trailing: TextButton(
                   onPressed: () => _unblockMechanic(d.id),
@@ -997,15 +1033,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ...filteredDocs.map((d) {
               final data = d.data();
               return ListTile(
-                title: Text(data['username'] ?? d.id),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(d.id),
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'mechanic'})',
+                      ),
+                    ),
                     if (data['createdAt'] != null)
-                      Text('Registered: ${_formatDate(data['createdAt'])}'),
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                   ],
                 ),
+                subtitle: Text(d.id),
                 trailing: TextButton(
                   onPressed: () => _unflagMechanic(d.id),
                   child: const Text('Remove Flag'),
@@ -1048,7 +1091,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               final data = d.data();
               final flagged = data['flagged'] == true;
               return ListTile(
-                title: Text(data['username'] ?? d.id),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'customer'})',
+                      ),
+                    ),
+                    if (data['createdAt'] != null)
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
                 subtitle: Text(d.id),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1102,15 +1159,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ...filteredDocs.map((d) {
               final data = d.data();
               return ListTile(
-                title: Text(data['username'] ?? d.id),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(d.id),
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'customer'})',
+                      ),
+                    ),
                     if (data['createdAt'] != null)
-                      Text('Registered: ${_formatDate(data['createdAt'])}'),
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                   ],
                 ),
+                subtitle: Text(d.id),
                 trailing: TextButton(
                   onPressed: () => _unflagCustomer(d.id),
                   child: const Text('Remove Flag'),
