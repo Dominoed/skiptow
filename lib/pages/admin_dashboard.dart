@@ -316,6 +316,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _updateActiveUsers(
       QuerySnapshot<Map<String, dynamic>> snapshot) {
     int count = 0;
+    int mechCount = 0;
     int newCount = 0;
     final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
@@ -324,7 +325,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final username = (data['username'] ?? data['displayName'] ?? '').toString();
       nameMap[doc.id] = username;
       if (role == 'mechanic') {
-        if (data['isActive'] == true) count++;
+        if (data['isActive'] == true) {
+          count++;
+          mechCount++;
+        }
       } else if (role == 'customer') {
         count++;
         final Timestamp? ts = data['createdAt'];
@@ -339,12 +343,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
     if (!mounted) {
       _totalActiveUsers = count;
+      _activeMechanics = mechCount;
       _usernames = nameMap;
       _newCustomers = newCount;
       return;
     }
     setState(() {
       _totalActiveUsers = count;
+      _activeMechanics = mechCount;
       _usernames = nameMap;
       _newCustomers = newCount;
     });
@@ -391,7 +397,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Total Users: $_totalUsers'),
-        Text('Active Mechanics: $_activeMechanics'),
+        Text('Active Mechanics Right Now: $_activeMechanics'),
         Text('Total Active Users: $_totalActiveUsers'),
         Text('New Customers This Month: $_newCustomers'),
         Text('New Mechanics This Month: $_newMechanics'),
