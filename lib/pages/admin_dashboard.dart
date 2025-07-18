@@ -33,6 +33,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _averagePaidAmount = 0.0;
   double _unpaidOutstanding = 0.0;
   double _overdueBalance = 0.0;
+  double _monthlyCollected = 0.0;
 
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
@@ -136,11 +137,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .get();
     _paidInvoices = paidSnap.size;
     double total = 0.0;
+    double monthlyTotal = 0.0;
+    final now = DateTime.now();
     for (final doc in paidSnap.docs) {
-      final price = (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+      final data = doc.data();
+      final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       total += price;
+      final Timestamp? closedTs = data['closedAt'];
+      if (closedTs != null) {
+        final dt = closedTs.toDate();
+        if (dt.year == now.year && dt.month == now.month) {
+          monthlyTotal += price;
+        }
+      }
     }
     _totalPaidAmount = total;
+    _monthlyCollected = monthlyTotal;
     _averagePaidAmount =
         _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
 
@@ -189,8 +201,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int overdue = 0;
     int paid = 0;
     double total = 0.0;
+    double monthlyTotal = 0.0;
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
+    final now = DateTime.now();
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'];
@@ -215,7 +229,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
       if (paymentStatus == 'paid') {
         paid++;
-        total += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+        final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+        total += price;
+        final Timestamp? closedTs = data['closedAt'];
+        if (closedTs != null) {
+          final dt = closedTs.toDate();
+          if (dt.year == now.year && dt.month == now.month) {
+            monthlyTotal += price;
+          }
+        }
       } else if (paymentStatus == 'pending') {
         pendingTotal += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       }
@@ -230,6 +252,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _monthlyCollected = monthlyTotal;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -244,6 +267,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _monthlyCollected = monthlyTotal;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -325,6 +349,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Total Payments Collected: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_totalPaidAmount)}',
+        ),
+        Text(
+          'Payments Collected This Month: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyCollected)}',
         ),
         Text(
           'Average Payment Per Job: '
