@@ -380,11 +380,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Container(
       color: overdue ? Colors.red.shade50 : null,
       child: ListTile(
-        title: Text('Mechanic: ${data['mechanicId']}'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Mechanic: ${data['mechanicId']}'),
+            Text(
+              'Invoice #: ${data['invoiceNumber'] ?? doc.id}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Invoice #: ${data['invoiceNumber'] ?? doc.id}'),
             Text('Customer: ${data['customerId']}'),
             Text('Status: ${data['status']}'),
             Row(
