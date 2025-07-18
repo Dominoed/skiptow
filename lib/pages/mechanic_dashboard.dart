@@ -684,6 +684,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   builder: (context, snapshot) {
                     final data = snapshot.data?.data();
                     final completedCount = data?['completedJobs'] ?? completedJobs;
+                    final blocked = data?['blocked'] == true;
+                    if (blocked != _blocked) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          setState(() {
+                            _blocked = blocked;
+                          });
+                        }
+                      });
+                    }
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
