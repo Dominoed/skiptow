@@ -37,6 +37,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _overdueBalance = 0.0;
   double _monthlyCollected = 0.0;
   double _monthlyServiceTotal = 0.0;
+  int _monthlyInvoices = 0;
 
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
@@ -165,6 +166,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .get();
     _cancelledInvoices = cancelledSnap.size;
 
+    final monthlySnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+        .where('createdAt', isLessThan: Timestamp.fromDate(endOfMonth))
+        .get();
+    _monthlyInvoices = monthlySnap.size;
+
     final closedSnap = await FirebaseFirestore.instance
         .collection('invoices')
         .where('status', isEqualTo: 'closed')
@@ -256,6 +264,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     double total = 0.0;
     double monthlyTotal = 0.0;
     double monthlyServiceTotal = 0.0;
+    int monthlyInvoices = 0;
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
     final now = DateTime.now();
@@ -283,6 +292,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
       if (data['flagged'] == true) flagged++;
       final Timestamp? createdAtTs = data['createdAt'];
+      if (createdAtTs != null) {
+        final createdDt = createdAtTs.toDate();
+        if (createdDt.year == now.year && createdDt.month == now.month) {
+          monthlyInvoices++;
+        }
+      }
       if (paymentStatus == 'pending' &&
           createdAtTs != null &&
           DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
@@ -319,6 +334,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
+      _monthlyInvoices = monthlyInvoices;
       return;
     }
     setState(() {
@@ -335,6 +351,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
+      _monthlyInvoices = monthlyInvoices;
     });
   }
 
@@ -428,6 +445,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('New Mechanics This Month: $_newMechanics'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
+        Text('Total Requests This Month: $_monthlyInvoices'),
         Text('Total Paid Requests: $_paidInvoices'),
         Text(
           'Total Payments Collected: '
