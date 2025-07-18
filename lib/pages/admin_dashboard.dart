@@ -32,6 +32,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _totalPaidAmount = 0.0;
   double _averagePaidAmount = 0.0;
   double _unpaidOutstanding = 0.0;
+  double _overdueBalance = 0.0;
 
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
@@ -170,6 +171,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         )
         .get();
     _overdueInvoices = overdueSnap.size;
+    double overdueTotal = 0.0;
+    for (final doc in overdueSnap.docs) {
+      overdueTotal += (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+    }
+    _overdueBalance = overdueTotal;
     if (mounted) setState(() {});
   }
 
@@ -184,6 +190,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int paid = 0;
     double total = 0.0;
     double pendingTotal = 0.0;
+    double overdueTotal = 0.0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'];
@@ -204,6 +211,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           createdAtTs != null &&
           DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
         overdue++;
+        overdueTotal += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       }
       if (paymentStatus == 'paid') {
         paid++;
@@ -224,6 +232,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
+      _overdueBalance = overdueTotal;
       return;
     }
     setState(() {
@@ -237,6 +246,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _totalPaidAmount = total;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
+      _overdueBalance = overdueTotal;
     });
   }
 
@@ -326,6 +336,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
         Text('Cancelled Invoices: $_cancelledInvoices'),
         Text('Overdue Invoices: $_overdueInvoices'),
+        Text(
+          'Total Overdue Balance: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_overdueBalance)}',
+        ),
         Text('Flagged Invoices: $_flaggedInvoices'),
         Text('Platform Completed Jobs: $_platformCompletedJobs'),
         Text('Total Requests Closed: $_closedInvoices'),
