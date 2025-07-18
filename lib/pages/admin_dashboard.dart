@@ -29,6 +29,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _overdueInvoices = 0;
   int _blockedMechanics = 0;
   int _flaggedMechanics = 0;
+  int _flaggedCustomers = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
   int _newMechanics = 0;
@@ -160,6 +161,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _flaggedMechanics = usersSnapshot.docs
         .where((d) =>
             d.data()['role'] == 'mechanic' && d.data()['flagged'] == true)
+        .length;
+    _flaggedCustomers = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'customer' && d.data()['flagged'] == true)
         .length;
 
     final activeSnap = await FirebaseFirestore.instance
@@ -412,6 +417,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int newCount = 0;
     int blockedCount = 0;
     int flaggedCount = 0;
+    int flaggedCustomerCount = 0;
     final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -427,6 +433,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (data['flagged'] == true) flaggedCount++;
       } else if (role == 'customer') {
         count++;
+        if (data['flagged'] == true) flaggedCustomerCount++;
         final Timestamp? ts = data['createdAt'];
         if (ts != null) {
           final dt = ts.toDate();
@@ -444,6 +451,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
       _flaggedMechanics = flaggedCount;
+      _flaggedCustomers = flaggedCustomerCount;
       return;
     }
     setState(() {
@@ -453,6 +461,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
       _flaggedMechanics = flaggedCount;
+      _flaggedCustomers = flaggedCustomerCount;
     });
   }
 
@@ -565,6 +574,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Active Mechanics Right Now: $_activeMechanics'),
         Text('Blocked Mechanics: $_blockedMechanics'),
         Text('Flagged Mechanics: $_flaggedMechanics'),
+        Text('Flagged Customers: $_flaggedCustomers'),
         Text('Total Active Users: $_totalActiveUsers'),
         Text('New Customers This Month: $_newCustomers'),
         Text('New Mechanics This Month: $_newMechanics'),
