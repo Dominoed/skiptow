@@ -565,6 +565,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final flagged = data['flagged'] == true;
     final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
     final Timestamp? createdAtTs = data['createdAt'];
+    final double? finalPrice = (data['finalPrice'] as num?)?.toDouble();
+    double? platformFee = (data['platformFee'] as num?)?.toDouble();
+    if (platformFee == null && finalPrice != null) {
+      platformFee = double.parse((finalPrice * 0.15).toStringAsFixed(2));
+    }
     final bool overdue = paymentStatus == 'pending' &&
         createdAtTs != null &&
         DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
@@ -613,6 +618,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             if (data['closedAt'] != null)
               Text('Closed: ${_formatDate(data['closedAt'])}'),
             Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
+            if (platformFee != null)
+            Text('Platform Fee: \$${platformFee.toStringAsFixed(2)}'),
             if ((data['customerReview'] ?? '').toString().isNotEmpty)
               Text('Customer Review: ${data['customerReview']}')
             else
