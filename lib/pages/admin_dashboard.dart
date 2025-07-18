@@ -453,8 +453,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }
         final docs = snapshot.data?.docs ?? [];
         final filteredDocs = docs.where((d) {
-          final payment = (d.data()['paymentStatus'] ?? 'pending') as String;
-          return _paymentStatusFilter == 'all' || payment == _paymentStatusFilter;
+          final data = d.data();
+          final payment = (data['paymentStatus'] ?? 'pending') as String;
+          final Timestamp? createdAtTs = data['createdAt'];
+          final bool isOverdue = payment == 'pending' &&
+              createdAtTs != null &&
+              DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+          if (_paymentStatusFilter == 'all') return true;
+          if (_paymentStatusFilter == 'overdue') return isOverdue;
+          return payment == _paymentStatusFilter;
         }).toList();
         if (filteredDocs.isEmpty) {
           return const Text('No invoices');
@@ -612,6 +619,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           DropdownMenuItem(value: 'all', child: Text('All')),
                           DropdownMenuItem(value: 'paid', child: Text('Paid')),
                           DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                          DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
                         ],
                         onChanged: (value) {
                           if (value != null) {
