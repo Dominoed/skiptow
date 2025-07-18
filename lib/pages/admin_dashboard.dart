@@ -40,6 +40,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _monthlyPayoutEstimate = 0.0;
   double _platformRevenueEstimate = 0.0;
   double _totalPlatformRevenue = 0.0;
+  double _allTimePlatformFees = 0.0;
   int _monthlyInvoices = 0;
   double _monthlyPlatformFees = 0.0;
 
@@ -208,11 +209,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _paidInvoices = paidSnap.size;
     double total = 0.0;
     double monthlyTotal = 0.0;
-    final now = DateTime.now();
+    double allTimeFees = 0.0;
     for (final doc in paidSnap.docs) {
       final data = doc.data();
       final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
       total += price;
+      if (data['status'] == 'closed') {
+        allTimeFees += (data['platformFee'] as num?)?.toDouble() ?? 0.0;
+      }
       final Timestamp? closedTs = data['closedAt'];
       if (closedTs != null) {
         final dt = closedTs.toDate();
@@ -227,6 +231,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _monthlyPayoutEstimate = monthlyTotal * 0.85;
     _averagePaidAmount =
         _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
+    _allTimePlatformFees = allTimeFees;
 
     final pendingSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -280,6 +285,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
     double monthlyPayout = 0.0;
+    double allTimeFees = 0.0;
     final now = DateTime.now();
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -328,6 +334,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         paid++;
         final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
         total += price;
+        if (status == 'closed') {
+          allTimeFees += (data['platformFee'] as num?)?.toDouble() ?? 0.0;
+        }
         final Timestamp? closedTs = data['closedAt'];
         if (closedTs != null) {
           final dt = closedTs.toDate();
@@ -360,6 +369,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueBalance = overdueTotal;
       _monthlyInvoices = monthlyInvoices;
       _monthlyPlatformFees = monthlyPlatformFees;
+      _allTimePlatformFees = allTimeFees;
       return;
     }
     setState(() {
@@ -381,6 +391,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueBalance = overdueTotal;
       _monthlyInvoices = monthlyInvoices;
       _monthlyPlatformFees = monthlyPlatformFees;
+      _allTimePlatformFees = allTimeFees;
     });
   }
 
@@ -503,6 +514,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Total Platform Revenue (All-Time): '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_totalPlatformRevenue)}',
+        ),
+        Text(
+          'Total Platform Fees Collected (All-Time): '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_allTimePlatformFees)}',
         ),
         Text(
           'Average Payment Per Job: '
