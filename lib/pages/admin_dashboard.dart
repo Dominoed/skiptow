@@ -408,11 +408,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ],
             ),
             if (overdue)
-              const Text(
-                '⚠️ Overdue Payment',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Chip(
+                  label: const Text(
+                    'OVERDUE',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.red,
                 ),
               ),
             Text('Submitted: ${_formatDate(data['timestamp'])}'),
