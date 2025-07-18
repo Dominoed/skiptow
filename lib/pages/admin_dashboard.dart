@@ -39,6 +39,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _monthlyServiceTotal = 0.0;
   double _monthlyPayoutEstimate = 0.0;
   double _platformRevenueEstimate = 0.0;
+  double _totalPlatformRevenue = 0.0;
   int _monthlyInvoices = 0;
 
   // Cache of userId to username for quick lookups
@@ -216,6 +217,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
     }
     _totalPaidAmount = total;
+    _totalPlatformRevenue = total * 0.15;
     _monthlyCollected = monthlyTotal;
     _monthlyPayoutEstimate = monthlyTotal * 0.85;
     _averagePaidAmount =
@@ -335,6 +337,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _totalPlatformRevenue = total * 0.15;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
       _platformRevenueEstimate = monthlyServiceTotal * 0.15;
@@ -354,6 +357,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
+      _totalPlatformRevenue = total * 0.15;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
       _platformRevenueEstimate = monthlyServiceTotal * 0.15;
@@ -476,6 +480,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Estimated Platform Revenue This Month: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_platformRevenueEstimate)}',
+        ),
+        Text(
+          'Total Platform Revenue (All-Time): '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_totalPlatformRevenue)}',
         ),
         Text(
           'Average Payment Per Job: '
