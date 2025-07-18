@@ -28,6 +28,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _flaggedInvoices = 0;
   int _overdueInvoices = 0;
   int _totalActiveUsers = 0;
+  int _newCustomers = 0;
   int _paidInvoices = 0;
   double _totalPaidAmount = 0.0;
   double _averagePaidAmount = 0.0;
@@ -99,6 +100,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             (d.data()['role'] == 'mechanic' && d.data()['isActive'] == true) ||
             d.data()['role'] == 'customer')
         .length;
+    final now = DateTime.now();
+    _newCustomers = usersSnapshot.docs.where((d) {
+      final data = d.data();
+      if (data['role'] != 'customer') return false;
+      final Timestamp? ts = data['createdAt'];
+      if (ts == null) return false;
+      final dt = ts.toDate();
+      return dt.year == now.year && dt.month == now.month;
+    }).length;
     for (final d in usersSnapshot.docs) {
       final data = d.data();
       final username = (data['username'] ?? data['displayName'] ?? '').toString();
@@ -277,6 +287,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _updateActiveUsers(
       QuerySnapshot<Map<String, dynamic>> snapshot) {
     int count = 0;
+    int newCount = 0;
     final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -287,16 +298,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (data['isActive'] == true) count++;
       } else if (role == 'customer') {
         count++;
+        final Timestamp? ts = data['createdAt'];
+        if (ts != null) {
+          final dt = ts.toDate();
+          final now = DateTime.now();
+          if (dt.year == now.year && dt.month == now.month) {
+            newCount++;
+          }
+        }
       }
     }
     if (!mounted) {
       _totalActiveUsers = count;
       _usernames = nameMap;
+      _newCustomers = newCount;
       return;
     }
     setState(() {
       _totalActiveUsers = count;
       _usernames = nameMap;
+      _newCustomers = newCount;
     });
   }
 
@@ -343,6 +364,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Total Users: $_totalUsers'),
         Text('Active Mechanics: $_activeMechanics'),
         Text('Total Active Users: $_totalActiveUsers'),
+        Text('New Customers This Month: $_newCustomers'),
         Text('Active Invoices: $_activeInvoices'),
         Text('Completed Invoices: $_completedInvoices'),
         Text('Total Paid Requests: $_paidInvoices'),
