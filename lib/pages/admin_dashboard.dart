@@ -53,6 +53,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current search query for invoices
   String _invoiceSearch = '';
 
+  // Current search query for users
+  String _userSearch = '';
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
@@ -877,7 +880,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -885,7 +895,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Text('Active Mechanics'),
             ),
-            ...docs.map((d) {
+            ...filteredDocs.map((d) {
               return ListTile(
                 title: Text(d.data()['username'] ?? d.id),
                 subtitle: Text(d.id),
@@ -923,7 +933,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -931,7 +948,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Text('Blocked Mechanics'),
             ),
-            ...docs.map((d) {
+            ...filteredDocs.map((d) {
               return ListTile(
                 title: Text(d.data()['username'] ?? d.id),
                 subtitle: Text(d.id),
@@ -959,7 +976,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -967,7 +991,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Text('Flagged Mechanics'),
             ),
-            ...docs.map((d) {
+            ...filteredDocs.map((d) {
               final data = d.data();
               return ListTile(
                 title: Text(data['username'] ?? d.id),
@@ -1002,7 +1026,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1010,7 +1041,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Text('Customers'),
             ),
-            ...docs.map((d) {
+            ...filteredDocs.map((d) {
               final data = d.data();
               final flagged = data['flagged'] == true;
               return ListTile(
@@ -1050,7 +1081,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1058,7 +1096,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Text('Flagged Customers'),
             ),
-            ...docs.map((d) {
+            ...filteredDocs.map((d) {
               final data = d.data();
               return ListTile(
                 title: Text(data['username'] ?? d.id),
@@ -1178,6 +1216,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ],
                   ),
                   _buildInvoices(),
+                  const SizedBox(height: 16),
+                  const Text('Users', style: TextStyle(fontSize: 16)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search Users',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _userSearch = value;
+                        });
+                      },
+                    ),
+                  ),
                   _buildActiveMechanics(),
                   _buildBlockedMechanics(),
                   _buildFlaggedMechanics(),
