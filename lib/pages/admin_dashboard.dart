@@ -450,6 +450,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     await _loadStats();
   }
 
+  Future<void> _blockMechanic(String mechId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(mechId)
+        .update({'blocked': true});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mechanic blocked')),
+      );
+    }
+  }
+
   Future<void> _loadAppVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -794,10 +807,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               return ListTile(
                 title: Text(d.data()['username'] ?? d.id),
                 subtitle: Text(d.id),
-                trailing: IconButton(
-                  icon: const Icon(Icons.block),
-                  onPressed: () => _deactivateMechanic(d.id),
-                  tooltip: 'Deactivate',
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.block),
+                      onPressed: () => _deactivateMechanic(d.id),
+                      tooltip: 'Deactivate',
+                    ),
+                    TextButton(
+                      onPressed: () => _blockMechanic(d.id),
+                      child: const Text('Block Mechanic'),
+                    ),
+                  ],
                 ),
               );
             }).toList(),

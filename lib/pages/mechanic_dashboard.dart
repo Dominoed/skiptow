@@ -34,6 +34,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _locationPermissionGranted = false;
   bool _locationBannerVisible = false;
   bool _hasAccountData = true;
+  bool _blocked = false;
   int completedJobs = 0;
 
   void _showLocationBanner() {
@@ -83,6 +84,14 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       }
       setState(() {
         _hasAccountData = false;
+      });
+      return;
+    }
+
+    final data = doc.data();
+    if (data != null && data['blocked'] == true) {
+      setState(() {
+        _blocked = true;
       });
       return;
     }
@@ -175,6 +184,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
     final data = doc.data();
     if (data != null) {
+      if (data['blocked'] == true) {
+        setState(() {
+          _blocked = true;
+        });
+        return;
+      }
       setState(() {
         isActive = data['isActive'] ?? false;
         radiusMiles = (data['radiusMiles'] ?? 5).toDouble();
@@ -574,25 +589,33 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Job History',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MechanicJobHistoryPage(
-                    mechanicId: widget.userId,
-                  ),
-                ),
-              );
-            },
+            onPressed: _blocked
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MechanicJobHistoryPage(
+                          mechanicId: widget.userId,
+                        ),
+                      ),
+                    );
+                  },
           ),
           _buildMessagesIcon(),
         ],
       ),
-      body: !_locationPermissionGranted
+      body: _blocked
           ? const Center(
-              child: Text('Location permission is required to view the map.'),
+              child:
+                  Text('Your account has been blocked. Contact admin.'),
             )
-          : Column(
+          : !_locationPermissionGranted
+              ? const Center(
+                  child:
+                      Text('Location permission is required to view the map.'),
+                )
+              : Column(
               children: [
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: FirebaseFirestore.instance
@@ -749,7 +772,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       Text('Status: $status', style: const TextStyle(fontSize: 20)),
                       const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: _onTogglePressed,
+                  onPressed: _blocked ? null : _onTogglePressed,
                   child: Text(isActive ? 'Go Inactive' : 'Go Active'),
                 ),
                 const SizedBox(height: 20),
