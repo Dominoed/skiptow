@@ -19,6 +19,8 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   int _totalUsers = 0;
+  int _totalCustomers = 0;
+  int _totalMechanics = 0;
   int _activeMechanics = 0;
   int _activeInvoices = 0;
   int _completedInvoices = 0;
@@ -130,6 +132,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final Map<String, String> nameMap = {};
     _activeMechanics = usersSnapshot.docs
         .where((d) => d.data()['role'] == 'mechanic' && d.data()['isActive'] == true)
+        .length;
+    _totalMechanics = usersSnapshot.docs
+        .where((d) => d.data()['role'] == 'mechanic')
+        .length;
+    _totalCustomers = usersSnapshot.docs
+        .where((d) => d.data()['role'] == 'customer')
         .length;
     _totalActiveUsers = usersSnapshot.docs
         .where((d) =>
@@ -424,6 +432,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int blockedCount = 0;
     int flaggedCount = 0;
     int flaggedCustomerCount = 0;
+    int customerCount = 0;
+    int mechanicCount = 0;
     final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -431,6 +441,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final username = (data['username'] ?? data['displayName'] ?? '').toString();
       nameMap[doc.id] = username;
       if (role == 'mechanic') {
+        mechanicCount++;
         if (data['isActive'] == true) {
           count++;
           mechCount++;
@@ -438,6 +449,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (data['blocked'] == true) blockedCount++;
         if (data['flagged'] == true) flaggedCount++;
       } else if (role == 'customer') {
+        customerCount++;
         count++;
         if (data['flagged'] == true) flaggedCustomerCount++;
         final Timestamp? ts = data['createdAt'];
@@ -458,6 +470,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _blockedMechanics = blockedCount;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
+      _totalCustomers = customerCount;
+      _totalMechanics = mechanicCount;
       return;
     }
     setState(() {
@@ -468,6 +482,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _blockedMechanics = blockedCount;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
+      _totalCustomers = customerCount;
+      _totalMechanics = mechanicCount;
     });
   }
 
@@ -1284,7 +1300,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   _buildInvoices(),
                   const SizedBox(height: 16),
-                  const Text('Users', style: TextStyle(fontSize: 16)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Users', style: TextStyle(fontSize: 16)),
+                      Row(
+                        children: [
+                          Text('Total Customers: $_totalCustomers'),
+                          const SizedBox(width: 16),
+                          Text('Total Mechanics: $_totalMechanics'),
+                        ],
+                      ),
+                    ],
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: TextField(
