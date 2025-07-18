@@ -36,6 +36,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _unpaidOutstanding = 0.0;
   double _overdueBalance = 0.0;
   double _monthlyCollected = 0.0;
+  double _monthlyServiceTotal = 0.0;
 
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
@@ -169,6 +170,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where('status', isEqualTo: 'closed')
         .get();
     _closedInvoices = closedSnap.size;
+    double monthlyServiceTotal = 0.0;
+    for (final doc in closedSnap.docs) {
+      final data = doc.data();
+      final Timestamp? closedTs = data['closedAt'];
+      if (closedTs != null) {
+        final dt = closedTs.toDate();
+        if (dt.year == now.year && dt.month == now.month) {
+          monthlyServiceTotal +=
+              (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+        }
+      }
+    }
+    _monthlyServiceTotal = monthlyServiceTotal;
 
     final paidSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -241,6 +255,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int paid = 0;
     double total = 0.0;
     double monthlyTotal = 0.0;
+    double monthlyServiceTotal = 0.0;
     double pendingTotal = 0.0;
     double overdueTotal = 0.0;
     final now = DateTime.now();
@@ -255,6 +270,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       } else if (status == 'closed') {
         completed++;
         closed++;
+        final Timestamp? closedTs = data['closedAt'];
+        if (closedTs != null) {
+          final dt = closedTs.toDate();
+          if (dt.year == now.year && dt.month == now.month) {
+            monthlyServiceTotal +=
+                (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+          }
+        }
       } else if (status == 'cancelled') {
         cancelled++;
       }
@@ -292,6 +315,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _monthlyCollected = monthlyTotal;
+      _monthlyServiceTotal = monthlyServiceTotal;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -307,6 +331,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _paidInvoices = paid;
       _totalPaidAmount = total;
       _monthlyCollected = monthlyTotal;
+      _monthlyServiceTotal = monthlyServiceTotal;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -411,6 +436,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text(
           'Payments Collected This Month: '
           '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyCollected)}',
+        ),
+        Text(
+          'Total Service Value This Month: '
+          '${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(_monthlyServiceTotal)}',
         ),
         Text(
           'Average Payment Per Job: '
