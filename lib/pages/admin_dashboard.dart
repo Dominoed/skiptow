@@ -56,6 +56,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current search query for users
   String _userSearch = '';
 
+  // Current role filter for users
+  String _userRoleFilter = 'all';
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
@@ -1232,11 +1235,40 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       },
                     ),
                   ),
-                  _buildActiveMechanics(),
-                  _buildBlockedMechanics(),
-                  _buildFlaggedMechanics(),
-                  _buildCustomers(),
-                  _buildFlaggedCustomers(),
+                  Row(
+                    children: [
+                      const Text('Filter Users: '),
+                      DropdownButton<String>(
+                        value: _userRoleFilter,
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'all', child: Text('All Users')),
+                          DropdownMenuItem(
+                              value: 'customer', child: Text('Customers Only')),
+                          DropdownMenuItem(
+                              value: 'mechanic', child: Text('Mechanics Only')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _userRoleFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  if (_userRoleFilter == 'all' || _userRoleFilter == 'mechanic')
+                    ...[
+                      _buildActiveMechanics(),
+                      _buildBlockedMechanics(),
+                      _buildFlaggedMechanics(),
+                    ],
+                  if (_userRoleFilter == 'all' || _userRoleFilter == 'customer')
+                    ...[
+                      _buildCustomers(),
+                      _buildFlaggedCustomers(),
+                    ],
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
