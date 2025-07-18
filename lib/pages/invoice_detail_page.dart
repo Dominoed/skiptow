@@ -150,9 +150,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'Invoice #: ' + invoiceNum,
+              'Service Request #: $invoiceNum',
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
