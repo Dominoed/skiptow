@@ -32,6 +32,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _blockedMechanics = 0;
   int _flaggedMechanics = 0;
   int _flaggedCustomers = 0;
+  int _blockedUsers = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
   int _newMechanics = 0;
@@ -171,6 +172,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _blockedMechanics = usersSnapshot.docs
         .where((d) =>
             d.data()['role'] == 'mechanic' && d.data()['blocked'] == true)
+        .length;
+    _blockedUsers = usersSnapshot.docs
+        .where((d) => d.data()['blocked'] == true)
         .length;
     _flaggedMechanics = usersSnapshot.docs
         .where((d) =>
@@ -430,6 +434,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int mechCount = 0;
     int newCount = 0;
     int blockedCount = 0;
+    int blockedCustomerCount = 0;
     int flaggedCount = 0;
     int flaggedCustomerCount = 0;
     int customerCount = 0;
@@ -451,6 +456,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       } else if (role == 'customer') {
         customerCount++;
         count++;
+        if (data['blocked'] == true) blockedCustomerCount++;
         if (data['flagged'] == true) flaggedCustomerCount++;
         final Timestamp? ts = data['createdAt'];
         if (ts != null) {
@@ -462,12 +468,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }
       }
     }
+    final totalBlocked = blockedCount + blockedCustomerCount;
     if (!mounted) {
       _totalActiveUsers = count;
       _activeMechanics = mechCount;
       _usernames = nameMap;
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
+      _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
       _totalCustomers = customerCount;
@@ -480,6 +488,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _usernames = nameMap;
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
+      _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
       _totalCustomers = customerCount;
@@ -595,6 +604,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Total Users: $_totalUsers'),
         Text('Active Mechanics Right Now: $_activeMechanics'),
         Text('Blocked Mechanics: $_blockedMechanics'),
+        Text('Blocked Accounts: $_blockedUsers'),
         Text('Flagged Mechanics: $_flaggedMechanics'),
         Text('Flagged Customers: $_flaggedCustomers'),
         Text('Total Active Users: $_totalActiveUsers'),
