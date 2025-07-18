@@ -33,6 +33,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   double _averagePaidAmount = 0.0;
   double _unpaidOutstanding = 0.0;
 
+  // Cache of userId to username for quick lookups
+  Map<String, String> _usernames = {};
+
+  // Current search query for invoices
+  String _invoiceSearch = '';
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
@@ -82,6 +88,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _loadStats() async {
     final usersSnapshot = await FirebaseFirestore.instance.collection('users').get();
     _totalUsers = usersSnapshot.size;
+    final Map<String, String> nameMap = {};
     _activeMechanics = usersSnapshot.docs
         .where((d) => d.data()['role'] == 'mechanic' && d.data()['isActive'] == true)
         .length;
@@ -90,6 +97,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             (d.data()['role'] == 'mechanic' && d.data()['isActive'] == true) ||
             d.data()['role'] == 'customer')
         .length;
+    for (final d in usersSnapshot.docs) {
+      final data = d.data();
+      final username = (data['username'] ?? data['displayName'] ?? '').toString();
+      nameMap[d.id] = username;
+    }
+    _usernames = nameMap;
 
     final activeSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -230,9 +243,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _updateActiveUsers(
       QuerySnapshot<Map<String, dynamic>> snapshot) {
     int count = 0;
+    final Map<String, String> nameMap = {};
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final role = data['role'];
+      final username = (data['username'] ?? data['displayName'] ?? '').toString();
+      nameMap[doc.id] = username;
       if (role == 'mechanic') {
         if (data['isActive'] == true) count++;
       } else if (role == 'customer') {
@@ -241,10 +257,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
     if (!mounted) {
       _totalActiveUsers = count;
+      _usernames = nameMap;
       return;
     }
     setState(() {
       _totalActiveUsers = count;
+      _usernames = nameMap;
     });
   }
 
@@ -466,7 +484,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           if (_paymentStatusFilter == 'overdue') return isOverdue;
           return payment == _paymentStatusFilter;
         }).toList();
-        if (filteredDocs.isEmpty) {
+        final searchLower = _invoiceSearch.toLowerCase();
+        final searchDocs = filteredDocs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final invoiceNum = (data['invoiceNumber'] ?? '').toString().toLowerCase();
+          final mechName = (data['mechanicUsername'] ??
+                  _usernames[data['mechanicId']] ??
+                  '')
+              .toString()
+              .toLowerCase();
+          final custName = (_usernames[data['customerId']] ?? '')
+              .toLowerCase();
+          return invoiceNum.contains(searchLower) ||
+              mechName.contains(searchLower) ||
+              custName.contains(searchLower);
+        }).toList();
+        if (searchDocs.isEmpty) {
           return const Text('No invoices');
         }
 
@@ -474,7 +508,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final List<QueryDocumentSnapshot<Map<String, dynamic>>> completed = [];
         final List<QueryDocumentSnapshot<Map<String, dynamic>>> cancelled = [];
 
-        for (final d in filteredDocs) {
+        for (final d in searchDocs) {
           final status = d.data()['status'];
           if (status == 'active') {
             active.add(d);
@@ -613,6 +647,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const SizedBox(height: 16),
                   const Divider(),
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search Invoices',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _invoiceSearch = value;
+                        });
+                      },
+                    ),
+                  ),
                   Row(
                     children: [
                       const Text('Filter by Payment Status: '),
