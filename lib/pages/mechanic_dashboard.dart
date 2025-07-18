@@ -10,6 +10,7 @@ import 'invoices_page.dart';
 import 'messages_page.dart';
 import 'mechanic_request_queue_page.dart';
 import 'mechanic_job_history_page.dart';
+import 'mechanic_profile_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -601,6 +602,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       ),
                     );
                   },
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MechanicProfilePage(userId: widget.userId),
+                ),
+              );
+            },
+            icon: const Icon(Icons.person, color: Colors.white),
+            label: const Text(
+              'Profile',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           _buildMessagesIcon(),
         ],
