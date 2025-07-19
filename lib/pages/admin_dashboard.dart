@@ -82,6 +82,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   String _appVersion = '1.0.0';
 
+  // Date range filter for invoices
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  DateTime? _startDate;
+  DateTime? _endDate;
+
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance
         .collection('users')
@@ -1013,18 +1019,33 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           final bool isOverdue = payment == 'pending' &&
               createdAtTs != null &&
               DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+          bool matchesStatus;
           switch (_invoiceStatusFilter) {
             case 'paid':
-              return payment == 'paid';
+              matchesStatus = payment == 'paid';
+              break;
             case 'pending':
-              return payment == 'pending' && !isOverdue;
+              matchesStatus = payment == 'pending' && !isOverdue;
+              break;
             case 'overdue':
-              return isOverdue;
+              matchesStatus = isOverdue;
+              break;
             case 'closed':
-              return status == 'closed';
+              matchesStatus = status == 'closed';
+              break;
             default:
-              return true;
+              matchesStatus = true;
           }
+          if (!matchesStatus) return false;
+          if (_startDate != null && _endDate != null) {
+            if (createdAtTs == null) return false;
+            final dt = DateTime(createdAtTs.toDate().year,
+                createdAtTs.toDate().month, createdAtTs.toDate().day);
+            if (dt.isBefore(_startDate!) || dt.isAfter(_endDate!)) {
+              return false;
+            }
+          }
+          return true;
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
@@ -1622,6 +1643,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _newMechanicsSub?.cancel();
     _flaggedCustomersSub?.cancel();
     _flaggedMechanicsSub?.cancel();
+    _startDateController.dispose();
+    _endDateController.dispose();
     super.dispose();
   }
 
@@ -1725,6 +1748,72 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             });
                           }
                         },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Filter Invoices By Date Range'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _startDateController,
+                          readOnly: true,
+                          decoration:
+                              const InputDecoration(labelText: 'Start Date'),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _startDate ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _startDate =
+                                    DateTime(picked.year, picked.month, picked.day);
+                                _startDateController.text =
+                                    DateFormat('yyyy-MM-dd').format(_startDate!);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _endDateController,
+                          readOnly: true,
+                          decoration: const InputDecoration(labelText: 'End Date'),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _endDate ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _endDate =
+                                    DateTime(picked.year, picked.month, picked.day);
+                                _endDateController.text =
+                                    DateFormat('yyyy-MM-dd').format(_endDate!);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _startDate = null;
+                            _endDate = null;
+                            _startDateController.clear();
+                            _endDateController.clear();
+                          });
+                        },
+                        icon: const Icon(Icons.clear),
+                        tooltip: 'Clear',
                       ),
                     ],
                   ),
