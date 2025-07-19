@@ -9,6 +9,7 @@ import 'login_page.dart';
 import 'dashboard_page.dart';
 import 'admin_user_detail_page.dart';
 import 'admin_financial_report_page.dart';
+import 'admin_invoice_detail_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1011,6 +1012,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AdminInvoiceDetailPage(
+                      invoiceId: doc.id,
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+              tooltip: 'View Details',
+            ),
             IconButton(
               icon: const Icon(Icons.flag),
               onPressed: flagged ? null : () => _flagInvoice(doc.id),
