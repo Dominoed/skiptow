@@ -1066,15 +1066,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (searchDocs.isEmpty) {
           return const Text('No invoices');
         }
-
-        return ListView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: searchDocs.map((e) => _invoiceTile(e)).toList(),
+        final total = searchDocs.fold<double>(
+          0.0,
+          (sum, d) => sum + ((d.data()['finalPrice'] as num?)?.toDouble() ?? 0.0),
         );
-      },
-    );
-  }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Total Value of Filtered Invoices: \$${total.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: searchDocs.map((e) => _invoiceTile(e)).toList(),
+            ),
+          ],
+        );
 
   Widget _userTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
