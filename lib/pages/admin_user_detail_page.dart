@@ -16,6 +16,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   late Future<Map<String, dynamic>> _detailsFuture;
   bool _isBlocked = false;
   bool _isFlagged = false;
+  bool _isSuspicious = false;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     setState(() {
       _isBlocked = userData['blocked'] == true;
       _isFlagged = userData['flagged'] == true;
+      _isSuspicious = userData['suspicious'] == true;
     });
 
     int completedJobs = 0;
@@ -78,6 +80,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
       'role': role,
       'blocked': userData['blocked'] == true,
       'flagged': userData['flagged'] == true,
+      'suspicious': userData['suspicious'] == true,
       'completedJobs': completedJobs,
       'totalEarnings': totalEarnings,
       'totalRequests': totalRequests,
@@ -111,6 +114,18 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
         .update({'flagged': newStatus});
     setState(() {
       _isFlagged = newStatus;
+      _detailsFuture = _loadDetails();
+    });
+  }
+
+  Future<void> _toggleSuspicious() async {
+    final newStatus = !_isSuspicious;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'suspicious': newStatus});
+    setState(() {
+      _isSuspicious = newStatus;
       _detailsFuture = _loadDetails();
     });
   }
@@ -172,6 +187,25 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             children.add(const SizedBox(height: 8));
           }
 
+          if (_isSuspicious) {
+            children.add(
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                color: Colors.red,
+                child: const Text(
+                  'SUSPICIOUS ACCOUNT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+            children.add(const SizedBox(height: 8));
+          }
+
           children.addAll([
             Text('Username: ${data['username']}'),
             Text('User ID: ${widget.userId}'),
@@ -180,6 +214,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             Text('Account Created: ${_formatDate(data['createdAt'] as Timestamp?)}'),
             Text('Blocked: ${data['blocked'] == true ? 'Yes' : 'No'}'),
             Text('Flagged: ${data['flagged'] == true ? 'Yes' : 'No'}'),
+            Text('Suspicious: ${data['suspicious'] == true ? 'Yes' : 'No'}'),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: _toggleBlock,
@@ -189,6 +224,12 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             ElevatedButton(
               onPressed: _toggleFlag,
               child: Text(_isFlagged ? 'Remove Flag' : 'Flag Account'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _toggleSuspicious,
+              child:
+                  Text(_isSuspicious ? 'Unmark Suspicious' : 'Mark as Suspicious Account'),
             ),
             const SizedBox(height: 20),
           ];
