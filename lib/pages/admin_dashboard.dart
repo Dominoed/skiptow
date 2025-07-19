@@ -579,6 +579,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _unblockCustomer(String customerId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(customerId)
+        .update({'blocked': false});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer unblocked')),
+      );
+    }
+  }
+
   Future<void> _loadAppVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -951,6 +964,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           .collection('users')
           .where('role', isEqualTo: 'mechanic')
           .where('isActive', isEqualTo: true)
+          .where('blocked', isEqualTo: false)
+          .where('flagged', isEqualTo: false)
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1108,6 +1123,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           .collection('users')
           .where('role', isEqualTo: 'mechanic')
           .where('flagged', isEqualTo: true)
+          .where('blocked', isEqualTo: false)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1178,11 +1194,89 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  Widget _buildBlockedCustomers() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'customer')
+          .where('blocked', isEqualTo: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        final searchLower = _userSearch.toLowerCase();
+        final filteredDocs = docs.where((d) {
+          if (searchLower.isEmpty) return true;
+          final data = d.data();
+          final name = (data['username'] ?? '').toString().toLowerCase();
+          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+        }).toList();
+        if (filteredDocs.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 16, bottom: 8),
+              child: Text('Blocked Customers'),
+            ),
+            ...filteredDocs.map((d) {
+              final data = d.data();
+              return ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${data['username'] ?? d.id} (${data['role'] ?? 'customer'})',
+                      ),
+                    ),
+                    if (data['createdAt'] != null)
+                      Text(
+                        'Created: ${_formatMonthYear(data['createdAt'])}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+                subtitle: Text(d.id),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildStatusBadges(data),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
+                    TextButton(
+                      onPressed: () => _unblockCustomer(d.id),
+                      child: const Text('Unblock Customer'),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildCustomers() {
     return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
           .collection('users')
           .where('role', isEqualTo: 'customer')
+          .where('blocked', isEqualTo: false)
+          .where('flagged', isEqualTo: false)
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1260,6 +1354,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           .collection('users')
           .where('role', isEqualTo: 'customer')
           .where('flagged', isEqualTo: true)
+          .where('blocked', isEqualTo: false)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1479,14 +1574,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   if (_userRoleFilter == 'all' || _userRoleFilter == 'mechanic')
                     ...[
-                      _buildActiveMechanics(),
                       _buildBlockedMechanics(),
                       _buildFlaggedMechanics(),
+                      _buildActiveMechanics(),
                     ],
                   if (_userRoleFilter == 'all' || _userRoleFilter == 'customer')
                     ...[
-                      _buildCustomers(),
+                      _buildBlockedCustomers(),
                       _buildFlaggedCustomers(),
+                      _buildCustomers(),
                     ],
                   const SizedBox(height: 16),
                   Center(
