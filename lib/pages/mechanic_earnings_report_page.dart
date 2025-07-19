@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 import '../services/csv_downloader.dart';
+
+class _MonthEarning {
+  final DateTime month;
+  final double earnings;
+  _MonthEarning(this.month, this.earnings);
+}
 
 class MechanicEarningsReportPage extends StatelessWidget {
   final String mechanicId;
@@ -82,6 +89,13 @@ class MechanicEarningsReportPage extends StatelessWidget {
           double monthly = 0.0;
           double highest = 0.0;
           final now = DateTime.now();
+          final months = List.generate(
+            12,
+            (i) => DateTime(now.year, now.month - i, 1),
+          );
+          final monthTotals = {
+            for (final m in months) DateFormat('yyyy-MM').format(m): 0.0
+          };
           for (final doc in docs) {
             final data = doc.data();
             final amount = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
@@ -93,13 +107,56 @@ class MechanicEarningsReportPage extends StatelessWidget {
               if (dt.year == now.year && dt.month == now.month) {
                 monthly += amount;
               }
+              final key = DateFormat('yyyy-MM').format(DateTime(dt.year, dt.month));
+              if (monthTotals.containsKey(key)) {
+                monthTotals[key] = monthTotals[key]! + amount;
+              }
             }
           }
           final paidJobs = docs.length;
           final average = paidJobs > 0 ? total / paidJobs : 0.0;
 
+          final chartData = months
+              .map((m) => _MonthEarning(
+                    m,
+                    monthTotals[DateFormat('yyyy-MM').format(m)] ?? 0.0,
+                  ))
+              .toList()
+              .reversed
+              .toList();
+          final series = [
+            charts.Series<_MonthEarning, DateTime>(
+              id: 'Monthly Earnings',
+              colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+              domainFn: (d, _) => d.month,
+              measureFn: (d, _) => d.earnings,
+              data: chartData,
+            )
+          ];
+
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Earnings Per Month (Last 12 Months)',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 200,
+                      child: charts.TimeSeriesChart(
+                        series,
+                        animate: true,
+                        dateTimeFactory: const charts.LocalDateTimeFactory(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
