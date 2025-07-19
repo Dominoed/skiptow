@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -64,6 +65,7 @@ class PushNotificationService {
       notification.title,
       notification.body,
       details,
+      payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
     );
   }
 

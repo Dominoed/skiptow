@@ -6,12 +6,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:convert';
 import 'services/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/mechanic_request_queue_page.dart';
 import 'pages/customer_invoices_page.dart';
+import 'pages/invoice_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pages/maintenance_mode_page.dart';
 
@@ -34,14 +36,30 @@ void _handleNotificationTap(NotificationResponse response) {
       .get()
       .then((doc) {
     final role = doc.data()?['role'];
-    Widget page;
-    if (role == 'customer') {
-      page = CustomerInvoicesPage(userId: user.uid);
-    } else {
-      page = MechanicRequestQueuePage(mechanicId: user.uid);
+    final defaultPage = role == 'customer'
+        ? CustomerInvoicesPage(userId: user.uid)
+        : MechanicRequestQueuePage(mechanicId: user.uid);
+
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      try {
+        final data = jsonDecode(response.payload!);
+        final invoiceId = data['invoiceId'];
+        if (invoiceId is String) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => InvoiceDetailPage(
+                invoiceId: invoiceId,
+                role: role,
+              ),
+            ),
+          );
+          return;
+        }
+      } catch (_) {}
     }
+
     navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => page),
+      MaterialPageRoute(builder: (_) => defaultPage),
     );
   });
 }

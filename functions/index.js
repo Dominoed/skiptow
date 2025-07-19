@@ -257,3 +257,56 @@ exports.sendPaymentReminders = functions.pubsub
     return null;
   });
 
+exports.notifyInvoiceMessage = functions.firestore
+  .document('invoices/{invoiceId}/messages/{messageId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    if (!data) return null;
+
+    const invoiceId = context.params.invoiceId;
+    const fromUserId = data.fromUserId;
+    if (!invoiceId || !fromUserId) return null;
+
+    const db = admin.firestore();
+    const invoiceSnap = await db.collection('invoices').doc(invoiceId).get();
+    const invoice = invoiceSnap.data();
+    if (!invoice) return null;
+
+    const customerId = invoice.customerId;
+    const mechanicId = invoice.mechanicId;
+    let recipientId = null;
+
+    if (fromUserId === mechanicId) {
+      recipientId = customerId;
+    } else if (fromUserId === customerId) {
+      recipientId = mechanicId;
+    }
+
+    if (!recipientId) return null;
+
+    const recipientDoc = await db.collection('users').doc(recipientId).get();
+    if (!recipientDoc.exists || recipientDoc.data().role === 'admin') return null;
+
+    const tokensSnap = await db
+      .collection('users')
+      .doc(recipientId)
+      .collection('tokens')
+      .get();
+    const tokens = tokensSnap.docs.map(t => t.id);
+    if (tokens.length === 0) return null;
+
+    await admin.messaging().sendEachForMulticast({
+      notification: {
+        title: 'New Message in Service Request',
+        body: 'Tap to reply.'
+      },
+      data: {
+        invoiceId,
+        type: 'invoiceMessage'
+      },
+      tokens
+    });
+
+    return null;
+  });
+
