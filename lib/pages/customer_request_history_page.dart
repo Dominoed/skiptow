@@ -143,6 +143,8 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                               Text('Estimated: \${estimated.toDouble().toStringAsFixed(2)}'),
                             if (finalPrice != null)
                               Text('Final Price: \${finalPrice.toDouble().toStringAsFixed(2)}'),
+                            if (data['etaMinutes'] != null)
+                              Text('ETA: ${data['etaMinutes']} minutes'),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
