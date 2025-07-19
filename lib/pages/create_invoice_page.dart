@@ -209,7 +209,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
       final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
       await FirebaseFirestore.instance.collection('invoices').add({
-        'mechanicId': widget.mechanicId,
+        'mechanicId': isAnyTech ? null : widget.mechanicId,
         'customerId': widget.customerId,
         'invoiceNumber': invoiceNumber,
         'mechanicUsername': widget.mechanicUsername,

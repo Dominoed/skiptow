@@ -44,7 +44,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     data['customerEmail'] = customerData?['email'];
 
     // Fetch mechanic info
-    if (data['mechanicId'] != 'any') {
+    if (data['mechanicId'] != null && data['mechanicId'] != 'any') {
       final mechDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(data['mechanicId'])
@@ -308,6 +308,63 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 ? Text('Customer Review:\n${data['customerReview']}')
                 : const Text('No customer review provided.'),
         ]);
+
+        final currentUid = FirebaseAuth.instance.currentUser?.uid;
+        final List<dynamic>? candidates = data['mechanicCandidates'] as List<dynamic>?;
+        final bool canAccept = widget.role == 'mechanic' &&
+            data['mechanicId'] == null &&
+            currentUid != null &&
+            (candidates?.contains(currentUid) ?? false);
+
+        if (canAccept) {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final invoiceRef = FirebaseFirestore.instance
+                      .collection('invoices')
+                      .doc(widget.invoiceId);
+                  try {
+                    await FirebaseFirestore.instance.runTransaction((tx) async {
+                      final snap = await tx.get(invoiceRef);
+                      if (snap.data()?['mechanicId'] != null) {
+                        return;
+                      }
+                      final mechDoc = await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(currentUid)
+                          .get();
+                      final username = mechDoc.data()?['username'] ?? 'Mechanic';
+                      tx.update(invoiceRef, {
+                        'mechanicId': currentUid,
+                        'mechanicUsername': username,
+                        'mechanicAccepted': true,
+                        'status': 'accepted',
+                      });
+                    });
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Request accepted.')),
+                      );
+                      setState(() {
+                        _invoiceFuture = _loadInvoice();
+                      });
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Unable to accept. Another mechanic may have claimed it.')),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Accept Request'),
+              ),
+            ),
+          );
+        }
 
         if (widget.role == 'mechanic' && status == 'accepted') {
           children.add(
