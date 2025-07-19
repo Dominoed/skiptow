@@ -65,6 +65,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current role filter for users
   String _userRoleFilter = 'all';
 
+  // Current account status filter for users
+  String _accountStatusFilter = 'all';
+
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
@@ -1645,17 +1648,52 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     ],
                   ),
+                  Row(
+                    children: [
+                      const Text('Sort by Account Status: '),
+                      DropdownButton<String>(
+                        value: _accountStatusFilter,
+                        items: const [
+                          DropdownMenuItem(value: 'all', child: Text('All')),
+                          DropdownMenuItem(
+                              value: 'blocked', child: Text('Blocked')),
+                          DropdownMenuItem(
+                              value: 'flagged', child: Text('Flagged')),
+                          DropdownMenuItem(value: 'normal', child: Text('Normal')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _accountStatusFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                   if (_userRoleFilter == 'all' || _userRoleFilter == 'mechanic')
                     ...[
-                      _buildBlockedMechanics(),
-                      _buildFlaggedMechanics(),
-                      _buildActiveMechanics(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'blocked')
+                        _buildBlockedMechanics(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'flagged')
+                        _buildFlaggedMechanics(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'normal')
+                        _buildActiveMechanics(),
                     ],
                   if (_userRoleFilter == 'all' || _userRoleFilter == 'customer')
                     ...[
-                      _buildBlockedCustomers(),
-                      _buildFlaggedCustomers(),
-                      _buildCustomers(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'blocked')
+                        _buildBlockedCustomers(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'flagged')
+                        _buildFlaggedCustomers(),
+                      if (_accountStatusFilter == 'all' ||
+                          _accountStatusFilter == 'normal')
+                        _buildCustomers(),
                     ],
                   const SizedBox(height: 16),
                   Center(
