@@ -662,6 +662,54 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Widget _summaryCard(String title, String value, Color color) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryPanel() {
+    final currency = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _summaryCard('Total Customers', '$_totalCustomers', Colors.blue),
+        _summaryCard('Total Mechanics', '$_totalMechanics', Colors.blue),
+        _summaryCard('Blocked Accounts', '$_blockedUsers', Colors.red),
+        _summaryCard('Flagged Accounts', '$_flaggedUsers', Colors.orange),
+        _summaryCard('Active Mechanics', '$_activeMechanics', Colors.green),
+        _summaryCard('Overdue Invoices', '$_overdueInvoices', Colors.red),
+        _summaryCard('Outstanding Balance',
+            currency.format(_unpaidOutstanding), Colors.deepPurple),
+        _summaryCard('Paid Invoices', '$_paidInvoices', Colors.green),
+        _summaryCard('Platform Revenue',
+            currency.format(_totalPlatformRevenue), Colors.teal),
+      ],
+    );
+  }
+
   Widget _buildStats() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1618,12 +1666,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
           body: RefreshIndicator(
             onRefresh: _refresh,
-            child: SingleChildScrollView(
+              child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildSummaryPanel(),
+                  const SizedBox(height: 16),
                   _buildStats(),
                   const SizedBox(height: 16),
                   ElevatedButton(
