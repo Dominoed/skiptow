@@ -11,8 +11,8 @@ import '../services/alert_service.dart';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
-import 'customer_service_history_page.dart';
 import 'customer_profile_page.dart';
+import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
@@ -926,7 +926,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CustomerServiceHistoryPage(
+                  builder: (_) => CustomerRequestHistoryPage(
                     userId: widget.userId,
                   ),
                 ),
