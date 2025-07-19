@@ -59,6 +59,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current search query for invoices
   String _invoiceSearch = '';
 
+  // Search term specifically for invoice numbers
+  String _invoiceNumberSearch = '';
+
   // Search term for customer usernames in invoices
   String _customerUsernameSearch = '';
 
@@ -940,6 +943,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return payment == _paymentStatusFilter;
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
+        final invoiceNumberSearchLower = _invoiceNumberSearch.toLowerCase();
         final customerSearchLower = _customerUsernameSearch.toLowerCase();
         final mechanicSearchLower = _mechanicUsernameSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
@@ -957,6 +961,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             matches = invoiceNum.contains(searchLower) ||
                 mechName.contains(searchLower) ||
                 custName.contains(searchLower);
+          }
+          if (invoiceNumberSearchLower.isNotEmpty) {
+            matches = matches && invoiceNum.contains(invoiceNumberSearchLower);
           }
           if (customerSearchLower.isNotEmpty) {
             matches = matches && custName.contains(customerSearchLower);
@@ -1556,6 +1563,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onChanged: (value) {
                         setState(() {
                           _invoiceSearch = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search by Invoice Number',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _invoiceNumberSearch = value;
                         });
                       },
                     ),
