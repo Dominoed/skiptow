@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'services/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
@@ -9,8 +11,18 @@ import 'pages/dashboard_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await _pushService.initialize();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   final user = FirebaseAuth.instance.currentUser;
   runApp(MyApp(initialUserId: user?.uid));
+}
+
+final PushNotificationService _pushService = PushNotificationService();
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
+  await _pushService.handleMessage(message);
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -31,6 +43,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _currentUserId = widget.initialUserId;
+    _pushService.listenToForegroundMessages();
+    if (_currentUserId != null) {
+      _pushService.registerDevice(_currentUserId!);
+    }
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user == null && _currentUserId != null) {
         setState(() {
@@ -48,6 +64,7 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           _currentUserId = user.uid;
         });
+        _pushService.registerDevice(user.uid);
       }
     });
   }
