@@ -10,6 +10,7 @@ import 'dashboard_page.dart';
 import 'admin_user_detail_page.dart';
 import 'admin_financial_report_page.dart';
 import 'admin_invoice_detail_page.dart';
+import 'admin_mechanic_performance_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1168,7 +1169,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           if (created != null) Text('Created: ${_formatPrettyDate(created)}'),
         ],
       ),
-      trailing: _buildStatusBadges(data),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (data['role'] == 'mechanic')
+            IconButton(
+              icon: const Icon(Icons.bar_chart),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AdminMechanicPerformancePage(
+                      mechanicId: doc.id,
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+              tooltip: 'View Performance',
+            ),
+          _buildStatusBadges(data),
+        ],
+      ),
     );
   }
 
@@ -1311,6 +1333,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   children: [
                     _buildStatusBadges(data),
                     IconButton(
+                      icon: const Icon(Icons.bar_chart),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminMechanicPerformancePage(
+                              mechanicId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Performance',
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
                         Navigator.push(
@@ -1388,6 +1425,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   children: [
                     _buildStatusBadges(data),
                     IconButton(
+                      icon: const Icon(Icons.bar_chart),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminMechanicPerformancePage(
+                              mechanicId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Performance',
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
                         Navigator.push(
@@ -1460,6 +1512,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildStatusBadges(data),
+                    IconButton(
+                      icon: const Icon(Icons.bar_chart),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminMechanicPerformancePage(
+                              mechanicId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Performance',
+                    ),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
