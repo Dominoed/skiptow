@@ -541,6 +541,57 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Widget _buildActiveRequests() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('invoices')
+          .where('mechanicId', isEqualTo: widget.userId)
+          .where('status', whereIn: [
+            'accepted',
+            'arrived',
+            'in_progress',
+            'completed'
+          ])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          );
+        }
+        final docs = (snapshot.data?.docs ?? [])
+            .where((d) => d.data()['flagged'] != true)
+            .toList();
+        if (docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text('No active requests'),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text(
+                'Active Requests',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...docs.map(
+              (d) => _ActiveRequestCard(
+                invoiceId: d.id,
+                data: d.data(),
+                mechanicId: widget.userId,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasAccountData) {
@@ -579,7 +630,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MechanicRequestQueuePage(
+                  builder: (_) => MechanicRequestsPage(
                     mechanicId: widget.userId,
                   ),
                 ),
@@ -593,7 +644,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MechanicRequestsPage(
+                  builder: (_) => MechanicRequestQueuePage(
                     mechanicId: widget.userId,
                   ),
                 ),
@@ -750,6 +801,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     );
                   },
                 ),
+                _buildActiveRequests(),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
@@ -962,5 +1014,277 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         }
       }
     });
+  }
+}
+
+class _ActiveRequestCard extends StatelessWidget {
+  final String invoiceId;
+  final Map<String, dynamic> data;
+  final String mechanicId;
+
+  const _ActiveRequestCard({
+    required this.invoiceId,
+    required this.data,
+    required this.mechanicId,
+  });
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'completed':
+        return Colors.green;
+      case 'closed':
+        return Colors.blueGrey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.yellow[700]!;
+    }
+  }
+
+  Future<void> _updateEstimate(BuildContext context) async {
+    final controller = TextEditingController(
+      text: (data['estimatedPrice'] as num?)?.toString(),
+    );
+    final value = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Update Estimate'),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Estimated Price (USD)',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(context, double.tryParse(controller.text)),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (value != null) {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(invoiceId)
+          .update({'estimatedPrice': value});
+    }
+  }
+
+  Future<void> _markCompleted(BuildContext context) async {
+    final priceController = TextEditingController();
+    final notesController = TextEditingController();
+    final result = await showDialog<Map<String, dynamic>?>(
+      context: context,
+      builder: (context) {
+        String? errorText;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Mark as Completed'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: priceController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Enter final total price (in USD):',
+                      ),
+                    ),
+                    TextField(
+                      controller: notesController,
+                      minLines: 3,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        labelText: 'Post-Job Notes (required)',
+                      ),
+                    ),
+                    if (errorText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          errorText!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final price = double.tryParse(priceController.text);
+                    final notes = notesController.text.trim();
+                    if (price == null || notes.isEmpty) {
+                      setState(() {
+                        errorText = 'Please enter a valid price and notes.';
+                      });
+                    } else {
+                      Navigator.of(context).pop({'price': price, 'notes': notes});
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      final double price = result['price'] as double;
+      final String notes = result['notes'] as String;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Confirm Final Price'),
+            content: Text(
+              'Confirm final price of \$${price.toStringAsFixed(2)}? This cannot be changed later.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmed == true) {
+        final double fee = double.parse((price * 0.15).toStringAsFixed(2));
+        await FirebaseFirestore.instance
+            .collection('invoices')
+            .doc(invoiceId)
+            .update({
+          'status': 'completed',
+          'finalPrice': price,
+          'postJobNotes': notes,
+          'platformFee': fee,
+        });
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(mechanicId)
+            .update({'completedJobs': FieldValue.increment(1)});
+      }
+    }
+  }
+
+  void _viewDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InvoiceDetailPage(
+          invoiceId: invoiceId,
+          role: 'mechanic',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final description = data['description'] ?? '';
+    final location = data['location'];
+    final status = (data['status'] ?? 'active').toString();
+
+    final actions = <Widget>[];
+    if (status != 'completed' && status != 'closed' && status != 'cancelled') {
+      actions.add(
+        ElevatedButton(
+          onPressed: () => _markCompleted(context),
+          child: const Text('Mark Completed'),
+        ),
+      );
+      actions.add(
+        TextButton(
+          onPressed: () => _updateEstimate(context),
+          child: const Text('Update Estimate'),
+        ),
+      );
+    }
+    actions.add(
+      TextButton(
+        onPressed: () => _viewDetails(context),
+        child: const Text('Details'),
+      ),
+    );
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(data['customerId'])
+          .get(),
+      builder: (context, snapshot) {
+        final customerName = snapshot.data?.data()?['username'] ?? data['customerId'];
+        return Card(
+          margin: const EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Customer: $customerName'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _statusColor(status),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                if (description.toString().isNotEmpty) Text(description),
+                if (location != null &&
+                    location['lat'] != null &&
+                    location['lng'] != null)
+                  Text('Location: ${location['lat']}, ${location['lng']}')
+                else
+                  const Text('Location unavailable.'),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions
+                      .map((w) => Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: w,
+                          ))
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
