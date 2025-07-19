@@ -62,6 +62,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Search term for customer usernames in invoices
   String _customerUsernameSearch = '';
 
+  // Search term for mechanic usernames in invoices
+  String _mechanicUsernameSearch = '';
+
   // Current search query for users
   String _userSearch = '';
 
@@ -938,6 +941,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
         final customerSearchLower = _customerUsernameSearch.toLowerCase();
+        final mechanicSearchLower = _mechanicUsernameSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
           final data = d.data();
           final invoiceNum = (data['invoiceNumber'] ?? '').toString().toLowerCase();
@@ -956,6 +960,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           }
           if (customerSearchLower.isNotEmpty) {
             matches = matches && custName.contains(customerSearchLower);
+          }
+          if (mechanicSearchLower.isNotEmpty) {
+            matches = matches && mechName.contains(mechanicSearchLower);
           }
           return matches;
         }).toList();
@@ -1563,6 +1570,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onChanged: (value) {
                         setState(() {
                           _customerUsernameSearch = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search by Mechanic Username',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _mechanicUsernameSearch = value;
                         });
                       },
                     ),
