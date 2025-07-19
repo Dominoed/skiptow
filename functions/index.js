@@ -25,7 +25,7 @@ exports.notifyNewInvoice = functions.firestore
 
     const mechanicId = invoice.mechanicId;
     const customerId = invoice.customerId;
-    if (!mechanicId || !customerId) return null;
+    if (!customerId) return null;
 
     const customerSnap = await admin.firestore()
       .collection('users')
@@ -36,8 +36,8 @@ exports.notifyNewInvoice = functions.firestore
       : 'customer';
 
     let mechanicIds = [];
-    if (mechanicId === 'any') {
-      // Notify all nearby active mechanics
+    if (!mechanicId || mechanicId === 'any') {
+      // Broadcast to nearby active mechanics
       const mechanicsSnap = await admin.firestore()
         .collection('users')
         .where('role', '==', 'mechanic')
@@ -52,6 +52,11 @@ exports.notifyNewInvoice = functions.firestore
         if (dist <= radius) {
           mechanicIds.push(doc.id);
         }
+      });
+      // Update the invoice with candidate list and clear mechanicId
+      await snap.ref.update({
+        mechanicId: null,
+        mechanicCandidates: mechanicIds,
       });
     } else {
       mechanicIds = [mechanicId];
@@ -73,10 +78,13 @@ exports.notifyNewInvoice = functions.firestore
 
     if (tokens.length === 0) return null;
 
+    const broadcast = !mechanicId || mechanicId === 'any';
     const message = {
       notification: {
         title: 'New Service Request',
-        body: `You\u2019ve received a new service request from ${customerUsername}.`
+        body: broadcast
+          ? 'New nearby service request!'
+          : `You\u2019ve received a new service request from ${customerUsername}.`
       },
       tokens
     };
