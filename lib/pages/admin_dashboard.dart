@@ -914,6 +914,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final blocked = data['blocked'] == true;
     final flagged = data['flagged'] == true;
     final suspicious = data['suspicious'] == true;
+    final unavailable = data['unavailable'] == true;
     final List<Widget> badges = [];
     if (blocked) {
       badges.add(
@@ -945,6 +946,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             style: TextStyle(color: Colors.white, fontSize: 12),
           ),
           backgroundColor: Colors.red,
+    if (unavailable) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Unavailable',
+            style: TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          backgroundColor: Colors.orange,
         ),
       );
     }

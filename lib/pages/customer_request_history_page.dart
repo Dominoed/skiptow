@@ -45,6 +45,19 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
     }
   }
 
+  Color _paymentColor(String status) {
+    switch (status) {
+      case 'paid':
+        return Colors.green;
+      case 'failed':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   String _formatDate(Timestamp? ts) {
     if (ts == null) return '';
     final dt = ts.toDate().toLocal();
@@ -143,8 +156,31 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                               Text('Estimated: \${estimated.toDouble().toStringAsFixed(2)}'),
                             if (finalPrice != null)
                               Text('Final Price: \${finalPrice.toDouble().toStringAsFixed(2)}'),
+                            Row(
+                              children: [
+                                const Text('Mechanic Accepted: '),
+                                Icon(
+                                  data['mechanicAccepted'] == true ? Icons.check : Icons.close,
+                                  color: data['mechanicAccepted'] == true ? Colors.green : Colors.red,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
                             if (data['etaMinutes'] != null)
                               Text('ETA: ${data['etaMinutes']} minutes'),
+                            if (data['paymentStatus'] != null)
+                              Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _paymentColor(data['paymentStatus']),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Payment: ${data['paymentStatus']}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
