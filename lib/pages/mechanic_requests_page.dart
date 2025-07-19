@@ -75,8 +75,14 @@ class _MechanicRequestsPageState extends State<MechanicRequestsPage> {
                 if (broadSnap.data != null) {
                   docs.addAll(broadSnap.data!.docs);
                 }
-                final visibleDocs =
-                    docs.where((d) => d.data()['flagged'] != true).toList();
+                final visibleDocs = docs.where((d) {
+                  final data = d.data();
+                  if (data['flagged'] == true) return false;
+                  final responded = (data['mechanicResponded'] as List?)
+                          ?.contains(widget.mechanicId) ??
+                      false;
+                  return !responded;
+                }).toList();
 
                 return Scaffold(
                   appBar: AppBar(title: const Text('Service Requests')),
@@ -138,6 +144,7 @@ class _RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final broadcast = data['mechanicId'] == null;
+    final responded = (data['mechanicResponded'] as List?)?.contains(mechanicId) ?? false;
     final car = data['carInfo'] ?? {};
     final carText =
         '${car['year'] ?? ''} ${car['make'] ?? ''} ${car['model'] ?? ''}'.trim();
@@ -177,8 +184,15 @@ class _RequestCard extends StatelessWidget {
                   children: broadcast
                       ? [
                           ElevatedButton(
-                            onPressed: () => _acceptBroadcast(context),
+                            onPressed:
+                                responded ? null : () => _acceptBroadcast(context),
                             child: const Text('Accept Job'),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed:
+                                responded ? null : () => _declineBroadcast(context),
+                            child: const Text('Decline'),
                           ),
                           const SizedBox(width: 8),
                           TextButton(
@@ -232,6 +246,9 @@ class _RequestCard extends StatelessWidget {
         if (snap.data()?['mechanicId'] != null) {
           return;
         }
+        if ((snap.data()?['mechanicResponded'] as List?)?.contains(mechanicId) ?? false) {
+          return;
+        }
         final mechDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(mechanicId)
@@ -256,6 +273,46 @@ class _RequestCard extends StatelessWidget {
               content: Text('Unable to accept. Another mechanic may have claimed it.')),
         );
       }
+    }
+  }
+
+  Future<void> _declineBroadcast(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Decline Request'),
+          content: const Text('Are you sure you want to decline this request?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+    final invoiceRef =
+        FirebaseFirestore.instance.collection('invoices').doc(invoiceId);
+    await FirebaseFirestore.instance.runTransaction((tx) async {
+      final snap = await tx.get(invoiceRef);
+      if ((snap.data()?['mechanicResponded'] as List?)?.contains(mechanicId) ??
+          false) {
+        return;
+      }
+      tx.update(invoiceRef, {
+        'mechanicResponded': FieldValue.arrayUnion([mechanicId])
+      });
+    });
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request declined.')),
+      );
     }
   }
 
@@ -292,10 +349,17 @@ class _RequestCard extends StatelessWidget {
       },
     );
     if (confirmed != true) return;
-    await FirebaseFirestore.instance.collection('invoices').doc(invoiceId).update({
+    final update = {
       'status': 'cancelled',
       'cancelledBy': 'mechanic',
-    });
+    };
+    if (data['mechanicResponded'] is List) {
+      update['mechanicResponded'] = FieldValue.arrayUnion([mechanicId]);
+    }
+    await FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(invoiceId)
+        .update(update);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Request declined.')),
