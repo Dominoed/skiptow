@@ -411,6 +411,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
+      if (data['unavailable'] == true) continue;
       if (data.containsKey('location') && data.containsKey('radiusMiles')) {
         final double lat = data['location']['lat'];
         final double lng = data['location']['lng'];

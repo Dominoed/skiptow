@@ -45,6 +45,7 @@ exports.notifyNewInvoice = functions.firestore
         .get();
       mechanicsSnap.forEach(doc => {
         const data = doc.data();
+        if (data.unavailable === true) return;
         if (!data.location || typeof data.radiusMiles !== 'number') return;
         if (!invoice.location) return;
         const dist = haversineDistance(invoice.location, data.location);
@@ -67,7 +68,9 @@ exports.notifyNewInvoice = functions.firestore
     for (const id of mechanicIds) {
       const userDoc = await admin.firestore().collection('users').doc(id).get();
       if (!userDoc.exists) continue;
-      if (userDoc.data().isActive !== true) continue;
+      const uData = userDoc.data();
+      if (uData.isActive !== true) continue;
+      if (uData.unavailable === true) continue;
       const tokensSnap = await admin
         .firestore()
         .collection('users')
