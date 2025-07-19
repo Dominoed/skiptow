@@ -69,6 +69,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _completedJobsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _usersSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _newMechanicsSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _flaggedCustomersSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _flaggedMechanicsSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _paymentStatusFilter = 'all';
@@ -124,6 +126,40 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         });
       } else {
         _newMechanics = snapshot.size;
+      }
+    });
+
+    _flaggedCustomersSub = FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'customer')
+        .where('flagged', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _flaggedCustomers = snapshot.size;
+          _flaggedUsers = _flaggedCustomers + _flaggedMechanics;
+        });
+      } else {
+        _flaggedCustomers = snapshot.size;
+        _flaggedUsers = _flaggedCustomers + _flaggedMechanics;
+      }
+    });
+
+    _flaggedMechanicsSub = FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'mechanic')
+        .where('flagged', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _flaggedMechanics = snapshot.size;
+          _flaggedUsers = _flaggedCustomers + _flaggedMechanics;
+        });
+      } else {
+        _flaggedMechanics = snapshot.size;
+        _flaggedUsers = _flaggedCustomers + _flaggedMechanics;
       }
     });
     _loadStats();
@@ -1437,6 +1473,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _completedJobsSub?.cancel();
     _usersSub?.cancel();
     _newMechanicsSub?.cancel();
+    _flaggedCustomersSub?.cancel();
+    _flaggedMechanicsSub?.cancel();
     super.dispose();
   }
 
