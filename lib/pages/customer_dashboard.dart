@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import '../services/alert_service.dart';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
@@ -34,6 +35,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   String? selectedMechanicId;
   bool _locationPermissionGranted = false;
   bool _locationBannerVisible = false;
+  bool _alertBannerVisible = false;
   bool _hasAccountData = true;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
@@ -144,6 +146,48 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _completedBannerVisible = false;
   }
 
+  void _showAlertBanner(Map<String, dynamic> alert) {
+    if (_alertBannerVisible || !mounted) return;
+    _alertBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              alert['title'] ?? '',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            if ((alert['body'] ?? '').toString().isNotEmpty)
+              Text(alert['body'] ?? '')
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _hideAlertBanner();
+              AlertService.dismiss();
+            },
+            child: const Text('Dismiss'),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _hideAlertBanner() {
+    if (!_alertBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _alertBannerVisible = false;
+  }
+
+  Future<void> _checkGlobalAlert() async {
+    final alert = await AlertService.fetchAlert();
+    if (alert != null) {
+      _showAlertBanner(alert);
+    }
+  }
+
   void _listenForCompletedInvoices() {
     _completedInvoiceSub?.cancel();
     _completedInvoiceSub = FirebaseFirestore.instance
@@ -178,6 +222,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _verifyAccountData();
     _listenForAcceptedInvoices();
     _listenForCompletedInvoices();
+    _checkGlobalAlert();
   }
 
   Future<void> _verifyAccountData() async {

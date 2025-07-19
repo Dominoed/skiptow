@@ -16,6 +16,7 @@ class _AdminBroadcastMessagePageState extends State<AdminBroadcastMessagePage> {
   final TextEditingController _bodyController = TextEditingController();
   String _audience = 'both';
   bool _sendPush = true;
+  bool _urgent = false;
   bool _sending = false;
 
   @override
@@ -66,6 +67,16 @@ class _AdminBroadcastMessagePageState extends State<AdminBroadcastMessagePage> {
       });
     }
     await batch.commit();
+
+    if (_urgent) {
+      await FirebaseFirestore.instance
+          .doc('alerts/global/currentAlert')
+          .set({
+        'title': title,
+        'body': body,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -150,10 +161,31 @@ class _AdminBroadcastMessagePageState extends State<AdminBroadcastMessagePage> {
                     setState(() => _sendPush = v);
                   },
                 ),
+                SwitchListTile(
+                  title: const Text('Mark as urgent global alert'),
+                  value: _urgent,
+                  onChanged: (v) {
+                    setState(() => _urgent = v);
+                  },
+                ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _sending ? null : _submit,
                   child: Text(_sending ? 'Sending...' : 'Send Message'),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    await FirebaseFirestore.instance
+                        .doc('alerts/global/currentAlert')
+                        .delete();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Global alert cleared')),
+                      );
+                    }
+                  },
+                  child: const Text('Clear Current Alert'),
                 ),
               ],
             ),
