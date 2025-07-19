@@ -852,6 +852,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _buildStatusBadges(Map<String, dynamic> data) {
     final blocked = data['blocked'] == true;
     final flagged = data['flagged'] == true;
+    final unavailable = data['unavailable'] == true;
     final List<Widget> badges = [];
     if (blocked) {
       badges.add(
@@ -872,6 +873,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             style: TextStyle(color: Colors.black, fontSize: 12),
           ),
           backgroundColor: Colors.yellow,
+        ),
+      );
+    }
+    if (unavailable) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Unavailable',
+            style: TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          backgroundColor: Colors.orange,
         ),
       );
     }

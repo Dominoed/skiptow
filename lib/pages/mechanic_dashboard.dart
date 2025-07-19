@@ -41,9 +41,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _locationPermissionGranted = false;
   bool _locationBannerVisible = false;
   bool _alertBannerVisible = false;
+  bool _unavailableBannerVisible = false;
   bool _hasAccountData = true;
   bool _blocked = false;
   int completedJobs = 0;
+  bool unavailable = false;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -105,6 +107,30 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     if (!_alertBannerVisible || !mounted) return;
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     _alertBannerVisible = false;
+  }
+
+  void _showUnavailableBanner() {
+    if (_unavailableBannerVisible || !mounted) return;
+    _unavailableBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        backgroundColor: Colors.orange,
+        content: const Text(
+            'You are marked as temporarily unavailable and will not receive requests.'),
+        actions: [
+          TextButton(
+            onPressed: _hideUnavailableBanner,
+            child: const Text('Dismiss'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _hideUnavailableBanner() {
+    if (!_unavailableBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _unavailableBannerVisible = false;
   }
 
   Future<void> _checkGlobalAlert() async {
@@ -245,6 +271,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         isActive = data['isActive'] ?? false;
         radiusMiles = (data['radiusMiles'] ?? 5).toDouble();
         completedJobs = data['completedJobs'] ?? 0;
+        unavailable = data['unavailable'] ?? false;
         if (data.containsKey('location')) {
           currentPosition = Position(
             latitude: data['location']['lat'],
@@ -261,6 +288,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         }
         status = isActive ? 'Active' : 'Inactive';
       });
+
+      if (unavailable) {
+        _showUnavailableBanner();
+      } else {
+        _hideUnavailableBanner();
+      }
 
       // ✅ Start live updates if mechanic is active and permission granted
       if (isActive && _locationPermissionGranted) {
@@ -344,7 +377,55 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
   }
 
+  Future<void> _toggleUnavailable(bool value) async {
+    final data = <String, dynamic>{
+      'unavailable': value,
+      'timestamp': DateTime.now(),
+    };
+    if (value) {
+      data['isActive'] = false;
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update(data);
+    } catch (e) {
+      logError('Toggle unavailable error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      unavailable = value;
+      if (value) {
+        isActive = false;
+        status = 'Inactive';
+      }
+    });
+
+    if (value) {
+      positionStream?.cancel();
+      backgroundTimer?.cancel();
+      _showUnavailableBanner();
+    } else {
+      _hideUnavailableBanner();
+    }
+  }
+
   Future<void> _onTogglePressed() async {
+    if (unavailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Disable Temporarily Unavailable to go active.')),
+        );
+      }
+      return;
+    }
     if (!isActive) {
       if (!_locationPermissionGranted || currentPosition == null) {
         if (mounted) {
@@ -909,6 +990,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ElevatedButton(
                   onPressed: _blocked ? null : _onTogglePressed,
                   child: Text(isActive ? 'Go Inactive' : 'Go Active'),
+                ),
+                SwitchListTile(
+                  title: const Text('Temporarily Unavailable'),
+                  value: unavailable,
+                  onChanged: _blocked ? null : _toggleUnavailable,
                 ),
                 const SizedBox(height: 20),
                 Slider(
