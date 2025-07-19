@@ -240,6 +240,8 @@ class _RequestTile extends StatelessWidget {
                   Text('Email: $email'),
                 if (distance != null)
                   Text('Distance: ${(distance as num).toDouble().toStringAsFixed(1)} mi'),
+                if (data['etaMinutes'] != null)
+                  Text('ETA: ${data['etaMinutes']} minutes'),
                 Text('Status: $status'),
                 Align(
                   alignment: Alignment.centerRight,

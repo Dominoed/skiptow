@@ -28,6 +28,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
+  final TextEditingController _etaController = TextEditingController();
   File? _selectedImage;
   Future<Map<String, dynamic>?> _loadInvoice() async {
     final doc = await FirebaseFirestore.instance
@@ -315,6 +316,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   void dispose() {
     _messageController.dispose();
     _chatScrollController.dispose();
+    _etaController.dispose();
     super.dispose();
   }
 
@@ -344,6 +346,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final finalPrice = data['finalPrice'];
         final paymentStatus = data['paymentStatus'] ?? 'pending';
         final Timestamp? createdAtTs = data['createdAt'];
+        _etaController.text = data['etaMinutes'] != null ? data['etaMinutes'].toString() : '';
 
         final children = <Widget>[];
         final bool isOverdue =
@@ -472,6 +475,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Distance: ${data['distance'].toStringAsFixed(1)} mi'),
           Text('Submitted: ${_formatDate(data['timestamp'])}'),
           Text('Status: $status'),
+          if (data['etaMinutes'] != null)
+            Text('ETA: ${data['etaMinutes']} minutes'),
           if (finalPrice != null && widget.role != 'customer')
             Text('Final Price: \$${finalPrice.toString()}'),
           if (widget.role == 'admin' && data['platformFee'] != null)
@@ -509,6 +514,44 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 : const Text('No customer review provided.'),
         ]);
 
+        if (widget.role == 'mechanic' && (status == 'accepted' || status == 'arrived' || status == 'in_progress')) {
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _etaController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Estimated Arrival Time (in minutes)'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final eta = int.tryParse(_etaController.text);
+                      if (eta != null) {
+                        await FirebaseFirestore.instance.collection('invoices').doc(widget.invoiceId).update({'etaMinutes': eta});
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ETA updated.')));
+                          setState(() {
+                            _invoiceFuture = _loadInvoice();
+                          });
+                        }
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a valid ETA.')));
+                        }
+                      }
+                    },
+                    child: const Text('Update ETA'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final currentUid = FirebaseAuth.instance.currentUser?.uid;
         final List<dynamic>? candidates = data['mechanicCandidates'] as List<dynamic>?;
         final List<dynamic>? responded = data['mechanicResponded'] as List<dynamic>?;
