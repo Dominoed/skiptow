@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 import '../services/csv_downloader.dart';
+
+class _MonthSpending {
+  final DateTime month;
+  final double amount;
+  _MonthSpending(this.month, this.amount);
+}
 
 class CustomerServiceHistoryPage extends StatelessWidget {
   final String userId;
@@ -117,6 +124,13 @@ class CustomerServiceHistoryPage extends StatelessWidget {
           int overdueCount = 0;
           double totalSpent = 0.0;
 
+          final now = DateTime.now();
+          final months = List.generate(
+              12, (i) => DateTime(now.year, now.month - i, 1));
+          final monthTotals = {
+            for (final m in months) DateFormat('yyyy-MM').format(m): 0.0
+          };
+
           for (final doc in docs) {
             final data = doc.data();
             final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
@@ -124,9 +138,20 @@ class CustomerServiceHistoryPage extends StatelessWidget {
             final bool overdue = paymentStatus == 'pending' &&
                 createdAtTs != null &&
                 DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+            final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
             if (paymentStatus == 'paid') {
               paidCount++;
-              totalSpent += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+              totalSpent += price;
+
+              final ts = data['closedAt'] as Timestamp? ?? createdAtTs;
+              if (ts != null) {
+                final dt = ts.toDate();
+                final key =
+                    DateFormat('yyyy-MM').format(DateTime(dt.year, dt.month));
+                if (monthTotals.containsKey(key)) {
+                  monthTotals[key] = monthTotals[key]! + price;
+                }
+              }
             } else if (overdue) {
               overdueCount++;
             } else {
@@ -134,8 +159,45 @@ class CustomerServiceHistoryPage extends StatelessWidget {
             }
           }
 
+          final chartData = months
+              .map((m) => _MonthSpending(
+                  m, monthTotals[DateFormat('yyyy-MM').format(m)] ?? 0.0))
+              .toList()
+              .reversed
+              .toList();
+          final series = [
+            charts.Series<_MonthSpending, DateTime>(
+              id: 'Monthly Spending',
+              colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+              domainFn: (d, _) => d.month,
+              measureFn: (d, _) => d.amount,
+              data: chartData,
+            )
+          ];
+
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Amount Spent Per Month (Last 12 Months)',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 200,
+                      child: charts.TimeSeriesChart(
+                        series,
+                        animate: true,
+                        dateTimeFactory: const charts.LocalDateTimeFactory(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
