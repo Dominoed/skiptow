@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'payment_processing_page.dart';
 
 /// Page to show full invoice details.
@@ -23,6 +27,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   late final Future<Map<String, dynamic>?> _invoiceFuture;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _selectedImage;
   Future<Map<String, dynamic>?> _loadInvoice() async {
     final doc = await FirebaseFirestore.instance
         .collection('invoices')
@@ -98,11 +104,40 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final XFile? file =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    final int bytes = await file.length();
+    if (bytes > 5 * 1024 * 1024) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image must be under 5 MB.')),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _selectedImage = File(file.path);
+    });
+  }
+
   Future<void> _sendChatMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _selectedImage == null) return;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
+
+    String? imageUrl;
+    if (_selectedImage != null) {
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${_selectedImage!.path.split('/').last}';
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('invoices/${widget.invoiceId}/chat_images/$fileName');
+      await ref.putFile(_selectedImage!);
+      imageUrl = await ref.getDownloadURL();
+    }
 
     await FirebaseFirestore.instance
         .collection('invoices')
@@ -110,11 +145,15 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         .collection('messages')
         .add({
       'fromUserId': uid,
-      'message': text,
+      if (text.isNotEmpty) 'message': text,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'timestamp': FieldValue.serverTimestamp(),
     });
 
     _messageController.clear();
+    setState(() {
+      _selectedImage = null;
+    });
     _scrollChatToBottom();
   }
 
@@ -167,6 +206,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         isMechanic ? Alignment.centerLeft : Alignment.centerRight;
                     final color =
                         isMechanic ? Colors.grey[300] : Colors.blue[100];
+                    final String? text = msg['message'] as String?;
+                    final String? imageUrl = msg['imageUrl'] as String?;
                     return Align(
                       alignment: alignment,
                       child: Container(
@@ -176,7 +217,22 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                           color: color,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(msg['message'] ?? ''),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (text != null && text.isNotEmpty) Text(text),
+                            if (imageUrl != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Image.network(
+                                  imageUrl,
+                                  width: 150,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -199,6 +255,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.photo),
+                    onPressed: _pickImage,
+                  ),
+                  if (_selectedImage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: SizedBox(
+                        height: 40,
+                        width: 40,
+                        child: Image.file(_selectedImage!),
+                      ),
+                    ),
                   IconButton(
                     icon: const Icon(Icons.send),
                     onPressed: _sendChatMessage,
