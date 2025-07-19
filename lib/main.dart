@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'services/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
@@ -17,8 +18,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await _pushService.initialize(onNotificationTap: _handleNotificationTap);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  final user = FirebaseAuth.instance.currentUser;
-  runApp(MyApp(initialUserId: user?.uid));
+  runApp(const MyApp());
 }
 
 final PushNotificationService _pushService = PushNotificationService();
@@ -53,8 +53,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatefulWidget {
-  final String? initialUserId;
-  const MyApp({super.key, this.initialUserId});
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -63,14 +62,24 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late StreamSubscription<User?> _authSub;
   String? _currentUserId;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _currentUserId = widget.initialUserId;
     _pushService.listenToForegroundMessages();
-    if (_currentUserId != null) {
-      _pushService.registerDevice(_currentUserId!);
+    _initAuth();
+  }
+
+  Future<void> _initAuth() async {
+    final storage = const FlutterSecureStorage();
+    final token = await storage.read(key: 'session_token');
+    if (token != null && FirebaseAuth.instance.currentUser == null) {
+      try {
+        await FirebaseAuth.instance.signInWithCustomToken(token);
+      } catch (_) {
+        await storage.delete(key: 'session_token');
+      }
     }
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user == null && _currentUserId != null) {
@@ -92,6 +101,7 @@ class _MyAppState extends State<MyApp> {
         _pushService.registerDevice(user.uid);
       }
     });
+    setState(() { _loading = false; });
   }
 
   @override
@@ -102,6 +112,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'SkipTow',

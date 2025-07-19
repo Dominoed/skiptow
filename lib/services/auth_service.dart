@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<User?> signUpWithEmail(String email, String password) async {
     try {
@@ -9,7 +11,12 @@ class AuthService {
         email: email,
         password: password,
       );
-      return result.user;
+      final user = result.user;
+      if (user != null) {
+        final token = await user.getIdToken();
+        await _storage.write(key: 'session_token', value: token);
+      }
+      return user;
     } catch (e) {
       print("Signup error: $e");
       return null;
@@ -22,7 +29,12 @@ class AuthService {
         email: email,
         password: password,
       );
-      return result.user;
+      final user = result.user;
+      if (user != null) {
+        final token = await user.getIdToken();
+        await _storage.write(key: 'session_token', value: token);
+      }
+      return user;
     } catch (e) {
       print("Login error: $e");
       return null;
@@ -31,6 +43,7 @@ class AuthService {
 
   Future<void> signOut() async {
     await _auth.signOut();
+    await _storage.delete(key: 'session_token');
   }
 
   User? get currentUser => _auth.currentUser;

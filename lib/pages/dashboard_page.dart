@@ -6,6 +6,7 @@ import 'customer_dashboard.dart';
 import 'login_page.dart';
 import 'settings_page.dart';
 import 'admin_dashboard.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'help_page.dart';
 import 'service_request_history_page.dart';
 import 'vehicle_history_page.dart';
@@ -27,6 +28,7 @@ class DashboardPage extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
+    await const FlutterSecureStorage().delete(key: 'session_token');
     // Reset snackbar flag so message shows on next login
     _snackbarShown = false;
     if (context.mounted) {
