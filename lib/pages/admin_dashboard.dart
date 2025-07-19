@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
+import 'admin_user_detail_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -959,6 +960,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.block),
                       onPressed: () => _deactivateMechanic(d.id),
                       tooltip: 'Deactivate',
@@ -1023,9 +1036,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ],
                 ),
                 subtitle: Text(d.id),
-                trailing: TextButton(
-                  onPressed: () => _unblockMechanic(d.id),
-                  child: const Text('Unblock Mechanic'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
+                    TextButton(
+                      onPressed: () => _unblockMechanic(d.id),
+                      child: const Text('Unblock Mechanic'),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
@@ -1081,9 +1111,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ],
                 ),
                 subtitle: Text(d.id),
-                trailing: TextButton(
-                  onPressed: () => _unflagMechanic(d.id),
-                  child: const Text('Remove Flag'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
+                    TextButton(
+                      onPressed: () => _unflagMechanic(d.id),
+                      child: const Text('Remove Flag'),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
@@ -1142,6 +1189,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
                     if (flagged)
                       const Icon(
                         Icons.flag,
@@ -1207,9 +1266,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ],
                 ),
                 subtitle: Text(d.id),
-                trailing: TextButton(
-                  onPressed: () => _unflagCustomer(d.id),
-                  child: const Text('Remove Flag'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminUserDetailPage(userId: d.id),
+                          ),
+                        );
+                      },
+                      tooltip: 'View Details',
+                    ),
+                    TextButton(
+                      onPressed: () => _unflagCustomer(d.id),
+                      child: const Text('Remove Flag'),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
