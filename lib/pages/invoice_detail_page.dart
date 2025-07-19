@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,77 +25,91 @@ class InvoiceDetailPage extends StatefulWidget {
 }
 
 class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
-  late final Future<Map<String, dynamic>?> _invoiceFuture;
+  late final Stream<Map<String, dynamic>?> _invoiceStream;
+  StreamSubscription<Map<String, dynamic>?>? _invoiceSub;
+  bool _paymentPageOpened = false;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _etaController = TextEditingController();
   File? _selectedImage;
-  Future<Map<String, dynamic>?> _loadInvoice() async {
-    final doc = await FirebaseFirestore.instance
+
+  Stream<Map<String, dynamic>?> _buildInvoiceStream() {
+    return FirebaseFirestore.instance
         .collection('invoices')
         .doc(widget.invoiceId)
-        .get();
-    final data = doc.data();
-    if (data == null) return null;
-    if (data['flagged'] == true && widget.role != 'admin') return null;
+        .snapshots()
+        .asyncMap((doc) async {
+      final data = doc.data();
+      if (data == null) return null;
+      if (data['flagged'] == true && widget.role != 'admin') return null;
 
-    final customerDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(data['customerId'])
-        .get();
-    final customerData = customerDoc.data();
-    data['customerName'] =
-        customerData?['displayName'] ?? customerData?['username'];
-    data['customerUsername'] = customerData?['username'] ?? 'Unknown';
-    // Optional contact info
-    data['customerPhone'] =
-        customerData?['phone'] ?? customerData?['phoneNumber'];
-    data['customerEmail'] = customerData?['email'];
-
-    // Fetch mechanic info
-    if (data['mechanicId'] != null && data['mechanicId'] != 'any') {
-      final mechDoc = await FirebaseFirestore.instance
+      final customerDoc = await FirebaseFirestore.instance
           .collection('users')
-          .doc(data['mechanicId'])
+          .doc(data['customerId'])
           .get();
-      final mechData = mechDoc.data();
-      // Preserve null if mechanic status isn't available so UI can show
-      // "Unknown" rather than assuming inactive.
-      data['mechanicIsActive'] = mechData?['isActive'];
+      final customerData = customerDoc.data();
+      data['customerName'] =
+          customerData?['displayName'] ?? customerData?['username'];
+      data['customerUsername'] = customerData?['username'] ?? 'Unknown';
+      data['customerPhone'] =
+          customerData?['phone'] ?? customerData?['phoneNumber'];
+      data['customerEmail'] = customerData?['email'];
 
-      final mechLocation = mechData?['location'];
-      final invoiceLocation = data['location'];
-      if (widget.role == 'customer' &&
-          mechLocation != null &&
-          invoiceLocation != null &&
-          mechLocation['lat'] != null &&
-          mechLocation['lng'] != null &&
-          invoiceLocation['lat'] != null &&
-          invoiceLocation['lng'] != null) {
-        final double meters = Geolocator.distanceBetween(
-          invoiceLocation['lat'],
-          invoiceLocation['lng'],
-          mechLocation['lat'],
-          mechLocation['lng'],
-        );
-        data['distanceToMechanic'] = meters / 1609.34;
+      if (data['mechanicId'] != null && data['mechanicId'] != 'any') {
+        final mechDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(data['mechanicId'])
+            .get();
+        final mechData = mechDoc.data();
+        data['mechanicIsActive'] = mechData?['isActive'];
+
+        final mechLocation = mechData?['location'];
+        final invoiceLocation = data['location'];
+        if (widget.role == 'customer' &&
+            mechLocation != null &&
+            invoiceLocation != null &&
+            mechLocation['lat'] != null &&
+            mechLocation['lng'] != null &&
+            invoiceLocation['lat'] != null &&
+            invoiceLocation['lng'] != null) {
+          final double meters = Geolocator.distanceBetween(
+            invoiceLocation['lat'],
+            invoiceLocation['lng'],
+            mechLocation['lat'],
+            mechLocation['lng'],
+          );
+          data['distanceToMechanic'] = meters / 1609.34;
+        }
+
+        if (widget.role != 'customer') {
+          data['mechanicPhone'] =
+              mechData?['phone'] ?? mechData?['phoneNumber'];
+          data['mechanicEmail'] = mechData?['email'];
+        }
       }
 
-      // Contact details only for non-customer views
-      if (widget.role != 'customer') {
-        data['mechanicPhone'] =
-            mechData?['phone'] ?? mechData?['phoneNumber'];
-        data['mechanicEmail'] = mechData?['email'];
-      }
-    }
-    return data;
+      return data;
+    });
   }
 
   String _formatDate(Timestamp? ts) {
     if (ts == null) return '';
     final dt = ts.toDate().toLocal();
     return dt.toString().split('.').first;
+  }
+
+  Color _paymentColor(String status) {
+    switch (status) {
+      case 'paid':
+        return Colors.green;
+      case 'failed':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 
   void _scrollChatToBottom() {
@@ -285,13 +300,15 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   @override
   void initState() {
     super.initState();
-    _invoiceFuture = _loadInvoice();
-    _invoiceFuture.then((data) {
-      if (mounted &&
+    _invoiceStream = _buildInvoiceStream();
+    _invoiceSub = _invoiceStream.listen((data) {
+      if (!_paymentPageOpened &&
+          mounted &&
           widget.role == 'customer' &&
           data != null &&
           data['status'] == 'completed' &&
           (data['paymentStatus'] ?? 'pending') == 'pending') {
+        _paymentPageOpened = true;
         Future.microtask(() {
           Navigator.push(
             context,
@@ -302,10 +319,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             ),
           ).then((_) {
             if (mounted) {
-              setState(() {
-                _invoiceFuture = _loadInvoice();
-              });
+              setState(() {});
             }
+            _paymentPageOpened = false;
           });
         });
       }
@@ -314,6 +330,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
   @override
   void dispose() {
+    _invoiceSub?.cancel();
     _messageController.dispose();
     _chatScrollController.dispose();
     _etaController.dispose();
@@ -322,8 +339,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: _invoiceFuture,
+    return StreamBuilder<Map<String, dynamic>?>(
+      stream: _invoiceStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -395,7 +412,17 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
         children.add(
-          Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
+          Row(
+            children: [
+              Text('Mechanic: ${data['mechanicUsername'] ?? 'Unknown'}'),
+              const SizedBox(width: 8),
+              Icon(
+                data['mechanicAccepted'] == true ? Icons.check : Icons.close,
+                color: data['mechanicAccepted'] == true ? Colors.green : Colors.red,
+                size: 16,
+              ),
+            ],
+          ),
         );
 
         if (widget.role == 'customer') {
@@ -450,7 +477,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   : 'Final Total: Pending',
             ),
           if (widget.role == 'customer')
-            Text('Payment Status: $paymentStatus'),
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _paymentColor(paymentStatus),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Payment: $paymentStatus',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           if (widget.role == 'customer')
             (data['postJobNotes'] ?? '').toString().isNotEmpty
                 ? Text('Mechanic Notes:\n${data['postJobNotes']}')
@@ -535,9 +573,6 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         await FirebaseFirestore.instance.collection('invoices').doc(widget.invoiceId).update({'etaMinutes': eta});
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ETA updated.')));
-                          setState(() {
-                            _invoiceFuture = _loadInvoice();
-                          });
                         }
                       } else {
                         if (mounted) {
@@ -592,9 +627,6 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Request accepted.')),
                       );
-                      setState(() {
-                        _invoiceFuture = _loadInvoice();
-                      });
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -858,9 +890,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                     ),
                   );
                   if (context.mounted) {
-                    setState(() {
-                      _invoiceFuture = _loadInvoice();
-                    });
+                    setState(() {});
                   }
                 },
                 style: ElevatedButton.styleFrom(
