@@ -132,7 +132,47 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
           final data = snapshot.data!;
           final role = data['role'] ?? 'customer';
 
-          final List<Widget> children = [
+          final List<Widget> children = [];
+
+          if (_isBlocked) {
+            children.add(
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                color: Colors.red,
+                child: const Text(
+                  '🚫 BLOCKED ACCOUNT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+            children.add(const SizedBox(height: 8));
+          }
+
+          if (_isFlagged) {
+            children.add(
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                color: Colors.yellow,
+                child: const Text(
+                  '⚠️ FLAGGED ACCOUNT',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+            children.add(const SizedBox(height: 8));
+          }
+
+          children.addAll([
             Text('Username: ${data['username']}'),
             Text('User ID: ${widget.userId}'),
             Text('Email: ${data['email']}'),
