@@ -21,6 +21,8 @@ class InvoiceDetailPage extends StatefulWidget {
 
 class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   late final Future<Map<String, dynamic>?> _invoiceFuture;
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
   Future<Map<String, dynamic>?> _loadInvoice() async {
     final doc = await FirebaseFirestore.instance
         .collection('invoices')
@@ -88,6 +90,128 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     return dt.toString().split('.').first;
   }
 
+  void _scrollChatToBottom() {
+    if (_chatScrollController.hasClients) {
+      _chatScrollController.jumpTo(
+        _chatScrollController.position.maxScrollExtent,
+      );
+    }
+  }
+
+  Future<void> _sendChatMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    await FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(widget.invoiceId)
+        .collection('messages')
+        .add({
+      'fromUserId': uid,
+      'message': text,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    _messageController.clear();
+    _scrollChatToBottom();
+  }
+
+  Widget _buildChatSection(Map<String, dynamic> data) {
+    if (widget.role == 'admin') {
+      return const SizedBox.shrink();
+    }
+
+    final mechanicId = data['mechanicId'];
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(widget.invoiceId)
+        .collection('messages')
+        .orderBy('timestamp', descending: false)
+        .snapshots();
+
+    return SizedBox(
+      height: 250,
+      child: Column(
+        children: [
+          const Divider(),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Chat Thread',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: stream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final docs = snapshot.data!.docs;
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _scrollChatToBottom());
+                return ListView.builder(
+                  controller: _chatScrollController,
+                  itemCount: docs.length,
+                  itemBuilder: (context, index) {
+                    final msg = docs[index].data();
+                    final from = msg['fromUserId'];
+                    final bool isMechanic = from == mechanicId;
+                    final alignment =
+                        isMechanic ? Alignment.centerLeft : Alignment.centerRight;
+                    final color =
+                        isMechanic ? Colors.grey[300] : Colors.blue[100];
+                    return Align(
+                      alignment: alignment,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(msg['message'] ?? ''),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Type a message',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: _sendChatMessage,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -116,6 +240,13 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _chatScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -707,12 +838,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
         return Scaffold(
           appBar: AppBar(title: const Text('Invoice Details')),
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: children,
+                  ),
+                ),
+              ),
+              _buildChatSection(data),
+            ],
           ),
         );
       },
