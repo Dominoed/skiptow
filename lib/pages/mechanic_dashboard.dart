@@ -11,6 +11,7 @@ import 'messages_page.dart';
 import 'mechanic_request_queue_page.dart';
 import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
+import 'mechanic_earnings_report_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -602,6 +603,20 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       ),
                     );
                   },
+          ),
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            tooltip: 'Earnings Report',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MechanicEarningsReportPage(
+                    mechanicId: widget.userId,
+                  ),
+                ),
+              );
+            },
           ),
           TextButton.icon(
             onPressed: () {
