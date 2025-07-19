@@ -73,6 +73,10 @@ firebase_options.dart
 - text
 - timestamp
 
+### system/config
+- maintenanceMode: `true` or `false`
+- maintenanceMessage: string
+
 ## Setup Instructions
 
 1. Clone the repository.
