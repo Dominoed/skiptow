@@ -43,6 +43,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _flaggedCustomers = 0;
   int _flaggedUsers = 0;
   int _blockedUsers = 0;
+  int _suspiciousMechanics = 0;
+  int _suspiciousCustomers = 0;
+  int _suspiciousUsers = 0;
   int _totalActiveUsers = 0;
   int _newCustomers = 0;
   int _newMechanics = 0;
@@ -89,6 +92,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _newMechanicsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _flaggedCustomersSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _flaggedMechanicsSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _suspiciousCustomersSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _suspiciousMechanicsSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _invoiceStatusFilter = 'all';
@@ -186,6 +191,40 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _flaggedUsers = _flaggedCustomers + _flaggedMechanics;
       }
     });
+
+    _suspiciousCustomersSub = FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'customer')
+        .where('suspicious', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _suspiciousCustomers = snapshot.size;
+          _suspiciousUsers = _suspiciousCustomers + _suspiciousMechanics;
+        });
+      } else {
+        _suspiciousCustomers = snapshot.size;
+        _suspiciousUsers = _suspiciousCustomers + _suspiciousMechanics;
+      }
+    });
+
+    _suspiciousMechanicsSub = FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'mechanic')
+        .where('suspicious', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (mounted) {
+        setState(() {
+          _suspiciousMechanics = snapshot.size;
+          _suspiciousUsers = _suspiciousCustomers + _suspiciousMechanics;
+        });
+      } else {
+        _suspiciousMechanics = snapshot.size;
+        _suspiciousUsers = _suspiciousCustomers + _suspiciousMechanics;
+      }
+    });
     _loadStats();
     _loadAppVersion();
   }
@@ -250,6 +289,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             d.data()['role'] == 'customer' && d.data()['flagged'] == true)
         .length;
     _flaggedUsers = _flaggedMechanics + _flaggedCustomers;
+    _suspiciousMechanics = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'mechanic' && d.data()['suspicious'] == true)
+        .length;
+    _suspiciousCustomers = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'customer' && d.data()['suspicious'] == true)
+        .length;
+    _suspiciousUsers = _suspiciousMechanics + _suspiciousCustomers;
 
     final activeSnap = await FirebaseFirestore.instance
         .collection('invoices')
@@ -503,6 +551,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     int blockedCustomerCount = 0;
     int flaggedCount = 0;
     int flaggedCustomerCount = 0;
+    int suspiciousCount = 0;
+    int suspiciousCustomerCount = 0;
     int customerCount = 0;
     int mechanicCount = 0;
     final Map<String, String> nameMap = {};
@@ -519,11 +569,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         }
         if (data['blocked'] == true) blockedCount++;
         if (data['flagged'] == true) flaggedCount++;
+        if (data['suspicious'] == true) suspiciousCount++;
       } else if (role == 'customer') {
         customerCount++;
         count++;
         if (data['blocked'] == true) blockedCustomerCount++;
         if (data['flagged'] == true) flaggedCustomerCount++;
+        if (data['suspicious'] == true) suspiciousCustomerCount++;
         final Timestamp? ts = data['createdAt'];
         if (ts != null) {
           final dt = ts.toDate();
@@ -536,6 +588,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
     final totalBlocked = blockedCount + blockedCustomerCount;
     final totalFlagged = flaggedCount + flaggedCustomerCount;
+    final totalSuspicious = suspiciousCount + suspiciousCustomerCount;
     if (!mounted) {
       _totalActiveUsers = count;
       _activeMechanics = mechCount;
@@ -547,6 +600,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
       _flaggedUsers = totalFlagged;
+      _suspiciousMechanics = suspiciousCount;
+      _suspiciousCustomers = suspiciousCustomerCount;
+      _suspiciousUsers = totalSuspicious;
       _totalCustomers = customerCount;
       _totalMechanics = mechanicCount;
       return;
@@ -562,6 +618,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
       _flaggedUsers = totalFlagged;
+      _suspiciousMechanics = suspiciousCount;
+      _suspiciousCustomers = suspiciousCustomerCount;
+      _suspiciousUsers = totalSuspicious;
       _totalCustomers = customerCount;
       _totalMechanics = mechanicCount;
     });
@@ -719,6 +778,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _summaryCard('Total Mechanics', '$_totalMechanics', Colors.blue),
         _summaryCard('Blocked Accounts', '$_blockedUsers', Colors.red),
         _summaryCard('Flagged Accounts', '$_flaggedUsers', Colors.orange),
+        _summaryCard('Suspicious Accounts', '$_suspiciousUsers', Colors.red),
         _summaryCard('Active Mechanics', '$_activeMechanics', Colors.green),
         _summaryCard('Overdue Invoices', '$_overdueInvoices', Colors.red),
         _summaryCard('Outstanding Balance',
@@ -740,6 +800,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Blocked Customers: $_blockedCustomers'),
         Text('Blocked Accounts: $_blockedUsers'),
         Text('Flagged Accounts: $_flaggedUsers'),
+        Text('Suspicious Accounts: $_suspiciousUsers'),
         Text('Flagged Mechanics: $_flaggedMechanics'),
         Text('Flagged Customers: $_flaggedCustomers'),
         Text('Total Active Users: $_totalActiveUsers'),
@@ -852,6 +913,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _buildStatusBadges(Map<String, dynamic> data) {
     final blocked = data['blocked'] == true;
     final flagged = data['flagged'] == true;
+    final suspicious = data['suspicious'] == true;
     final unavailable = data['unavailable'] == true;
     final List<Widget> badges = [];
     if (blocked) {
@@ -876,6 +938,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       );
     }
+    if (suspicious) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Suspicious',
+            style: TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          backgroundColor: Colors.red,
     if (unavailable) {
       badges.add(
         const Chip(
@@ -1248,6 +1318,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           docs = docs
               .where((d) => d.data()['flagged'] == true && d.data()['blocked'] != true)
               .toList();
+        } else if (_accountStatusFilter == 'suspicious') {
+          docs = docs
+              .where((d) => d.data()['suspicious'] == true && d.data()['blocked'] != true)
+              .toList();
         } else if (_accountStatusFilter == 'normal') {
           docs = docs
               .where((d) => d.data()['flagged'] != true && d.data()['blocked'] != true)
@@ -1256,8 +1330,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         int rank(Map<String, dynamic> data) {
           if (data['blocked'] == true) return 0;
-          if (data['flagged'] == true) return 1;
-          return 2;
+          if (data['suspicious'] == true) return 1;
+          if (data['flagged'] == true) return 2;
+          return 3;
         }
 
         docs.sort((a, b) => rank(a.data()).compareTo(rank(b.data())));
@@ -1286,7 +1361,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final snapshot = await FirebaseFirestore.instance.collection('users').get();
     final buffer = StringBuffer();
     buffer.writeln(
-        'Username,Email,Role,User ID,Created Date,Blocked,Flagged');
+        'Username,Email,Role,User ID,Created Date,Blocked,Flagged,Suspicious');
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final username =
@@ -1296,6 +1371,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       final created = _formatDate(data['createdAt'] as Timestamp?);
       final blocked = data['blocked'] == true ? 'yes' : 'no';
       final flagged = data['flagged'] == true ? 'yes' : 'no';
+      final suspicious = data['suspicious'] == true ? 'yes' : 'no';
       final row = [
         username,
         email,
@@ -1304,6 +1380,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         created,
         blocked,
         flagged,
+        suspicious,
       ].map(_csvEscape).join(',');
       buffer.writeln(row);
     }
@@ -1853,6 +1930,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _newMechanicsSub?.cancel();
     _flaggedCustomersSub?.cancel();
     _flaggedMechanicsSub?.cancel();
+    _suspiciousCustomersSub?.cancel();
+    _suspiciousMechanicsSub?.cancel();
     _invoiceNumberController.dispose();
     _customerUsernameController.dispose();
     _mechanicUsernameController.dispose();
@@ -2139,6 +2218,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           DropdownMenuItem(value: 'all', child: Text('All')),
                           DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
                           DropdownMenuItem(value: 'flagged', child: Text('Flagged')),
+                          DropdownMenuItem(value: 'suspicious', child: Text('Suspicious')),
                           DropdownMenuItem(value: 'normal', child: Text('Normal')),
                         ],
                         onChanged: (value) {

@@ -255,6 +255,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
                   Text('Registration Date: ${_formatDate(data['createdAt'] as Timestamp?)}'),
                   Text('Blocked: ${data['blocked'] ? 'Yes' : 'No'}'),
                   Text('Flagged: ${data['flagged'] ? 'Yes' : 'No'}'),
+                  Text('Suspicious: ${data['suspicious'] ? 'Yes' : 'No'}'),
                   const SizedBox(height: 16),
                   _statItem('Total Jobs Completed', '${data['totalJobs']}'),
                   _statItem('Total Earnings Paid Out', _currency(data['totalEarnings'] as double)),

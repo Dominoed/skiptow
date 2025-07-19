@@ -235,6 +235,7 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                   Text('Registration Date: ${_formatDate(data['createdAt'] as Timestamp?)}'),
                   Text('Blocked: ${data['blocked'] ? 'Yes' : 'No'}'),
                   Text('Flagged: ${data['flagged'] ? 'Yes' : 'No'}'),
+                  Text('Suspicious: ${data['suspicious'] ? 'Yes' : 'No'}'),
                   const SizedBox(height: 16),
                   Text('Total Service Requests: ${data['totalRequests']}'),
                   Text('Total Amount Spent: \$${(data['totalSpent'] as double).toStringAsFixed(2)}'),
