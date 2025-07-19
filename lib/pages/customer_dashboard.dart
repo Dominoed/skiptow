@@ -10,6 +10,7 @@ import 'dart:async';
 import 'service_request_history_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
+import 'customer_service_history_page.dart';
 import 'customer_profile_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
@@ -920,6 +921,23 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             icon: const Icon(Icons.receipt, color: Colors.white),
             label: const Text(
               'My Invoices',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CustomerServiceHistoryPage(
+                    userId: widget.userId,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.history, color: Colors.white),
+            label: const Text(
+              'Service History',
               style: TextStyle(color: Colors.white),
             ),
           ),
