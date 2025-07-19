@@ -13,6 +13,7 @@ import 'mechanic_requests_page.dart';
 import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
 import 'mechanic_earnings_report_page.dart';
+import 'mechanic_notifications_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -470,11 +471,28 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MechanicNotificationsPage(userId: widget.userId),
+      ),
+    );
+  }
+
   Widget _buildMessagesIcon() {
     return IconButton(
       icon: const Icon(Icons.mail),
       tooltip: 'Messages',
       onPressed: _openMessages,
+    );
+  }
+
+  Widget _buildNotificationsIcon() {
+    return IconButton(
+      icon: const Icon(Icons.notifications),
+      tooltip: 'Notifications',
+      onPressed: _openNotifications,
     );
   }
 
@@ -583,6 +601,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             ),
           ),
           _buildMessagesIcon(),
+          _buildNotificationsIcon(),
         ],
       ),
       body: _blocked
