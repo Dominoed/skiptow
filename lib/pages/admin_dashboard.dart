@@ -742,6 +742,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return DateFormat('MMMM yyyy').format(dt);
   }
 
+  String _formatPrettyDate(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate();
+    return DateFormat('MMMM d, yyyy').format(dt);
+  }
+
   Color _paymentStatusColor(String status) {
     switch (status) {
       case 'paid':
@@ -866,7 +872,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Customer: ${data['customerId']}'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Customer: ${data['customerId']}'),
+                if (createdAtTs != null)
+                  Text(
+                    'Created: ${_formatPrettyDate(createdAtTs)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
             Text('Status: ${data['status']}'),
             Row(
               children: [
