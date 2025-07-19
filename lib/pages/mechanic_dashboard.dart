@@ -15,6 +15,7 @@ import 'mechanic_profile_page.dart';
 import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
+import 'mechanic_location_history_page.dart';
 import '../services/alert_service.dart';
 
 BitmapDescriptor? wrenchIcon;
@@ -695,6 +696,19 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.location_searching),
+            tooltip: 'Location History',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MechanicLocationHistoryPage(mechanicId: widget.userId),
+                ),
+              );
+            },
+          ),
           TextButton.icon(
             onPressed: () {
               Navigator.push(
@@ -992,10 +1006,30 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           'role': 'mechanic',
           'timestamp': DateTime.now(),
         });
+        await _storeLocationHistory();
       }
     } catch (e) {
       logError('Error refreshing location: $e');
       debugPrint('Error refreshing location: $e');
+    }
+  }
+
+  Future<void> _storeLocationHistory() async {
+    if (!isActive || currentPosition == null) return;
+    try {
+      final now = DateTime.now();
+      await FirebaseFirestore.instance
+          .collection('mechanics')
+          .doc(widget.userId)
+          .collection('location_history')
+          .doc(now.millisecondsSinceEpoch.toString())
+          .set({
+        'lat': currentPosition!.latitude,
+        'lng': currentPosition!.longitude,
+        'timestamp': now,
+      });
+    } catch (e) {
+      logError('Location history save error: $e');
     }
   }
 
@@ -1038,6 +1072,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           debugPrint('$e');
         }
       }
+    });
+
+    // store initial history and schedule periodic updates every 2 minutes
+    await _storeLocationHistory();
+    backgroundTimer = Timer.periodic(const Duration(minutes: 2), (_) {
+      _storeLocationHistory();
     });
   }
 }
