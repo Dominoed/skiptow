@@ -798,7 +798,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       );
     }
-    if (badges.isEmpty) return const SizedBox.shrink();
+    if (badges.isEmpty) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Active',
+            style: TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: badges
@@ -1044,6 +1054,80 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: children,
+        );
+      },
+    );
+  }
+
+  Widget _userTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final created = data['createdAt'] as Timestamp?;
+    return ListTile(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdminUserDetailPage(userId: doc.id),
+          ),
+        );
+      },
+      title: Text(data['username'] ?? doc.id),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Role: ${data['role'] ?? 'customer'}'),
+          Text('ID: ${doc.id}'),
+          if (data['email'] != null) Text('Email: ${data['email']}'),
+          if (created != null) Text('Created: ${_formatPrettyDate(created)}'),
+        ],
+      ),
+      trailing: _buildStatusBadges(data),
+    );
+  }
+
+  Widget _buildUsersList() {
+    Query<Map<String, dynamic>> query =
+        FirebaseFirestore.instance.collection('users');
+    if (_userRoleFilter != 'all') {
+      query = query.where('role', isEqualTo: _userRoleFilter);
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        List<QueryDocumentSnapshot<Map<String, dynamic>>> docs =
+            snapshot.data?.docs ?? [];
+
+        docs = docs.where((d) => _matchesUserSearch(d.data(), d.id)).toList();
+
+        if (_accountStatusFilter == 'blocked') {
+          docs = docs.where((d) => d.data()['blocked'] == true).toList();
+        } else if (_accountStatusFilter == 'flagged') {
+          docs = docs
+              .where((d) => d.data()['flagged'] == true && d.data()['blocked'] != true)
+              .toList();
+        } else if (_accountStatusFilter == 'normal') {
+          docs = docs
+              .where((d) => d.data()['flagged'] != true && d.data()['blocked'] != true)
+              .toList();
+        }
+
+        int rank(Map<String, dynamic> data) {
+          if (data['blocked'] == true) return 0;
+          if (data['flagged'] == true) return 1;
+          return 2;
+        }
+
+        docs.sort((a, b) => rank(a.data()).compareTo(rank(b.data())));
+
+        if (docs.isEmpty) return const Text('No users');
+
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: docs.map(_userTile).toList(),
         );
       },
     );
@@ -1666,15 +1750,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   Row(
                     children: [
-                      const Text('Sort by Account Status: '),
+                      const Text('Account Status: '),
                       DropdownButton<String>(
                         value: _accountStatusFilter,
                         items: const [
                           DropdownMenuItem(value: 'all', child: Text('All')),
-                          DropdownMenuItem(
-                              value: 'blocked', child: Text('Blocked')),
-                          DropdownMenuItem(
-                              value: 'flagged', child: Text('Flagged')),
+                          DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                          DropdownMenuItem(value: 'flagged', child: Text('Flagged')),
                           DropdownMenuItem(value: 'normal', child: Text('Normal')),
                         ],
                         onChanged: (value) {
@@ -1687,30 +1769,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     ],
                   ),
-                  if (_userRoleFilter == 'all' || _userRoleFilter == 'mechanic')
-                    ...[
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'blocked')
-                        _buildBlockedMechanics(),
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'flagged')
-                        _buildFlaggedMechanics(),
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'normal')
-                        _buildActiveMechanics(),
-                    ],
-                  if (_userRoleFilter == 'all' || _userRoleFilter == 'customer')
-                    ...[
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'blocked')
-                        _buildBlockedCustomers(),
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'flagged')
-                        _buildFlaggedCustomers(),
-                      if (_accountStatusFilter == 'all' ||
-                          _accountStatusFilter == 'normal')
-                        _buildCustomers(),
-                    ],
+                  _buildUsersList(),
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
