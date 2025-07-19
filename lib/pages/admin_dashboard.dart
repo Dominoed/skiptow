@@ -1101,15 +1101,25 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           0.0,
           (sum, d) => sum + ((d.data()['finalPrice'] as num?)?.toDouble() ?? 0.0),
         );
+        final count = searchDocs.length;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'Total Value of Filtered Invoices: \$${total.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Results: $count invoices',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Total Amount: \$${total.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
             ListView(
