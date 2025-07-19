@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'services/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
@@ -61,13 +62,16 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late StreamSubscription<User?> _authSub;
+  StreamSubscription<ConnectivityResult>? _connectSub;
   String? _currentUserId;
   bool _loading = true;
+  bool _offlineBannerVisible = false;
 
   @override
   void initState() {
     super.initState();
     _pushService.listenToForegroundMessages();
+    _initConnectivity();
     _initAuth();
   }
 
@@ -104,9 +108,46 @@ class _MyAppState extends State<MyApp> {
     setState(() { _loading = false; });
   }
 
+  Future<void> _initConnectivity() async {
+    final connectivity = Connectivity();
+    final result = await connectivity.checkConnectivity();
+    _updateConnectivityStatus(result);
+    _connectSub = connectivity.onConnectivityChanged.listen(_updateConnectivityStatus);
+  }
+
+  void _updateConnectivityStatus(ConnectivityResult result) {
+    final offline = result == ConnectivityResult.none;
+    final context = navigatorKey.currentContext;
+    void showBanner() {
+      if (context != null) {
+        ScaffoldMessenger.of(context).showMaterialBanner(
+          const MaterialBanner(
+            content: Text('⚠️ Offline Mode – Data may be outdated.'),
+            backgroundColor: Colors.orange,
+            actions: [SizedBox.shrink()],
+          ),
+        );
+      }
+    }
+    if (offline && !_offlineBannerVisible) {
+      if (context == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => showBanner());
+      } else {
+        showBanner();
+      }
+      _offlineBannerVisible = true;
+    } else if (!offline && _offlineBannerVisible) {
+      if (context != null) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+      _offlineBannerVisible = false;
+    }
+  }
+
   @override
   void dispose() {
     _authSub.cancel();
+    _connectSub?.cancel();
     super.dispose();
   }
 
