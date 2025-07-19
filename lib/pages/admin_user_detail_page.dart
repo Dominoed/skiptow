@@ -14,6 +14,7 @@ class AdminUserDetailPage extends StatefulWidget {
 
 class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   late Future<Map<String, dynamic>> _detailsFuture;
+  bool _isBlocked = false;
 
   @override
   void initState() {
@@ -28,6 +29,9 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
         .get();
     final userData = userDoc.data() ?? {};
     final role = userData['role'] ?? 'customer';
+    setState(() {
+      _isBlocked = userData['blocked'] == true;
+    });
 
     int completedJobs = 0;
     double totalEarnings = 0.0;
@@ -85,6 +89,18 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     return DateFormat('MMMM d, yyyy').format(dt);
   }
 
+  Future<void> _toggleBlock() async {
+    final newStatus = !_isBlocked;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'blocked': newStatus});
+    setState(() {
+      _isBlocked = newStatus;
+      _detailsFuture = _loadDetails();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +126,11 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             Text('Account Created: ${_formatDate(data['createdAt'] as Timestamp?)}'),
             Text('Blocked: ${data['blocked'] == true ? 'Yes' : 'No'}'),
             Text('Flagged: ${data['flagged'] == true ? 'Yes' : 'No'}'),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _toggleBlock,
+              child: Text(_isBlocked ? 'Unblock Account' : 'Block Account'),
+            ),
             const SizedBox(height: 20),
           ];
 
