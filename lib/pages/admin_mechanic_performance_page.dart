@@ -48,9 +48,17 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
         .get();
     final userData = userDoc.data() ?? {};
 
+    // Query all invoices for general stats
     final invoices = await FirebaseFirestore.instance
         .collection('invoices')
         .where('mechanicId', isEqualTo: widget.mechanicId)
+        .get();
+
+    // Query only paid invoices for the monthly earnings chart
+    final paidInvoicesQuery = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.mechanicId)
+        .where('paymentStatus', isEqualTo: 'paid')
         .get();
 
     int completed = 0;
@@ -84,19 +92,24 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
         totalPaid += price;
         if (price > highest) highest = price;
         fees += (data['platformFee'] as num?)?.toDouble() ?? price * 0.15;
-
-        final Timestamp? closedTs = data['closedAt'];
-        final date = (closedTs ?? createdAtTs)?.toDate();
-        if (date != null && !date.isBefore(start)) {
-          final key = date.year * 100 + date.month;
-          if (monthTotals.containsKey(key)) {
-            monthTotals[key] = monthTotals[key]! + price;
-          }
-        }
       } else if (paymentStatus == 'pending' &&
           createdAtTs != null &&
           DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
         overdue++;
+      }
+    }
+
+    for (final doc in paidInvoicesQuery.docs) {
+      final data = doc.data();
+      final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+      final Timestamp? createdAtTs = data['createdAt'];
+      final Timestamp? closedTs = data['closedAt'];
+      final date = (closedTs ?? createdAtTs)?.toDate();
+      if (date != null && !date.isBefore(start)) {
+        final key = date.year * 100 + date.month;
+        if (monthTotals.containsKey(key)) {
+          monthTotals[key] = monthTotals[key]! + price;
+        }
       }
     }
 
@@ -165,6 +178,39 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
     );
   }
 
+  Widget _buildEarningsTable(List<_MonthEarnings> months) {
+    return Table(
+      columnWidths: const {1: IntrinsicColumnWidth()},
+      border: TableBorder.all(color: Colors.grey),
+      children: [
+        const TableRow(children: [
+          Padding(
+            padding: EdgeInsets.all(8),
+            child:
+                Text('Month', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child:
+                Text('Earnings', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ]),
+        ...months.map(
+          (m) => TableRow(children: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(DateFormat('MMM yyyy').format(m.month)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(_currency(m.total)),
+            ),
+          ]),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String?>(
@@ -217,7 +263,14 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
                   _statItem('Highest Single Payment', _currency(data['highestPayment'] as double)),
                   _statItem('Number of Overdue Invoices', '${data['overdueInvoices']}'),
                   const SizedBox(height: 16),
+                  const Text(
+                    'Earnings Per Month (Last 12 Months)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
                   _buildChart(months),
+                  const SizedBox(height: 8),
+                  _buildEarningsTable(months),
                 ],
               );
             },
