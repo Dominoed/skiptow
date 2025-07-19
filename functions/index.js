@@ -144,3 +144,27 @@ exports.notifyInvoiceUpdate = functions.firestore
     await Promise.all(promises);
     return null;
   });
+
+exports.notifyBroadcastMessage = functions.firestore
+  .document('notifications/{userId}/messages/{messageId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    if (!data || data.sendFcm === false) return null;
+    const userId = context.params.userId;
+    const tokensSnap = await admin
+      .firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('tokens')
+      .get();
+    const tokens = tokensSnap.docs.map(t => t.id);
+    if (tokens.length === 0) return null;
+    await admin.messaging().sendEachForMulticast({
+      notification: {
+        title: data.title || 'New Message',
+        body: data.body || '',
+      },
+      tokens,
+    });
+    return null;
+  });
