@@ -563,6 +563,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         }
         final docs = (snapshot.data?.docs ?? [])
             .where((d) => d.data()['flagged'] != true)
+            .where((d) => d.data()['invoiceStatus'] != 'cancelled')
             .toList();
         if (docs.isEmpty) {
           return const Padding(

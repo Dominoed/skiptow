@@ -103,7 +103,9 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                     final doc = docs[index];
                     final data = doc.data();
                     final invoiceNum = data['invoiceNumber'] ?? doc.id;
-                    final status = (data['status'] ?? 'active').toString();
+                    final status =
+                        (data['invoiceStatus'] ?? data['status'] ?? 'active')
+                            .toString();
                     final mechanic = data['mechanicUsername'];
                     final Timestamp? createdAt = data['createdAt'] ?? data['timestamp'];
                     final estimated = (data['estimatedPrice'] ?? data['quotedPrice']) as num?;
@@ -158,6 +160,56 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                 child: const Text('View Details'),
                               ),
                             ),
+                            if ((data['mechanicId'] == null ||
+                                    data['mechanicAccepted'] != true) &&
+                                data['invoiceStatus'] != 'cancelled')
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title:
+                                              const Text('Cancel Request'),
+                                          content: const Text(
+                                              'Are you sure you want to cancel this service request?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(false),
+                                              child: const Text('No'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(true),
+                                              child: const Text('Yes'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (confirmed == true) {
+                                      await FirebaseFirestore.instance
+                                          .collection('invoices')
+                                          .doc(doc.id)
+                                          .update({
+                                        'invoiceStatus': 'cancelled'
+                                      });
+
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                              content: Text('Request cancelled.')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text('Cancel Request'),
+                                ),
+                              ),
                           ],
                         ),
                       ),

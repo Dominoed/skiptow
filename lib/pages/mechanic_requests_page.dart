@@ -78,6 +78,7 @@ class _MechanicRequestsPageState extends State<MechanicRequestsPage> {
                 final visibleDocs = docs.where((d) {
                   final data = d.data();
                   if (data['flagged'] == true) return false;
+                  if (data['invoiceStatus'] == 'cancelled') return false;
                   final responded = (data['mechanicResponded'] as List?)
                           ?.contains(widget.mechanicId) ??
                       false;
