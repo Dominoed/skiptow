@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
 import 'admin_user_detail_page.dart';
+import 'admin_financial_report_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1581,6 +1582,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildStats(),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AdminFinancialReportPage(userId: widget.userId),
+                        ),
+                      );
+                    },
+                    child: const Text('Financial Reports'),
+                  ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
