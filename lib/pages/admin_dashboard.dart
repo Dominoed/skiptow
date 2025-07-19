@@ -31,6 +31,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _flaggedInvoices = 0;
   int _overdueInvoices = 0;
   int _blockedMechanics = 0;
+  int _blockedCustomers = 0;
   int _flaggedMechanics = 0;
   int _flaggedCustomers = 0;
   int _flaggedUsers = 0;
@@ -175,9 +176,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .where((d) =>
             d.data()['role'] == 'mechanic' && d.data()['blocked'] == true)
         .length;
-    _blockedUsers = usersSnapshot.docs
-        .where((d) => d.data()['blocked'] == true)
+    _blockedCustomers = usersSnapshot.docs
+        .where((d) =>
+            d.data()['role'] == 'customer' && d.data()['blocked'] == true)
         .length;
+    _blockedUsers = _blockedMechanics + _blockedCustomers;
     _flaggedMechanics = usersSnapshot.docs
         .where((d) =>
             d.data()['role'] == 'mechanic' && d.data()['flagged'] == true)
@@ -479,6 +482,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _usernames = nameMap;
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
+      _blockedCustomers = blockedCustomerCount;
       _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
@@ -493,6 +497,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _usernames = nameMap;
       _newCustomers = newCount;
       _blockedMechanics = blockedCount;
+      _blockedCustomers = blockedCustomerCount;
       _blockedUsers = totalBlocked;
       _flaggedMechanics = flaggedCount;
       _flaggedCustomers = flaggedCustomerCount;
@@ -623,6 +628,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         Text('Total Users: $_totalUsers'),
         Text('Active Mechanics Right Now: $_activeMechanics'),
         Text('Blocked Mechanics: $_blockedMechanics'),
+        Text('Blocked Customers: $_blockedCustomers'),
         Text('Blocked Accounts: $_blockedUsers'),
         Text('Flagged Accounts: $_flaggedUsers'),
         Text('Flagged Mechanics: $_flaggedMechanics'),
