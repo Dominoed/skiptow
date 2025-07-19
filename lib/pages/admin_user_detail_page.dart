@@ -15,6 +15,7 @@ class AdminUserDetailPage extends StatefulWidget {
 class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
   late Future<Map<String, dynamic>> _detailsFuture;
   bool _isBlocked = false;
+  bool _isFlagged = false;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     final role = userData['role'] ?? 'customer';
     setState(() {
       _isBlocked = userData['blocked'] == true;
+      _isFlagged = userData['flagged'] == true;
     });
 
     int completedJobs = 0;
@@ -101,6 +103,18 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     });
   }
 
+  Future<void> _toggleFlag() async {
+    final newStatus = !_isFlagged;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .update({'flagged': newStatus});
+    setState(() {
+      _isFlagged = newStatus;
+      _detailsFuture = _loadDetails();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,6 +144,11 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             ElevatedButton(
               onPressed: _toggleBlock,
               child: Text(_isBlocked ? 'Unblock Account' : 'Block Account'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _toggleFlag,
+              child: Text(_isFlagged ? 'Remove Flag' : 'Flag Account'),
             ),
             const SizedBox(height: 20),
           ];
