@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 import '../services/csv_downloader.dart';
 
 import 'dashboard_page.dart';
@@ -162,6 +163,69 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
       );
     }
   }
+
+  // Data class for monthly revenue totals
+  class _MonthRevenue {
+    final DateTime month;
+    final double total;
+    _MonthRevenue(this.month, this.total);
+  }
+
+  /// Builds a bar chart showing platform revenue over the last 12 months.
+  Widget _buildRevenueChart() {
+    final start = DateTime(DateTime.now().year, DateTime.now().month - 11, 1);
+    return SizedBox(
+      height: 200,
+      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('invoices')
+            .where('paymentStatus', isEqualTo: 'paid')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final Map<int, double> totals = {};
+          for (final doc in snapshot.data!.docs) {
+            final data = doc.data();
+            final Timestamp? closedAtTs = data['closedAt'];
+            final Timestamp? createdAtTs = data['createdAt'];
+            final date = (closedAtTs ?? createdAtTs)?.toDate();
+            if (date == null || date.isBefore(start)) continue;
+            final key = date.year * 100 + date.month;
+            double fee;
+            final feeNum = data['platformFee'];
+            if (feeNum is num) {
+              fee = feeNum.toDouble();
+            } else {
+              final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+              fee = price * 0.15;
+            }
+            totals[key] = (totals[key] ?? 0) + fee;
+          }
+
+          final List<_MonthRevenue> dataPoints = [];
+          for (int i = 0; i < 12; i++) {
+            final month = DateTime(start.year, start.month + i, 1);
+            final key = month.year * 100 + month.month;
+            dataPoints.add(_MonthRevenue(month, totals[key] ?? 0));
+          }
+
+          final series = [
+            charts.Series<_MonthRevenue, String>(
+              id: 'PlatformRevenue',
+              colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+              domainFn: (d, _) => DateFormat('MMM').format(d.month),
+              measureFn: (d, _) => d.total,
+              data: dataPoints,
+            )
+          ];
+          return charts.BarChart(series, animate: true);
+        },
+      ),
+    );
+  }
   Widget _buildReport(Map<String, dynamic> stats) {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -205,6 +269,12 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
             _currency(stats['overdueBalance'] as double)),
         _statItem('Total Pending Payments',
             _currency(stats['pendingPayments'] as double)),
+        const SizedBox(height: 16),
+        const Text(
+          'Platform Revenue (Last 12 Months)',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        _buildRevenueChart(),
       ],
     );
   }
