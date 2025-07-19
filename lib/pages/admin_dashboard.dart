@@ -11,6 +11,7 @@ import 'admin_user_detail_page.dart';
 import 'admin_financial_report_page.dart';
 import 'admin_invoice_detail_page.dart';
 import 'admin_mechanic_performance_page.dart';
+import 'admin_customer_history_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1188,6 +1189,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               },
               tooltip: 'View Performance',
             ),
+          if (data['role'] == 'customer')
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AdminCustomerHistoryPage(
+                      customerId: doc.id,
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('View History'),
+            ),
           _buildStatusBadges(data),
         ],
       ),
@@ -1612,6 +1628,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       tooltip: 'View Details',
                     ),
                     TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminCustomerHistoryPage(
+                              customerId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('View History'),
+                    ),
+                    TextButton(
                       onPressed: () => _unblockCustomer(d.id),
                       child: const Text('Unblock Customer'),
                     ),
@@ -1686,6 +1716,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       tooltip: 'View Details',
                     ),
                     TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminCustomerHistoryPage(
+                              customerId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('View History'),
+                    ),
+                    TextButton(
                       onPressed: flagged ? null : () => _flagCustomer(d.id),
                       child: const Text('Flag Customer'),
                     ),
@@ -1757,6 +1801,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         );
                       },
                       tooltip: 'View Details',
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminCustomerHistoryPage(
+                              customerId: d.id,
+                              userId: widget.userId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('View History'),
                     ),
                     TextButton(
                       onPressed: () => _unflagCustomer(d.id),
