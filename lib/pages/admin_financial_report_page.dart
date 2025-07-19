@@ -155,7 +155,7 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
       ].map(_csvEscape).join(',');
       buffer.writeln(row);
     }
-    await downloadCsv(buffer.toString());
+    await downloadCsv(buffer.toString(), fileName: 'invoices.csv');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invoice CSV exported')),
