@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../services/csv_downloader.dart';
 
 import 'dashboard_page.dart';
 
@@ -111,10 +112,68 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
       ),
     );
   }
+
+  String _formatTimestamp(Timestamp? ts) {
+    if (ts == null) return '';
+    final dt = ts.toDate().toLocal();
+    return DateFormat('yyyy-MM-dd HH:mm:ss').format(dt);
+  }
+
+  String _csvEscape(String? input) {
+    if (input == null) return '';
+    var s = input.replaceAll('"', '""');
+    if (s.contains(',') || s.contains('\n') || s.contains('"')) {
+      s = '"$s"';
+    }
+    return s;
+  }
+
+  Future<void> _exportInvoices() async {
+    final snapshot = await FirebaseFirestore.instance.collection('invoices').get();
+    final buffer = StringBuffer();
+    buffer.writeln(
+        'Invoice Number,Customer Username,Mechanic Username,Final Price,Platform Fee,Payment Status,Created Date,Closed Date');
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final invoiceNum = (data['invoiceNumber'] ?? doc.id).toString();
+      final customer = (data['customerUsername'] ?? '').toString();
+      final mechanic = (data['mechanicUsername'] ?? '').toString();
+      final finalPrice = (data['finalPrice'] as num?)?.toString() ?? '';
+      final fee = (data['platformFee'] as num?)?.toString() ?? '';
+      final paymentStatus = (data['paymentStatus'] ?? '').toString();
+      final created = _formatTimestamp(data['createdAt'] as Timestamp?);
+      final closed = _formatTimestamp(data['closedAt'] as Timestamp?);
+      final row = [
+        invoiceNum,
+        customer,
+        mechanic,
+        finalPrice,
+        fee,
+        paymentStatus,
+        created,
+        closed,
+      ].map(_csvEscape).join(',');
+      buffer.writeln(row);
+    }
+    await downloadCsv(buffer.toString());
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invoice CSV exported')),
+      );
+    }
+  }
   Widget _buildReport(Map<String, dynamic> stats) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton(
+            onPressed: _exportInvoices,
+            child: const Text('Export Invoices as CSV'),
+          ),
+        ),
+        const SizedBox(height: 16),
         const Text(
           'All-Time Totals',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
