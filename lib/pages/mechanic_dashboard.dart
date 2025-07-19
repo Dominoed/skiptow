@@ -14,6 +14,7 @@ import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
 import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
+import 'mechanic_radius_history_page.dart';
 import '../services/alert_service.dart';
 
 BitmapDescriptor? wrenchIcon;
@@ -681,6 +682,19 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.timeline),
+            tooltip: 'Radius History',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MechanicRadiusHistoryPage(mechanicId: widget.userId),
+                ),
+              );
+            },
+          ),
           TextButton.icon(
             onPressed: () {
               Navigator.push(
@@ -909,12 +923,23 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text(
-                                    'An error occurred. Please try again.')),
+                                content: Text('An error occurred. Please try again.')),
                           );
                         }
                         debugPrint('$e');
                       }
+                    }
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('mechanics')
+                          .doc(widget.userId)
+                          .collection('radius_history')
+                          .add({
+                        'timestamp': DateTime.now(),
+                        'newRadiusMiles': val,
+                      });
+                    } catch (e) {
+                      logError('Radius history log error: $e');
                     }
                   },
                 ),
