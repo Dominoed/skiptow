@@ -17,9 +17,9 @@ class MechanicJobHistoryPage extends StatelessWidget {
       case 'overdue':
         return Colors.red;
       case 'closed':
-        return Colors.blueGrey;
+        return Colors.grey;
       default:
-        return Colors.orange;
+        return Colors.yellow;
     }
   }
 
@@ -107,16 +107,12 @@ class MechanicJobHistoryPage extends StatelessWidget {
                               'Invoice #: $invoiceNum',
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _statusColor(status),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                status,
+                            Chip(
+                              label: Text(
+                                status[0].toUpperCase() + status.substring(1),
                                 style: const TextStyle(color: Colors.white),
                               ),
+                              backgroundColor: _statusColor(status),
                             ),
                           ],
                         ),
