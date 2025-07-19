@@ -12,6 +12,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/mechanic_request_queue_page.dart';
 import 'pages/customer_invoices_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'pages/maintenance_mode_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,12 +64,33 @@ class _MyAppState extends State<MyApp> {
   late StreamSubscription<User?> _authSub;
   String? _currentUserId;
   bool _loading = true;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _maintSub;
+  bool? _maintenanceMode;
+  String _maintenanceMessage = '';
 
   @override
   void initState() {
     super.initState();
     _pushService.listenToForegroundMessages();
+    _listenMaintenance();
     _initAuth();
+  }
+
+  void _listenMaintenance() {
+    _maintSub = FirebaseFirestore.instance
+        .collection('system')
+        .doc('config')
+        .snapshots()
+        .listen((snap) {
+      final data = snap.data();
+      if (data != null) {
+        setState(() {
+          _maintenanceMode = data['maintenanceMode'] == true;
+          _maintenanceMessage =
+              (data['maintenanceMessage'] ?? '').toString();
+        });
+      }
+    });
   }
 
   Future<void> _initAuth() async {
@@ -107,17 +129,27 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _authSub.cancel();
+    _maintSub?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    if (_loading || _maintenanceMode == null) {
       return MaterialApp(
         navigatorKey: navigatorKey,
         home: const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
+      );
+    }
+    if (_maintenanceMode == true) {
+      return MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'SkipTow',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange)),
+        home: MaintenanceModePage(message: _maintenanceMessage),
       );
     }
     return MaterialApp(
