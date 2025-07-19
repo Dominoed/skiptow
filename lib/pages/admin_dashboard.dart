@@ -59,15 +59,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current search query for invoices
   String _invoiceSearch = '';
 
-  // Search term specifically for invoice numbers
-  String _invoiceNumberSearch = '';
-
-  // Search term for customer usernames in invoices
-  String _customerUsernameSearch = '';
-
-  // Search term for mechanic usernames in invoices
-  String _mechanicUsernameSearch = '';
-
   // Current search query for users
   String _userSearch = '';
 
@@ -943,9 +934,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return payment == _paymentStatusFilter;
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
-        final invoiceNumberSearchLower = _invoiceNumberSearch.toLowerCase();
-        final customerSearchLower = _customerUsernameSearch.toLowerCase();
-        final mechanicSearchLower = _mechanicUsernameSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
           final data = d.data();
           final invoiceNum = (data['invoiceNumber'] ?? '').toString().toLowerCase();
@@ -956,22 +944,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               .toLowerCase();
           final custName = (_usernames[data['customerId']] ?? '')
               .toLowerCase();
-          bool matches = true;
-          if (searchLower.isNotEmpty) {
-            matches = invoiceNum.contains(searchLower) ||
-                mechName.contains(searchLower) ||
-                custName.contains(searchLower);
-          }
-          if (invoiceNumberSearchLower.isNotEmpty) {
-            matches = matches && invoiceNum.contains(invoiceNumberSearchLower);
-          }
-          if (customerSearchLower.isNotEmpty) {
-            matches = matches && custName.contains(customerSearchLower);
-          }
-          if (mechanicSearchLower.isNotEmpty) {
-            matches = matches && mechName.contains(mechanicSearchLower);
-          }
-          return matches;
+          if (searchLower.isEmpty) return true;
+          return invoiceNum.contains(searchLower) ||
+              mechName.contains(searchLower) ||
+              custName.contains(searchLower);
         }).toList();
         if (searchDocs.isEmpty) {
           return const Text('No invoices');
@@ -1567,48 +1543,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       },
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Search by Invoice Number',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _invoiceNumberSearch = value;
-                        });
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Search by Customer Username',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _customerUsernameSearch = value;
-                        });
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Search by Mechanic Username',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _mechanicUsernameSearch = value;
-                        });
-                      },
-                    ),
-                  ),
+
                   Row(
                     children: [
                       const Text('Filter by Payment Status: '),
