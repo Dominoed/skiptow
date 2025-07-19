@@ -697,6 +697,41 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Widget _buildStatusBadges(Map<String, dynamic> data) {
+    final blocked = data['blocked'] == true;
+    final flagged = data['flagged'] == true;
+    final List<Widget> badges = [];
+    if (blocked) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Blocked',
+            style: TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    if (flagged) {
+      badges.add(
+        const Chip(
+          label: Text(
+            'Flagged',
+            style: TextStyle(color: Colors.black, fontSize: 12),
+          ),
+          backgroundColor: Colors.yellow,
+        ),
+      );
+    }
+    if (badges.isEmpty) return const SizedBox.shrink();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: badges
+          .map((w) => Padding(padding: const EdgeInsets.only(right: 4), child: w))
+          .toList(),
+    );
+  }
+
   Future<void> _flagInvoice(String id) async {
     await FirebaseFirestore.instance
         .collection('invoices')
@@ -959,6 +994,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildStatusBadges(data),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -1039,6 +1075,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildStatusBadges(data),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -1114,6 +1151,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildStatusBadges(data),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -1189,6 +1227,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildStatusBadges(data),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -1201,11 +1240,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       },
                       tooltip: 'View Details',
                     ),
-                    if (flagged)
-                      const Icon(
-                        Icons.flag,
-                        color: Colors.red,
-                      ),
                     TextButton(
                       onPressed: flagged ? null : () => _flagCustomer(d.id),
                       child: const Text('Flag Customer'),
@@ -1269,6 +1303,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildStatusBadges(data),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
