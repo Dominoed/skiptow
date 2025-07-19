@@ -58,8 +58,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Cache of userId to username for quick lookups
   Map<String, String> _usernames = {};
 
-  // Current search query for invoices
-  String _invoiceSearch = '';
+  // Current search queries for invoices
+  String _invoiceNumberSearch = '';
+  String _customerUsernameSearch = '';
+  String _mechanicUsernameSearch = '';
+
+  final TextEditingController _invoiceNumberController = TextEditingController();
+  final TextEditingController _customerUsernameController =
+      TextEditingController();
+  final TextEditingController _mechanicUsernameController =
+      TextEditingController();
 
   // Current search query for users
   String _userSearch = '';
@@ -917,6 +925,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  void _resetInvoiceFilters() {
+    setState(() {
+      _invoiceStatusFilter = 'all';
+      _invoiceNumberSearch = '';
+      _customerUsernameSearch = '';
+      _mechanicUsernameSearch = '';
+      _invoiceNumberController.clear();
+      _customerUsernameController.clear();
+      _mechanicUsernameController.clear();
+      _startDate = null;
+      _endDate = null;
+      _startDateController.clear();
+      _endDateController.clear();
+    });
+  }
+
   Widget _invoiceTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final flagged = data['flagged'] == true;
@@ -1047,21 +1071,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           }
           return true;
         }).toList();
-        final searchLower = _invoiceSearch.toLowerCase();
+        final invoiceLower = _invoiceNumberSearch.toLowerCase();
+        final mechLower = _mechanicUsernameSearch.toLowerCase();
+        final custLower = _customerUsernameSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
           final data = d.data();
           final invoiceNum = (data['invoiceNumber'] ?? '').toString().toLowerCase();
           final mechName = (data['mechanicUsername'] ??
-                  _usernames[data['mechanicId']] ??
-                  '')
+                  _usernames[data['mechanicId']] ?? '')
               .toString()
               .toLowerCase();
           final custName = (_usernames[data['customerId']] ?? '')
               .toLowerCase();
-          if (searchLower.isEmpty) return true;
-          return invoiceNum.contains(searchLower) ||
-              mechName.contains(searchLower) ||
-              custName.contains(searchLower);
+          if (invoiceLower.isNotEmpty && !invoiceNum.contains(invoiceLower)) {
+            return false;
+          }
+          if (mechLower.isNotEmpty && !mechName.contains(mechLower)) {
+            return false;
+          }
+          if (custLower.isNotEmpty && !custName.contains(custLower)) {
+            return false;
+          }
+          return true;
         }).toList();
         if (searchDocs.isEmpty) {
           return const Text('No invoices');
@@ -1656,6 +1687,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _newMechanicsSub?.cancel();
     _flaggedCustomersSub?.cancel();
     _flaggedMechanicsSub?.cancel();
+    _invoiceNumberController.dispose();
+    _customerUsernameController.dispose();
+    _mechanicUsernameController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
     super.dispose();
@@ -1727,106 +1761,141 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const SizedBox(height: 16),
                   const Divider(),
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Search Invoices',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _invoiceSearch = value;
-                        });
-                      },
-                    ),
-                  ),
-
-                  Row(
+                  ExpansionTile(
+                    title: const Text('Advanced Filters'),
                     children: [
-                      const Text('Filter by Status: '),
-                      DropdownButton<String>(
-                        value: _invoiceStatusFilter,
-                        items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All')),
-                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
-                          DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                          DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
-                          DropdownMenuItem(value: 'closed', child: Text('Closed')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _invoiceStatusFilter = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('Filter Invoices By Date Range'),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _startDateController,
-                          readOnly: true,
-                          decoration:
-                              const InputDecoration(labelText: 'Start Date'),
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _startDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                _startDate =
-                                    DateTime(picked.year, picked.month, picked.day);
-                                _startDateController.text =
-                                    DateFormat('yyyy-MM-dd').format(_startDate!);
-                              });
-                            }
-                          },
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _invoiceNumberController,
+                              decoration: const InputDecoration(
+                                labelText: 'Invoice Number',
+                                prefixIcon: Icon(Icons.receipt),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _invoiceNumberSearch = value;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _customerUsernameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Customer Username',
+                                prefixIcon: Icon(Icons.person),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _customerUsernameSearch = value;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _mechanicUsernameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Mechanic Username',
+                                prefixIcon: Icon(Icons.person),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _mechanicUsernameSearch = value;
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Text('Status: '),
+                                DropdownButton<String>(
+                                  value: _invoiceStatusFilter,
+                                  items: const [
+                                    DropdownMenuItem(value: 'all', child: Text('All')),
+                                    DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                                    DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                                    DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
+                                    DropdownMenuItem(value: 'closed', child: Text('Closed')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _invoiceStatusFilter = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _startDateController,
+                                    readOnly: true,
+                                    decoration:
+                                        const InputDecoration(labelText: 'Start Date'),
+                                    onTap: () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: _startDate ?? DateTime.now(),
+                                        firstDate: DateTime(2000),
+                                        lastDate:
+                                            DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          _startDate = DateTime(
+                                              picked.year, picked.month, picked.day);
+                                          _startDateController.text =
+                                              DateFormat('yyyy-MM-dd').format(_startDate!);
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _endDateController,
+                                    readOnly: true,
+                                    decoration:
+                                        const InputDecoration(labelText: 'End Date'),
+                                    onTap: () async {
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: _endDate ?? DateTime.now(),
+                                        firstDate: DateTime(2000),
+                                        lastDate:
+                                            DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          _endDate =
+                                              DateTime(picked.year, picked.month, picked.day);
+                                          _endDateController.text =
+                                              DateFormat('yyyy-MM-dd').format(_endDate!);
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton(
+                                onPressed: _resetInvoiceFilters,
+                                child: const Text('Reset Filters'),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _endDateController,
-                          readOnly: true,
-                          decoration: const InputDecoration(labelText: 'End Date'),
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _endDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                _endDate =
-                                    DateTime(picked.year, picked.month, picked.day);
-                                _endDateController.text =
-                                    DateFormat('yyyy-MM-dd').format(_endDate!);
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _startDate = null;
-                            _endDate = null;
-                            _startDateController.clear();
-                            _endDateController.clear();
-                          });
-                        },
-                        icon: const Icon(Icons.clear),
-                        tooltip: 'Clear',
                       ),
                     ],
                   ),
