@@ -13,6 +13,7 @@ import 'admin_financial_report_page.dart';
 import 'admin_invoice_detail_page.dart';
 import 'admin_mechanic_performance_page.dart';
 import 'admin_customer_history_page.dart';
+import 'admin_broadcast_message_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1910,6 +1911,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       );
                     },
                     child: const Text('Financial Reports'),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AdminBroadcastMessagePage(userId: widget.userId),
+                        ),
+                      );
+                    },
+                    child: const Text('Broadcast Message'),
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
