@@ -9,6 +9,7 @@ import 'package:skiptow/services/error_logger.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
 import 'mechanic_request_queue_page.dart';
+import 'mechanic_requests_page.dart';
 import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
 import 'mechanic_earnings_report_page.dart';
@@ -516,6 +517,20 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => MechanicRequestQueuePage(
+                    mechanicId: widget.userId,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.inbox),
+            tooltip: 'Service Requests',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MechanicRequestsPage(
                     mechanicId: widget.userId,
                   ),
                 ),
