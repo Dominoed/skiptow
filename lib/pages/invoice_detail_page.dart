@@ -311,10 +311,12 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
         final currentUid = FirebaseAuth.instance.currentUser?.uid;
         final List<dynamic>? candidates = data['mechanicCandidates'] as List<dynamic>?;
+        final List<dynamic>? responded = data['mechanicResponded'] as List<dynamic>?;
         final bool canAccept = widget.role == 'mechanic' &&
             data['mechanicId'] == null &&
             currentUid != null &&
-            (candidates?.contains(currentUid) ?? false);
+            (candidates?.contains(currentUid) ?? false) &&
+            !(responded?.contains(currentUid) ?? false);
 
         if (canAccept) {
           children.add(

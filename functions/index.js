@@ -57,6 +57,7 @@ exports.notifyNewInvoice = functions.firestore
       await snap.ref.update({
         mechanicId: null,
         mechanicCandidates: mechanicIds,
+        mechanicResponded: [],
       });
     } else {
       mechanicIds = [mechanicId];
@@ -114,6 +115,17 @@ exports.notifyInvoiceUpdate = functions.firestore
 
     const promises = [];
 
+    const cand = Array.isArray(after.mechanicCandidates)
+      ? after.mechanicCandidates
+      : [];
+    const responded = Array.isArray(after.mechanicResponded)
+      ? after.mechanicResponded
+      : [];
+
+    const beforeRespLen = Array.isArray(before.mechanicResponded)
+      ? before.mechanicResponded.length
+      : 0;
+
     if (before.paymentStatus !== after.paymentStatus) {
       const invoiceNumber = after.invoiceNumber || context.params.invoiceId;
       promises.push(
@@ -134,6 +146,23 @@ exports.notifyInvoiceUpdate = functions.firestore
           notification: {
             title: 'Mechanic Accepted',
             body: `${mech} accepted your request.`
+          },
+          tokens
+        })
+      );
+    }
+
+    if (
+      !after.mechanicId &&
+      cand.length > 0 &&
+      responded.length === cand.length &&
+      responded.length !== beforeRespLen
+    ) {
+      promises.push(
+        admin.messaging().sendEachForMulticast({
+          notification: {
+            title: 'Service Request Update',
+            body: 'All nearby mechanics declined your request.'
           },
           tokens
         })
