@@ -12,6 +12,7 @@ import 'messages_page.dart';
 import 'customer_invoices_page.dart';
 import 'customer_service_history_page.dart';
 import 'customer_profile_page.dart';
+import 'customer_notifications_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -536,11 +537,28 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerNotificationsPage(userId: widget.userId),
+      ),
+    );
+  }
+
   Widget _buildMessagesIcon() {
     return IconButton(
       icon: const Icon(Icons.mail),
       tooltip: 'Messages',
       onPressed: _openMessages,
+    );
+  }
+
+  Widget _buildNotificationsIcon() {
+    return IconButton(
+      icon: const Icon(Icons.notifications),
+      tooltip: 'Notifications',
+      onPressed: _openNotifications,
     );
   }
 
@@ -893,6 +911,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             ),
           ),
           _buildMessagesIcon(),
+          _buildNotificationsIcon(),
         ],
       ),
       body: !_locationPermissionGranted
