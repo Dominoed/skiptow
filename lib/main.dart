@@ -3,21 +3,33 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'services/push_notification_service.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/mechanic_request_queue_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await _pushService.initialize();
+  await _pushService.initialize(onNotificationTap: _handleNotificationTap);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   final user = FirebaseAuth.instance.currentUser;
   runApp(MyApp(initialUserId: user?.uid));
 }
 
 final PushNotificationService _pushService = PushNotificationService();
+
+void _handleNotificationTap(NotificationResponse response) {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (_) => MechanicRequestQueuePage(mechanicId: user.uid),
+    ),
+  );
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
