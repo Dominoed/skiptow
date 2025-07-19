@@ -76,8 +76,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _flaggedMechanicsSub;
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
-  String _paymentStatusFilter = 'all';
-  String _statusSort = 'all';
+  String _invoiceStatusFilter = 'all';
 
   String _appVersion = '1.0.0';
 
@@ -753,12 +752,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Color _paymentStatusColor(String status) {
     switch (status) {
+      case 'Paid':
       case 'paid':
         return Colors.green;
-      case 'pending':
+      case 'Overdue':
+      case 'overdue':
         return Colors.red;
+      case 'Pending':
+      case 'pending':
+        return Colors.yellow;
+      case 'Closed':
+      case 'closed':
+        return Colors.grey;
       default:
-        return Colors.orange;
+        return Colors.grey;
     }
   }
 
@@ -848,27 +855,37 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final data = doc.data();
     final flagged = data['flagged'] == true;
     final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
+    final status = (data['status'] ?? '') as String;
     final Timestamp? createdAtTs = data['createdAt'];
     final double? finalPrice = (data['finalPrice'] as num?)?.toDouble();
-    double? platformFee = (data['platformFee'] as num?)?.toDouble();
-    bool estimatedFee = false;
-    if (platformFee == null && finalPrice != null) {
-      platformFee = double.parse((finalPrice * 0.15).toStringAsFixed(2));
-      estimatedFee = true;
-    }
+    final mechName = (data['mechanicUsername'] ?? _usernames[data['mechanicId']] ?? data['mechanicId']).toString();
+    final custName = (data['customerUsername'] ?? _usernames[data['customerId']] ?? data['customerId']).toString();
     final bool overdue = paymentStatus == 'pending' &&
         createdAtTs != null &&
         DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
+    final label = status == 'closed'
+        ? 'Closed'
+        : (overdue
+            ? 'Overdue'
+            : (paymentStatus == 'paid' ? 'Paid' : 'Pending'));
     return Container(
       color: overdue ? Colors.red.shade50 : null,
       child: ListTile(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Mechanic: ${data['mechanicId']}'),
-            Text(
-              'Invoice #: ${data['invoiceNumber'] ?? doc.id}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            Expanded(
+              child: Text(
+                'Invoice #: ${data['invoiceNumber'] ?? doc.id}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Chip(
+              label: Text(
+                label,
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: _paymentStatusColor(label),
             ),
           ],
         ),
@@ -878,47 +895,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Customer: ${data['customerId']}'),
+                Expanded(child: Text('Customer: $custName')),
+                Expanded(child: Text('Mechanic: $mechName')),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 if (createdAtTs != null)
                   Text(
                     'Created: ${_formatPrettyDate(createdAtTs)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (finalPrice != null)
+                  Text('Total: $' + finalPrice.toStringAsFixed(2)),
               ],
             ),
-            Text('Status: ${data['status']}'),
-            Row(
-              children: [
-                const Text('Payment Status: '),
-                Text(
-                  paymentStatus,
-                  style: TextStyle(
-                    color: _paymentStatusColor(paymentStatus),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            if (overdue)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Chip(
-                  label: const Text(
-                    'OVERDUE',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              ),
-            Text('Submitted: ${_formatDate(data['timestamp'])}'),
-            if (data['closedAt'] != null)
-              Text('Closed: ${_formatDate(data['closedAt'])}'),
-            Text('Flagged: ${flagged ? 'Yes' : 'No'}'),
-            if (platformFee != null)
-            Text(
-              'Platform Fee for This Invoice: \$${platformFee.toStringAsFixed(2)}' +
-                  (estimatedFee ? ' (est.)' : ''),
-            ),
+            Text('Status: $status'),
             if ((data['customerReview'] ?? '').toString().isNotEmpty)
               Text('Customer Review: ${data['customerReview']}')
             else
@@ -960,16 +953,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           final bool isOverdue = payment == 'pending' &&
               createdAtTs != null &&
               DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
-          bool pass = true;
-          if (_paymentStatusFilter != 'all') {
-            if (_paymentStatusFilter == 'overdue') {
-              pass = isOverdue;
-            } else {
-              pass = payment == _paymentStatusFilter;
-            }
-          }
-          if (!pass) return false;
-          switch (_statusSort) {
+          switch (_invoiceStatusFilter) {
             case 'paid':
               return payment == 'paid';
             case 'pending':
@@ -1002,48 +986,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Text('No invoices');
         }
 
-        final List<QueryDocumentSnapshot<Map<String, dynamic>>> active = [];
-        final List<QueryDocumentSnapshot<Map<String, dynamic>>> completed = [];
-        final List<QueryDocumentSnapshot<Map<String, dynamic>>> cancelled = [];
-
-        for (final d in searchDocs) {
-          final status = d.data()['status'];
-          if (status == 'active') {
-            active.add(d);
-          } else if (status == 'completed' || status == 'closed') {
-            completed.add(d);
-          } else if (status == 'cancelled') {
-            cancelled.add(d);
-          }
-        }
-
-        List<Widget> section(String title,
-            List<QueryDocumentSnapshot<Map<String, dynamic>>> items) {
-          if (items.isEmpty) return <Widget>[];
-          return [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            ...items.map((e) => _invoiceTile(e)),
-            const Divider(),
-          ];
-        }
-
-        final children = <Widget>[
-          ...section('Active Invoices', active),
-          ...section('Completed Invoices', completed),
-          ...section('Cancelled Invoices', cancelled),
-        ];
-        if (children.isNotEmpty && children.last is Divider) {
-          children.removeLast();
-        }
-
         return ListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          children: children,
+          children: searchDocs.map((e) => _invoiceTile(e)).toList(),
         );
       },
     );
@@ -1571,30 +1517,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                   Row(
                     children: [
-                      const Text('Filter by Payment Status: '),
+                      const Text('Filter by Status: '),
                       DropdownButton<String>(
-                        value: _paymentStatusFilter,
-                        items: const [
-                          DropdownMenuItem(value: 'all', child: Text('All')),
-                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
-                          DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                          DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _paymentStatusFilter = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Text('Sort by Status: '),
-                      DropdownButton<String>(
-                        value: _statusSort,
+                        value: _invoiceStatusFilter,
                         items: const [
                           DropdownMenuItem(value: 'all', child: Text('All')),
                           DropdownMenuItem(value: 'paid', child: Text('Paid')),
@@ -1605,7 +1530,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
-                              _statusSort = value;
+                              _invoiceStatusFilter = value;
                             });
                           }
                         },
