@@ -10,13 +10,19 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
 
   /// Initialize messaging and local notification plugins.
-  Future<void> initialize() async {
+  ///
+  /// [onNotificationTap] is triggered when the user taps a displayed
+  /// notification.
+  Future<void> initialize({void Function(NotificationResponse)? onNotificationTap}) async {
     await _messaging.requestPermission();
-    const settings = InitializationSettings(
+    final settings = const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     );
-    await _localPlugin.initialize(settings);
+    await _localPlugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: onNotificationTap,
+    );
   }
 
   /// Listen for foreground messages.

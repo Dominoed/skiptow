@@ -85,6 +85,9 @@ firebase_options.dart
 6. For Android/iOS:
    - Add Google Maps API key in platform-specific configs.
    - Run using `flutter run`.
+7. Deploy Cloud Functions:
+   - From the `functions` directory run `npm install`.
+   - Deploy using `firebase deploy --only functions`.
 
 ## Next Steps (Planned)
 - Real-time messaging system (in development).
