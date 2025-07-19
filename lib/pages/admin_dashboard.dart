@@ -74,6 +74,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _paymentStatusFilter = 'all';
+  String _statusSort = 'all';
 
   String _appVersion = '1.0.0';
 
@@ -935,13 +936,32 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final filteredDocs = docs.where((d) {
           final data = d.data();
           final payment = (data['paymentStatus'] ?? 'pending') as String;
+          final status = (data['status'] ?? '') as String;
           final Timestamp? createdAtTs = data['createdAt'];
           final bool isOverdue = payment == 'pending' &&
               createdAtTs != null &&
               DateTime.now().difference(createdAtTs.toDate()).inDays > 7;
-          if (_paymentStatusFilter == 'all') return true;
-          if (_paymentStatusFilter == 'overdue') return isOverdue;
-          return payment == _paymentStatusFilter;
+          bool pass = true;
+          if (_paymentStatusFilter != 'all') {
+            if (_paymentStatusFilter == 'overdue') {
+              pass = isOverdue;
+            } else {
+              pass = payment == _paymentStatusFilter;
+            }
+          }
+          if (!pass) return false;
+          switch (_statusSort) {
+            case 'paid':
+              return payment == 'paid';
+            case 'pending':
+              return payment == 'pending' && !isOverdue;
+            case 'overdue':
+              return isOverdue;
+            case 'closed':
+              return status == 'closed';
+            default:
+              return true;
+          }
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
@@ -1545,6 +1565,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           if (value != null) {
                             setState(() {
                               _paymentStatusFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Text('Sort by Status: '),
+                      DropdownButton<String>(
+                        value: _statusSort,
+                        items: const [
+                          DropdownMenuItem(value: 'all', child: Text('All')),
+                          DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                          DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                          DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
+                          DropdownMenuItem(value: 'closed', child: Text('Closed')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _statusSort = value;
                             });
                           }
                         },
