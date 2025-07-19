@@ -197,3 +197,63 @@ exports.notifyBroadcastMessage = functions.firestore
     });
     return null;
   });
+
+exports.sendPaymentReminders = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('Etc/UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+    const snapshot = await db
+      .collection('invoices')
+      .where('paymentStatus', '==', 'overdue')
+      .get();
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const customerId = data.customerId;
+      if (!customerId) continue;
+
+      const invoiceNumber = data.invoiceNumber || doc.id;
+      let body = `Invoice #${invoiceNumber} is overdue. Please pay as soon as possible.`;
+      const createdAt = data.createdAt instanceof admin.firestore.Timestamp
+        ? data.createdAt.toDate()
+        : null;
+      if (createdAt) {
+        const days = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        if (days > 37) {
+          body = `Invoice #${invoiceNumber} is over 30 days overdue. Please pay immediately.`;
+        }
+      }
+
+      const messageData = {
+        title: 'Payment Reminder',
+        body,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await db
+        .collection('notifications')
+        .doc(customerId)
+        .collection('messages')
+        .add(messageData);
+
+      const tokensSnap = await db
+        .collection('users')
+        .doc(customerId)
+        .collection('tokens')
+        .get();
+      const tokens = tokensSnap.docs.map(t => t.id);
+      if (tokens.length > 0) {
+        await admin.messaging().sendEachForMulticast({
+          notification: {
+            title: messageData.title,
+            body: messageData.body,
+          },
+          tokens,
+        });
+      }
+    }
+
+    return null;
+  });
+
