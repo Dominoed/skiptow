@@ -8,6 +8,7 @@ import '../services/csv_downloader.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
 import 'admin_user_detail_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'admin_financial_report_page.dart';
 import 'admin_invoice_detail_page.dart';
 import 'admin_mechanic_performance_page.dart';
@@ -670,6 +671,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
+    await const FlutterSecureStorage().delete(key: 'session_token');
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,

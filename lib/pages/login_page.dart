@@ -6,6 +6,7 @@ import 'package:skiptow/pages/signup_page.dart';
 import 'package:skiptow/pages/terms_of_service_page.dart';
 import 'package:skiptow/pages/privacy_policy_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   String _status = '';
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String _appVersion = '1.0.0';
 
   @override
@@ -47,12 +49,13 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passController.text.trim(),
       );
-      final uid = cred.user?.uid;
-      if (uid != null) {
-        // Optional: You can fetch extra user data here
+      final user = cred.user;
+      if (user != null) {
+        final token = await user.getIdToken();
+        await _storage.write(key: 'session_token', value: token);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => DashboardPage(userId: uid)),
+          MaterialPageRoute(builder: (_) => DashboardPage(userId: user.uid)),
         );
       } else {
         _status = 'No user ID found';
