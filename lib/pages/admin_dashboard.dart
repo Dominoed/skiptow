@@ -59,6 +59,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   // Current search query for invoices
   String _invoiceSearch = '';
 
+  // Search term for customer usernames in invoices
+  String _customerUsernameSearch = '';
+
   // Current search query for users
   String _userSearch = '';
 
@@ -934,8 +937,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return payment == _paymentStatusFilter;
         }).toList();
         final searchLower = _invoiceSearch.toLowerCase();
+        final customerSearchLower = _customerUsernameSearch.toLowerCase();
         final searchDocs = filteredDocs.where((d) {
-          if (searchLower.isEmpty) return true;
           final data = d.data();
           final invoiceNum = (data['invoiceNumber'] ?? '').toString().toLowerCase();
           final mechName = (data['mechanicUsername'] ??
@@ -945,9 +948,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               .toLowerCase();
           final custName = (_usernames[data['customerId']] ?? '')
               .toLowerCase();
-          return invoiceNum.contains(searchLower) ||
-              mechName.contains(searchLower) ||
-              custName.contains(searchLower);
+          bool matches = true;
+          if (searchLower.isNotEmpty) {
+            matches = invoiceNum.contains(searchLower) ||
+                mechName.contains(searchLower) ||
+                custName.contains(searchLower);
+          }
+          if (customerSearchLower.isNotEmpty) {
+            matches = matches && custName.contains(customerSearchLower);
+          }
+          return matches;
         }).toList();
         if (searchDocs.isEmpty) {
           return const Text('No invoices');
@@ -1539,6 +1549,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onChanged: (value) {
                         setState(() {
                           _invoiceSearch = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search by Customer Username',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _customerUsernameSearch = value;
                         });
                       },
                     ),
