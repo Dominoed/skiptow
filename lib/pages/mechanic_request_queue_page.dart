@@ -140,8 +140,6 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
                     _filterButton('active', 'Show Active'),
                     const SizedBox(width: 8),
                     _filterButton('completed', 'Show Completed'),
-                    const SizedBox(width: 8),
-                    _filterButton('cancelled', 'Show Cancelled'),
                   ],
                 ),
               ),
@@ -154,6 +152,7 @@ class _MechanicRequestQueuePageState extends State<MechanicRequestQueuePage> {
                     }
                     final docs = (snapshot.data?.docs ?? [])
                         .where((d) => d.data()['flagged'] != true)
+                        .where((d) => d.data()['invoiceStatus'] != 'cancelled')
                         .toList();
                     if (docs.isEmpty) {
                       return const Center(child: Text('No requests found'));
@@ -199,7 +198,8 @@ class _RequestTile extends StatelessWidget {
     final car = data['carInfo'] ?? {};
     final carText =
         '${car['year'] ?? ''} ${car['make'] ?? ''} ${car['model'] ?? ''}'.trim();
-    final status = (data['status'] ?? 'active').toString();
+    final status =
+        (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
     final distance = data['distance'];
     final location = data['location'];
 
