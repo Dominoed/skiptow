@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
+
+class _MonthSpending {
+  final DateTime month;
+  final double total;
+  _MonthSpending(this.month, this.total);
+}
 
 import 'dashboard_page.dart';
 
@@ -54,6 +61,13 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
     double totalSpent = 0.0;
     double highestPayment = 0.0;
 
+    final now = DateTime.now();
+    final Map<int, double> monthTotals = {};
+    for (int i = 0; i < 12; i++) {
+      final m = DateTime(now.year, now.month - i, 1);
+      monthTotals[m.year * 100 + m.month] = 0.0;
+    }
+
     for (final doc in invoicesSnap.docs) {
       final data = doc.data();
       if (data['flagged'] == true) continue;
@@ -65,6 +79,14 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
         paidInvoices++;
         totalSpent += price;
         if (price > highestPayment) highestPayment = price;
+        final Timestamp? closedAt = data['closedAt'];
+        final date = (closedAt ?? createdAtTs)?.toDate();
+        if (date != null) {
+          final key = date.year * 100 + date.month;
+          if (monthTotals.containsKey(key)) {
+            monthTotals[key] = monthTotals[key]! + price;
+          }
+        }
       } else {
         if (createdAtTs != null &&
             DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
@@ -73,6 +95,13 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
           pendingInvoices++;
         }
       }
+    }
+
+    final List<_MonthSpending> months = [];
+    for (int i = 11; i >= 0; i--) {
+      final m = DateTime(now.year, now.month - i, 1);
+      final key = m.year * 100 + m.month;
+      months.add(_MonthSpending(m, monthTotals[key] ?? 0));
     }
 
     return {
@@ -87,6 +116,7 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
       'pendingInvoices': pendingInvoices,
       'highestPayment': highestPayment,
       'invoices': invoicesSnap.docs,
+      'months': months,
     };
   }
 
@@ -107,6 +137,58 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
     if (ts == null) return 'N/A';
     final dt = ts.toDate().toLocal();
     return DateFormat('MMMM d, yyyy').format(dt);
+  }
+
+  String _currency(double value) {
+    return NumberFormat.currency(locale: 'en_US', symbol: '\$').format(value);
+  }
+
+  Widget _buildChart(List<_MonthSpending> months) {
+    final series = [
+      charts.Series<_MonthSpending, String>(
+        id: 'Spending',
+        colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+        domainFn: (d, _) => DateFormat('MMM').format(d.month),
+        measureFn: (d, _) => d.total,
+        data: months,
+      )
+    ];
+    return SizedBox(
+      height: 200,
+      child: charts.BarChart(series, animate: true),
+    );
+  }
+
+  Widget _buildSpendingTable(List<_MonthSpending> months) {
+    return Table(
+      columnWidths: const {1: IntrinsicColumnWidth()},
+      border: TableBorder.all(color: Colors.grey),
+      children: [
+        const TableRow(children: [
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Text('Month', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child:
+                Text('Amount', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ]),
+        ...months.map(
+          (m) => TableRow(children: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(DateFormat('MMM yyyy').format(m.month)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(_currency(m.total)),
+            ),
+          ]),
+        ),
+      ],
+    );
   }
 
   @override
@@ -160,6 +242,15 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                   Text('Number of Overdue Invoices: ${data['overdueInvoices']}'),
                   Text('Number of Pending Invoices: ${data['pendingInvoices']}'),
                   Text('Highest Payment Made: \$${(data['highestPayment'] as double).toStringAsFixed(2)}'),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Amount Spent Per Month (Last 12 Months)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildChart(data['months'] as List<_MonthSpending>),
+                  const SizedBox(height: 8),
+                  _buildSpendingTable(data['months'] as List<_MonthSpending>),
                   const SizedBox(height: 16),
                   const Text('Invoices', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
