@@ -1624,7 +1624,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   Row(
                     children: [
-                      const Text('Filter Users: '),
+                      const Text('Filter by Role: '),
                       DropdownButton<String>(
                         value: _userRoleFilter,
                         items: const [
