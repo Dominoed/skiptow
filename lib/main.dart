@@ -9,6 +9,8 @@ import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/mechanic_request_queue_page.dart';
+import 'pages/customer_invoices_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +26,22 @@ final PushNotificationService _pushService = PushNotificationService();
 void _handleNotificationTap(NotificationResponse response) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return;
-  navigatorKey.currentState?.push(
-    MaterialPageRoute(
-      builder: (_) => MechanicRequestQueuePage(mechanicId: user.uid),
-    ),
-  );
+  FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .get()
+      .then((doc) {
+    final role = doc.data()?['role'];
+    Widget page;
+    if (role == 'customer') {
+      page = CustomerInvoicesPage(userId: user.uid);
+    } else {
+      page = MechanicRequestQueuePage(mechanicId: user.uid);
+    }
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => page),
+    );
+  });
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

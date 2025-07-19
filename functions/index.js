@@ -84,3 +84,55 @@ exports.notifyNewInvoice = functions.firestore
     await admin.messaging().sendEachForMulticast(message);
     return null;
   });
+
+exports.notifyInvoiceUpdate = functions.firestore
+  .document('invoices/{invoiceId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (!before || !after) return null;
+
+    const customerId = after.customerId;
+    if (!customerId) return null;
+
+    const tokensSnap = await admin
+      .firestore()
+      .collection('users')
+      .doc(customerId)
+      .collection('tokens')
+      .get();
+    const tokens = tokensSnap.docs.map(t => t.id);
+    if (tokens.length === 0) return null;
+
+    const promises = [];
+
+    if (before.paymentStatus !== after.paymentStatus) {
+      const invoiceNumber = after.invoiceNumber || context.params.invoiceId;
+      promises.push(
+        admin.messaging().sendEachForMulticast({
+          notification: {
+            title: 'Invoice Update',
+            body: `Your invoice ${invoiceNumber} is now marked as ${after.paymentStatus}.`
+          },
+          tokens
+        })
+      );
+    }
+
+    if (before.mechanicAccepted !== after.mechanicAccepted) {
+      const mech = after.mechanicUsername || 'Mechanic';
+      promises.push(
+        admin.messaging().sendEachForMulticast({
+          notification: {
+            title: 'Mechanic Accepted',
+            body: `${mech} accepted your request.`
+          },
+          tokens
+        })
+      );
+    }
+
+    if (promises.length === 0) return null;
+    await Promise.all(promises);
+    return null;
+  });
