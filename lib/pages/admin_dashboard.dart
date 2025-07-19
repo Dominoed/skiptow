@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import '../services/csv_downloader.dart';
 import 'login_page.dart';
 import 'dashboard_page.dart';
 import 'admin_user_detail_page.dart';
@@ -1080,6 +1081,48 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  String _csvEscape(String? input) {
+    if (input == null) return '';
+    var s = input.replaceAll('"', '""');
+    if (s.contains(',') || s.contains('\n') || s.contains('"')) {
+      s = '"$s"';
+    }
+    return s;
+  }
+
+  Future<void> _exportUsers() async {
+    final snapshot = await FirebaseFirestore.instance.collection('users').get();
+    final buffer = StringBuffer();
+    buffer.writeln(
+        'Username,Email,Role,User ID,Created Date,Blocked,Flagged');
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final username =
+          (data['username'] ?? data['displayName'] ?? '').toString();
+      final email = (data['email'] ?? '').toString();
+      final role = (data['role'] ?? '').toString();
+      final created = _formatDate(data['createdAt'] as Timestamp?);
+      final blocked = data['blocked'] == true ? 'yes' : 'no';
+      final flagged = data['flagged'] == true ? 'yes' : 'no';
+      final row = [
+        username,
+        email,
+        role,
+        doc.id,
+        created,
+        blocked,
+        flagged,
+      ].map(_csvEscape).join(',');
+      buffer.writeln(row);
+    }
+    await downloadCsv(buffer.toString(), fileName: 'users.csv');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User CSV exported')),
+      );
+    }
+  }
+
   Widget _buildActiveMechanics() {
     return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
@@ -1707,6 +1750,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         },
                       ),
                     ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      onPressed: _exportUsers,
+                      child: const Text('Export Users as CSV'),
+                    ),
                   ),
                   _buildUsersList(),
                   const SizedBox(height: 16),
