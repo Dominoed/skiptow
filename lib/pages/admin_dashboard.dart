@@ -752,6 +752,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  bool _matchesUserSearch(Map<String, dynamic> data, String id) {
+    final searchLower = _userSearch.toLowerCase();
+    if (searchLower.isEmpty) return true;
+    final username = (data['username'] ?? '').toString().toLowerCase();
+    final email = (data['email'] ?? '').toString().toLowerCase();
+    return username.contains(searchLower) ||
+        id.toLowerCase().contains(searchLower) ||
+        email.contains(searchLower);
+  }
+
   Widget _buildStatusBadges(Map<String, dynamic> data) {
     final blocked = data['blocked'] == true;
     final flagged = data['flagged'] == true;
@@ -1014,12 +1024,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -1095,12 +1101,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -1172,12 +1174,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -1248,12 +1246,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -1325,12 +1319,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -1403,12 +1393,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           return const Center(child: CircularProgressIndicator());
         }
         final docs = snapshot.data?.docs ?? [];
-        final searchLower = _userSearch.toLowerCase();
         final filteredDocs = docs.where((d) {
-          if (searchLower.isEmpty) return true;
-          final data = d.data();
-          final name = (data['username'] ?? '').toString().toLowerCase();
-          return name.contains(searchLower) || d.id.toLowerCase().contains(searchLower);
+          return _matchesUserSearch(d.data(), d.id);
         }).toList();
         if (filteredDocs.isEmpty) return const SizedBox.shrink();
         return Column(
