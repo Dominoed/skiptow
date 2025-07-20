@@ -747,6 +747,17 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final location = data['location'];
         final status = data['status'] ?? 'active';
         final invoiceStatus = data['invoiceStatus'] ?? status;
+
+        // Mechanics should not view closed or cancelled invoices
+        if (widget.role == 'mechanic' &&
+            (invoiceStatus == 'closed' || invoiceStatus == 'cancelled')) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Invoice Details')),
+            body: const Center(
+              child: Text('This job has been closed or cancelled.'),
+            ),
+          );
+        }
         final customerConfirmed = data['customerConfirmed'] == true;
         final finalPrice = data['finalPrice'];
         final estimatedPrice = finalPrice == null
