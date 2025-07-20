@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
+import 'package:intl/intl.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
 import 'mechanic_request_queue_page.dart';
@@ -19,6 +20,7 @@ import 'mechanic_radius_history_page.dart';
 import 'mechanic_location_history_page.dart';
 import '../services/alert_service.dart';
 import 'mechanic_current_job_page.dart';
+import 'invoice_detail_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -732,6 +734,112 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Color _invoiceStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'accepted':
+        return Colors.blue;
+      case 'arrived':
+      case 'in_progress':
+        return Colors.orange;
+      case 'completed':
+        return Colors.purple;
+      case 'closed':
+        return Colors.grey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildRecentActivity() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .orderBy('createdAt', descending: true)
+        .limit(5)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        final docs = (snapshot.data?.docs ?? [])
+            .where((d) => d.data()['flagged'] != true)
+            .toList();
+
+        return ExpansionTile(
+          title: const Text('Recent Activity'),
+          children: docs.isEmpty
+              ? [
+                  const ListTile(
+                    title: Text('No recent activity'),
+                  )
+                ]
+              : docs.map((doc) {
+                  final data = doc.data();
+                  final status =
+                      (data['invoiceStatus'] ?? data['status'] ?? '').toString();
+                  final priceNum = data['finalPrice'] as num?;
+                  final price = priceNum != null
+                      ? '\$${priceNum.toDouble().toStringAsFixed(2)}'
+                      : null;
+                  final Timestamp? ts =
+                      data['createdAt'] ?? data['mechanicAcceptedAt'];
+                  final date = ts != null
+                      ? DateFormat('MMM d, h:mm a')
+                          .format(ts.toDate().toLocal())
+                      : '';
+                  return ListTile(
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Job ID: ${doc.id}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Chip(
+                          label: Text(
+                            status,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: _invoiceStatusColor(status),
+                        ),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (price != null && status == 'closed')
+                          Text('Final Price: $price'),
+                        if (date.isNotEmpty) Text(date),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => InvoiceDetailPage(
+                            invoiceId: doc.id,
+                            role: 'mechanic',
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasAccountData) {
@@ -1012,6 +1120,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   },
                 ),
                 _buildActiveRequests(),
+                _buildRecentActivity(),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
