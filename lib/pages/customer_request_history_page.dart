@@ -16,6 +16,7 @@ class CustomerRequestHistoryPage extends StatefulWidget {
 
 class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage> {
   String _filter = 'all';
+  final TextEditingController _feedbackController = TextEditingController();
 
   Widget _filterButton(String value, String label) {
     final selected = _filter == value;
@@ -55,6 +56,74 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
         return Colors.orange;
       default:
         return Colors.grey;
+    }
+  }
+
+  Future<void> _showFeedbackDialog(String invoiceId) async {
+    int rating = 0;
+    _feedbackController.clear();
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('How was your service?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: Colors.orange,
+                        ),
+                        onPressed: () => setState(() => rating = index + 1),
+                      );
+                    }),
+                  ),
+                  TextField(
+                    controller: _feedbackController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Additional Feedback (optional)',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Skip'),
+                ),
+                TextButton(
+                  onPressed: rating == 0
+                      ? null
+                      : () => Navigator.pop(context, true),
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(invoiceId)
+          .collection('feedback')
+          .add({
+        'rating': rating,
+        if (_feedbackController.text.trim().isNotEmpty)
+          'feedbackText': _feedbackController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
     }
   }
 
@@ -184,6 +253,7 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 const SnackBar(content: Text('Price accepted. Invoice closed.')),
                                               );
+                                              await _showFeedbackDialog(doc.id);
                                             }
                                           },
                                           child: const Text('Accept Price & Close'),
@@ -240,6 +310,29 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                 },
                                 child: const Text('View Details'),
                               ),
+                            ),
+                            FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              future: FirebaseFirestore.instance
+                                  .collection('invoices')
+                                  .doc(doc.id)
+                                  .collection('feedback')
+                                  .get(),
+                              builder: (context, fbSnap) {
+                                if (!fbSnap.hasData) {
+                                  return const SizedBox.shrink();
+                                }
+                                final hasFb = fbSnap.data!.docs.isNotEmpty;
+                                if (data['invoiceStatus'] == 'closed' && !hasFb) {
+                                  return Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () => _showFeedbackDialog(doc.id),
+                                      child: const Text('Leave Feedback'),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
                             ),
                             if ((data['mechanicId'] == null ||
                                     data['mechanicAccepted'] != true) &&

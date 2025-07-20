@@ -38,6 +38,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   File? _selectedImage;
   final TextEditingController _reportController = TextEditingController();
   File? _reportImage;
+  final TextEditingController _feedbackController = TextEditingController();
 
   Widget _buildTimeline(Map<String, dynamic> data) {
     final Timestamp? createdAt = data['createdAt'] as Timestamp?;
@@ -404,6 +405,74 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           const SnackBar(content: Text('Report submitted.')),
         );
       }
+    }
+  }
+
+  Future<void> _showFeedbackDialog(String invoiceId) async {
+    int rating = 0;
+    _feedbackController.clear();
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('How was your service?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: Colors.orange,
+                        ),
+                        onPressed: () => setState(() => rating = index + 1),
+                      );
+                    }),
+                  ),
+                  TextField(
+                    controller: _feedbackController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Additional Feedback (optional)',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Skip'),
+                ),
+                TextButton(
+                  onPressed: rating == 0
+                      ? null
+                      : () => Navigator.pop(context, true),
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(invoiceId)
+          .collection('feedback')
+          .add({
+        'rating': rating,
+        if (_feedbackController.text.trim().isNotEmpty)
+          'feedbackText': _feedbackController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
     }
   }
 
@@ -1315,6 +1384,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Price accepted. Invoice closed.')),
                               );
+                              await _showFeedbackDialog(widget.invoiceId);
                               setState(() {});
                             }
                           }
