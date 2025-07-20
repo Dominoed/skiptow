@@ -123,6 +123,13 @@ class MechanicJobHistoryPage extends StatelessWidget {
                               .doc(data['customerId'])
                               .get(),
                           builder: (context, snap) {
+                            if (snap.connectionState == ConnectionState.waiting) {
+                              return const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              );
+                            }
                             final username = snap.data?.data()?['username'] ?? 'Unknown';
                             return Text('Customer: $username');
                           },

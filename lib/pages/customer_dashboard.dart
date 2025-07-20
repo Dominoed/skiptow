@@ -654,6 +654,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final docs = snapshot.hasData
             ? snapshot.data!.docs
                 .where((d) => d.data()['flagged'] != true)
@@ -695,6 +698,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final docs = snapshot.hasData
             ? snapshot.data!.docs
                 .where((d) => d.data()['flagged'] != true)
@@ -727,6 +733,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final docs = snapshot.hasData
             ? snapshot.data!.docs
                 .where((d) => d.data()['flagged'] != true)
@@ -789,6 +798,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final docs = snapshot.hasData
             ? snapshot.data!.docs
                 .where((d) => d.data()['flagged'] != true)
@@ -832,6 +844,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final docs = snapshot.hasData
             ? snapshot.data!.docs
                 .where((d) => d.data()['flagged'] != true)
@@ -1293,6 +1308,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                         .limit(1)
                         .snapshots(),
                     builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
                       final docs = snapshot.hasData
                           ? snapshot.data!.docs
                               .where((d) => d.data()['flagged'] != true)

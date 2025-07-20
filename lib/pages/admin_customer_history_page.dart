@@ -311,6 +311,13 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                                       .get()
                                   : Future.value(null),
                               builder: (context, snap) {
+                                if (snap.connectionState == ConnectionState.waiting) {
+                                  return const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  );
+                                }
                                 final name = snap.data?.data()?['username'] ?? 'Unknown';
                                 return Text('Mechanic: $name');
                               },
