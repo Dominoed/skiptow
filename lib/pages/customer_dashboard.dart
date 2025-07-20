@@ -46,6 +46,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   Timer? _etaTimer;
   String _etaText = '';
   String? _acceptedMechanicId;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _invoiceMechanicSub;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _mechanicLocationSub;
+  Marker? _liveMechanicMarker;
+  String? _trackingMechanicId;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -222,6 +226,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     _verifyAccountData();
     _listenForAcceptedInvoices();
     _listenForCompletedInvoices();
+    _listenForAssignedMechanic();
     _checkGlobalAlert();
   }
 
@@ -440,29 +445,32 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           }
         }
 
-        tempMarkers.add(
-          Marker(
-            markerId: MarkerId(doc.id),
-            position: LatLng(lat, lng),
-            icon: wrenchIcon ??
-                BitmapDescriptor.defaultMarkerWithHue(
-                  distance != null && distance <= radius
-                      ? BitmapDescriptor.hueGreen
-                      : BitmapDescriptor.hueAzure,
-                ),
-            anchor: const Offset(0.5, 0.5),
-            infoWindow: InfoWindow(
-              title: data['username'] ?? 'Unnamed',
-              snippet: distance != null
-                  ? 'You are ${distance.toStringAsFixed(1)} miles from this mechanic.'
-                  : 'Distance unknown.',
-            ),
-            onTap: () {
-              mapController?.showMarkerInfoWindow(MarkerId(doc.id));
-              if (chooseTechMode) {
-                if (!_hasAvailableMechanics) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No mechanics available nearby.')),
+        if (_trackingMechanicId != null && doc.id == _trackingMechanicId) {
+          // live location handled separately
+        } else {
+          tempMarkers.add(
+            Marker(
+              markerId: MarkerId(doc.id),
+              position: LatLng(lat, lng),
+              icon: wrenchIcon ??
+                  BitmapDescriptor.defaultMarkerWithHue(
+                    distance != null && distance <= radius
+                        ? BitmapDescriptor.hueGreen
+                        : BitmapDescriptor.hueAzure,
+                  ),
+              anchor: const Offset(0.5, 0.5),
+              infoWindow: InfoWindow(
+                title: data['username'] ?? 'Unnamed',
+                snippet: distance != null
+                    ? 'You are ${distance.toStringAsFixed(1)} miles from this mechanic.'
+                    : 'Distance unknown.',
+              ),
+              onTap: () {
+                mapController?.showMarkerInfoWindow(MarkerId(doc.id));
+                if (chooseTechMode) {
+                  if (!_hasAvailableMechanics) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No mechanics available nearby.')),
                   );
                   return;
                 }
@@ -514,9 +522,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   ),
                 );
               }
-            },
-          ),
-        );
+              },
+            ),
+          );
+        }
 
         inRange[doc.id] = {
           'username': data['username'] ?? 'Unnamed',
@@ -540,9 +549,14 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     final bool noMechanics = !insideActive && !insideExtended;
 
+    Set<Marker> allMarkers = Set.from(tempMarkers);
+    if (_liveMechanicMarker != null) {
+      allMarkers.add(_liveMechanicMarker!);
+    }
+
     setState(() {
-      showNoMechanics = noMechanics;
-      markers = noMechanics ? {} : tempMarkers;
+      showNoMechanics = noMechanics && _liveMechanicMarker == null;
+      markers = showNoMechanics ? {} : allMarkers;
       mechanicsInRange = inRange;
       mechanicStatusMessage = insideActive
           ? "✅ Mechanic nearby"
@@ -801,6 +815,100 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         });
       }
     }
+  }
+
+  void _updateLiveMechanicMarker(Marker? marker) {
+    setState(() {
+      markers.removeWhere((m) => m.markerId.value == 'live_mechanic');
+      if (marker != null) {
+        markers.add(marker);
+        showNoMechanics = false;
+      }
+      _liveMechanicMarker = marker;
+    });
+  }
+
+  void _startMechanicLocationStream(String mechanicId) {
+    if (_trackingMechanicId == mechanicId && _mechanicLocationSub != null) {
+      return;
+    }
+    _trackingMechanicId = mechanicId;
+    _mechanicLocationSub?.cancel();
+    _mechanicLocationSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(mechanicId)
+        .snapshots()
+        .listen((doc) {
+      final data = doc.data();
+      final loc = data?['location'];
+      final bool active = data?['isActive'] == true;
+      if (!active || loc == null) {
+        _updateLiveMechanicMarker(null);
+        return;
+      }
+      final lat = (loc['lat'] as num?)?.toDouble();
+      final lng = (loc['lng'] as num?)?.toDouble();
+      if (lat == null || lng == null) {
+        _updateLiveMechanicMarker(null);
+        return;
+      }
+      final marker = Marker(
+        markerId: const MarkerId('live_mechanic'),
+        position: LatLng(lat, lng),
+        icon: wrenchIcon ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        anchor: const Offset(0.5, 0.5),
+      );
+      _updateLiveMechanicMarker(marker);
+    }, onError: (e) {
+      logError('Mechanic location stream error: $e');
+    });
+  }
+
+  void _stopMechanicLocationStream() {
+    _trackingMechanicId = null;
+    _mechanicLocationSub?.cancel();
+    _mechanicLocationSub = null;
+    _updateLiveMechanicMarker(null);
+  }
+
+  void _listenForAssignedMechanic() {
+    _invoiceMechanicSub?.cancel();
+    _invoiceMechanicSub = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', whereIn: [
+          'active',
+          'accepted',
+          'arrived',
+          'in_progress',
+          'completed'
+        ])
+        .snapshots()
+        .listen((snapshot) {
+      final docs = snapshot.docs
+          .where((d) => d.data()['flagged'] != true)
+          .toList();
+      if (docs.isEmpty) {
+        _stopMechanicLocationStream();
+        return;
+      }
+      final data = docs.first.data();
+      final invoiceStatus =
+          (data['invoiceStatus'] ?? data['status'] ?? '').toString();
+      if (invoiceStatus == 'closed' || invoiceStatus == 'cancelled') {
+        _stopMechanicLocationStream();
+        return;
+      }
+      final mechId = data['mechanicId'] as String?;
+      if (mechId == null) {
+        _stopMechanicLocationStream();
+        return;
+      }
+      _startMechanicLocationStream(mechId);
+    }, onError: (e) {
+      logError('Assigned mechanic listen error: $e');
+    });
   }
 
   void _handleAnyTech() {
@@ -1143,6 +1251,8 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   void dispose() {
     _acceptedInvoiceSub?.cancel();
     _completedInvoiceSub?.cancel();
+    _invoiceMechanicSub?.cancel();
+    _mechanicLocationSub?.cancel();
     _etaTimer?.cancel();
     mapController?.dispose();
     super.dispose();
