@@ -14,6 +14,7 @@ import 'customer_invoices_page.dart';
 import 'customer_profile_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
+import 'emergency_support_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -1061,6 +1062,21 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             icon: const Icon(Icons.person, color: Colors.white),
             label: const Text(
               'Profile',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EmergencySupportPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.help, color: Colors.white),
+            label: const Text(
+              'Support',
               style: TextStyle(color: Colors.white),
             ),
           ),
