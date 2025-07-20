@@ -467,21 +467,23 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: _forceCloseInvoice,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('Force Close Invoice'),
-            ),
-            ElevatedButton(
-              onPressed: _forceCancelInvoice,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Force Cancel Invoice'),
-            ),
-          ],
-        ),
+        if (data['invoiceStatus'] != 'closed' &&
+            data['invoiceStatus'] != 'cancelled')
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: _forceCloseInvoice,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: const Text('Force Close Invoice'),
+              ),
+              ElevatedButton(
+                onPressed: _forceCancelInvoice,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Force Cancel Invoice'),
+              ),
+            ],
+          ),
       ],
     );
   }
