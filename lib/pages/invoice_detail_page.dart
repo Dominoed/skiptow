@@ -10,6 +10,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:pdf/widgets.dart' as pw;
+import '../services/pdf_downloader.dart';
+import '../services/invoice_pdf.dart';
 import 'payment_processing_page.dart';
 import 'image_viewer_page.dart';
 import 'customer_mechanic_tracking_page.dart';
@@ -232,6 +235,17 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    }
+  }
+
+  Future<void> _downloadInvoicePdf(Map<String, dynamic> data) async {
+    final bytes = await generateInvoicePdf(data, widget.invoiceId);
+    final num = data['invoiceNumber'] ?? widget.invoiceId;
+    await downloadPdf(bytes, fileName: 'invoice_\$num.pdf');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invoice PDF downloaded')),
+      );
     }
   }
 
@@ -1081,6 +1095,15 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             (data['customerReview'] ?? '').toString().isNotEmpty
                 ? Text('Customer Review:\n${data['customerReview']}')
                 : const Text('No customer review provided.'),
+          if (invoiceStatus == 'closed')
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: () => _downloadInvoicePdf(data),
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text('Download Invoice PDF'),
+              ),
+            ),
         ]);
 
         if (widget.role == 'mechanic' &&
