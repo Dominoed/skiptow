@@ -558,7 +558,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         'rating': rating,
         if (_feedbackController.text.trim().isNotEmpty)
           'feedbackText': _feedbackController.text.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
+        'submittedAt': FieldValue.serverTimestamp(),
       });
     }
   }
@@ -1552,6 +1552,34 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 onPressed: () => _showPaymentIssueDialog(data),
                 child: const Text('Report Payment Issue'),
               ),
+            ),
+          );
+        }
+
+        if (widget.role == 'customer' && invoiceStatus == 'closed') {
+          children.add(
+            FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              future: FirebaseFirestore.instance
+                  .collection('invoices')
+                  .doc(widget.invoiceId)
+                  .collection('feedback')
+                  .get(),
+              builder: (context, fbSnap) {
+                if (!fbSnap.hasData) {
+                  return const SizedBox.shrink();
+                }
+                final hasFb = fbSnap.data!.docs.isNotEmpty;
+                if (!hasFb) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => _showFeedbackDialog(widget.invoiceId),
+                      child: const Text('Leave Feedback'),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           );
         }
