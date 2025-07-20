@@ -19,8 +19,15 @@ class MaintenanceModePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-              Text(
-                message,
+              if (message.trim().isNotEmpty) ...[
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+              ],
+              const Text(
+                'The app is currently unavailable. Please check back later.',
                 textAlign: TextAlign.center,
               ),
             ],

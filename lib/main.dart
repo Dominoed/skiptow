@@ -101,18 +101,15 @@ class _MyAppState extends State<MyApp> {
 
   void _listenMaintenance() {
     _maintSub = FirebaseFirestore.instance
-        .collection('system')
-        .doc('config')
+        .collection('config')
+        .doc('maintenance')
         .snapshots()
         .listen((snap) {
       final data = snap.data();
-      if (data != null) {
-        setState(() {
-          _maintenanceMode = getBool(data, 'maintenanceMode');
-          _maintenanceMessage =
-              (data['maintenanceMessage'] ?? '').toString();
-        });
-      }
+      setState(() {
+        _maintenanceMode = getBool(data, 'enabled');
+        _maintenanceMessage = (data?['message'] ?? '').toString();
+      });
     });
   }
 
