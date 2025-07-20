@@ -429,6 +429,29 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
           Text('Mechanic Notes:\n${data['postJobNotes']}'),
         if ((data['customerReview'] ?? '').toString().isNotEmpty)
           Text('Customer Review:\n${data['customerReview']}'),
+        FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          future: FirebaseFirestore.instance
+              .collection('invoices')
+              .doc(widget.invoiceId)
+              .collection('feedback')
+              .get(),
+          builder: (context, snap) {
+            if (!snap.hasData || snap.data!.docs.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final fb = snap.data!.docs.first.data();
+            final rating = fb['rating'];
+            final text = fb['feedbackText'];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Rating: ${rating ?? ''}/5'),
+                if (text != null && text.toString().isNotEmpty)
+                  Text('Feedback:\n$text'),
+              ],
+            );
+          },
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
