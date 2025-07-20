@@ -318,7 +318,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Report an Issue'),
+              title: const Text('Report Issue with This Service'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -395,14 +395,20 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         await ref.putFile(_reportImage!);
         imageUrl = await ref.getDownloadURL();
       }
+      final uid = FirebaseAuth.instance.currentUser?.uid;
       await doc.set({
+        'reportText': _reportController.text.trim(),
+        'reportedBy': uid,
+        'role': widget.role,
+        'relatedInvoiceId': widget.invoiceId,
+        'type': 'service_issue',
+        'status': 'open',
+        'timestamp': FieldValue.serverTimestamp(),
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        // legacy fields for backward compatibility
         'invoiceId': widget.invoiceId,
         'mechanicId': data['mechanicId'],
         'customerId': data['customerId'],
-        'reportText': _reportController.text.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'status': 'open',
-        if (imageUrl != null) 'imageUrl': imageUrl,
       });
       _reportController.clear();
       setState(() {
@@ -1532,7 +1538,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () => _showReportDialog(data),
-                child: const Text('Report an Issue'),
+                child: const Text('Report Issue with This Service'),
               ),
             ),
           );
