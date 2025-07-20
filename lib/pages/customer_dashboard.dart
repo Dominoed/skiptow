@@ -16,6 +16,7 @@ import 'account_settings_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'emergency_support_page.dart';
+import 'help_support_page.dart';
 import 'customer_mechanic_tracking_page.dart';
 import 'invoice_detail_page.dart';
 
@@ -1246,6 +1247,27 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           ),
           label: Text(
             'Account Settings',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HelpSupportPage(
+                  userId: widget.userId,
+                  userRole: 'customer',
+                ),
+              ),
+            );
+          },
+          icon: Icon(
+            Icons.support_agent,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          label: Text(
+            'Help & Support',
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
