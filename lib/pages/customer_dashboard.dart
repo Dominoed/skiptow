@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
+import '../utils.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
 import 'package:intl/intl.dart';
@@ -1004,7 +1005,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         .listen((doc) {
       final data = doc.data();
       final loc = data?['location'];
-      final bool active = data?['isActive'] == true;
+      final bool active = getBool(data, 'isActive');
       if (!active || loc == null) {
         _updateLiveMechanicMarker(null);
         return;
