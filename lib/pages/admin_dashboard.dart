@@ -98,6 +98,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _invoiceStatusFilter = 'all';
+  String _invoiceStateFilter = 'all';
   String _reportStatusFilter = 'open';
 
   String _appVersion = '1.0.0';
@@ -1018,6 +1019,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _resetInvoiceFilters() {
     setState(() {
       _invoiceStatusFilter = 'all';
+      _invoiceStateFilter = 'all';
       _invoiceNumberSearch = '';
       _customerUsernameSearch = '';
       _mechanicUsernameSearch = '';
@@ -1155,7 +1157,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final filteredDocs = docs.where((d) {
           final data = d.data();
           final payment = (data['paymentStatus'] ?? 'pending') as String;
-          final status = (data['status'] ?? '') as String;
+          final status = (data['invoiceStatus'] ?? data['status'] ?? '') as String;
           final Timestamp? createdAtTs = data['createdAt'];
           final bool isOverdue = payment == 'pending' &&
               createdAtTs != null &&
@@ -1178,6 +1180,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               matchesStatus = true;
           }
           if (!matchesStatus) return false;
+          bool matchesState;
+          switch (_invoiceStateFilter) {
+            case 'pending':
+              matchesState = status == 'active';
+              break;
+            case 'accepted':
+              matchesState = status == 'accepted';
+              break;
+            case 'completed':
+              matchesState = status == 'completed';
+              break;
+            case 'closed':
+              matchesState = status == 'closed';
+              break;
+            case 'cancelled':
+              matchesState = status == 'cancelled';
+              break;
+            default:
+              matchesState = true;
+          }
+          if (!matchesState) return false;
           if (_startDate != null && _endDate != null) {
             if (createdAtTs == null) return false;
             final dt = DateTime(createdAtTs.toDate().year,
@@ -2174,6 +2197,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                     if (value != null) {
                                       setState(() {
                                         _invoiceStatusFilter = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Text('Show Invoices By Status: '),
+                                DropdownButton<String>(
+                                  value: _invoiceStateFilter,
+                                  items: const [
+                                    DropdownMenuItem(value: 'all', child: Text('All')),
+                                    DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                                    DropdownMenuItem(value: 'accepted', child: Text('Accepted')),
+                                    DropdownMenuItem(value: 'completed', child: Text('Completed')),
+                                    DropdownMenuItem(value: 'closed', child: Text('Closed')),
+                                    DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _invoiceStateFilter = value;
                                       });
                                     }
                                   },
