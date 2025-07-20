@@ -17,6 +17,7 @@ import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'emergency_support_page.dart';
 import 'customer_mechanic_tracking_page.dart';
+import 'invoice_detail_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -625,6 +626,23 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'completed':
+        return Colors.green;
+      case 'closed':
+        return Colors.blueGrey;
+      case 'cancelled':
+        return Colors.red;
+      case 'paid':
+        return Colors.green;
+      case 'overdue':
+        return Colors.red;
+      default:
+        return Colors.yellow[700]!;
+    }
+  }
+
   Widget _buildActiveInvoiceOverlay() {
     final stream = FirebaseFirestore.instance
         .collection('invoices')
@@ -798,6 +816,85 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           },
           icon: const Icon(Icons.directions_car),
           label: const Text('Track Mechanic'),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentRequestsPanel() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .orderBy('createdAt', descending: true)
+        .limit(5)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        return ExpansionTile(
+          title: const Text('Recent Service Requests'),
+          children: docs.map((doc) {
+            final data = doc.data();
+            final invoiceNum = data['invoiceNumber'] ?? doc.id;
+            final status =
+                (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
+            final mechanic = data['mechanicUsername'];
+            final priceNum =
+                (data['finalPrice'] ?? data['estimatedPrice'] ?? data['quotedPrice'])
+                    as num?;
+            final price = priceNum != null
+                ? '\$${priceNum.toDouble().toStringAsFixed(2)}'
+                : null;
+            final Timestamp? ts = data['createdAt'] ?? data['timestamp'];
+            final date = ts != null
+                ? DateFormat('MMM d, yyyy').format(ts.toDate().toLocal())
+                : '';
+
+            return ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Invoice #: $invoiceNum',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Chip(
+                    label: Text(
+                      status,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: _statusColor(status),
+                  ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (mechanic != null) Text('Mechanic: $mechanic'),
+                  if (price != null) Text('Price: $price'),
+                  if (date.isNotEmpty) Text('Submitted: $date'),
+                ],
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => InvoiceDetailPage(
+                      invoiceId: doc.id,
+                      role: 'customer',
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
         );
       },
     );
@@ -1293,35 +1390,37 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                                     },
                               child: const Text("Any Tech"),
                             ),
-                            const SizedBox(width: 10),
-                            ElevatedButton(
-                              onPressed: _hasAvailableMechanics
-                                  ? () {
-                                      setState(() {
-                                        chooseTechMode = true;
-                                      });
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text("☝🏽 Find and tap a mechanic icon")),
-                                      );
-                                    }
-                                  : () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text('No mechanics available nearby.')),
-                                      );
-                                    },
-                            child: const Text("Choose Tech"),
-                          ),
-                        ],
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: _hasAvailableMechanics
+                            ? () {
+                              setState(() {
+                                chooseTechMode = true;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text("☝🏽 Find and tap a mechanic icon")),
+                              );
+                            }
+                            : () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('No mechanics available nearby.')),
+                              );
+                            },
+                        child: const Text("Choose Tech"),
                       ),
-                      const SizedBox(height: 10),
-                      _buildTrackMechanicButton(),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  _buildTrackMechanicButton(),
+                  const SizedBox(height: 10),
+                  _buildRecentRequestsPanel(),
+                ],
+              ),
             ),
+          ],
+        ),
     );
   }
 
