@@ -55,7 +55,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     final bool etaProvided = data['etaMinutes'] != null;
     final bool mechanicCompleted = completedAt != null;
     final bool customerConfirmed = data['customerConfirmed'] == true;
-    final bool paymentCompleted = (data['paymentStatus'] ?? '') == 'paid';
+    final bool paymentCompleted =
+        (data['paymentStatus'] ?? '') == 'paid' ||
+            (data['paymentStatus'] ?? '') == 'paid_in_person';
     final bool invoiceClosed = closedAt != null ||
         (data['invoiceStatus'] ?? data['status']) == 'closed';
 
@@ -183,9 +185,12 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   Color _paymentColor(String status) {
     switch (status) {
       case 'paid':
+      case 'paid_in_person':
         return Colors.green;
       case 'failed':
         return Colors.red;
+      case 'unpaid':
+        return Colors.orange;
       case 'pending':
         return Colors.orange;
       default:
@@ -944,19 +949,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Estimated Total: \$${(estimatedPrice as num).toStringAsFixed(2)}')
           else
             const Text('Estimated Total: Pending'),
-          if (widget.role == 'customer')
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _paymentColor(paymentStatus),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Payment: $paymentStatus',
-                style: const TextStyle(color: Colors.white),
-              ),
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _paymentColor(paymentStatus),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Text(
+              'Payment: $paymentStatus',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
           if (widget.role == 'customer')
             (data['postJobNotes'] ?? '').toString().isNotEmpty
                 ? Text('Mechanic Notes:\n${data['postJobNotes']}')
@@ -1040,11 +1044,16 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 }
                 final pStatus =
                     paySnapshot.data!.data()?['paymentStatus'] ?? 'pending';
-                final bool isPaid = pStatus == 'paid';
+                final bool isPaid =
+                    pStatus == 'paid' || pStatus == 'paid_in_person';
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Text(
-                    isPaid ? 'Payment Completed' : 'Payment Pending',
+                    isPaid
+                        ? 'Payment Completed'
+                        : (pStatus == 'unpaid'
+                            ? 'Payment Unrecorded'
+                            : 'Payment Pending'),
                     style: TextStyle(
                       color: isPaid ? Colors.green : Colors.red,
                       fontWeight: FontWeight.w600,

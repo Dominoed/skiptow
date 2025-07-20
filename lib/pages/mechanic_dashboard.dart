@@ -802,6 +802,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
   }
 
+  Color _paymentColor(String status) {
+    switch (status) {
+      case 'paid':
+      case 'paid_in_person':
+        return Colors.green;
+      case 'failed':
+        return Colors.red;
+      case 'unpaid':
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildRecentActivity() {
     final stream = FirebaseFirestore.instance
         .collection('invoices')
@@ -1568,6 +1583,7 @@ class _ActiveJobCard extends StatelessWidget {
     final description = data['description'] ?? '';
     final status =
         (data['invoiceStatus'] ?? data['status'] ?? '').toString();
+    final paymentStatus = (data['paymentStatus'] ?? 'pending').toString();
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
           .collection('users')
@@ -1603,16 +1619,35 @@ class _ActiveJobCard extends StatelessWidget {
                   ),
               ],
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _invoiceStatusColor(status),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                status,
-                style: const TextStyle(color: Colors.white),
-              ),
+            trailing: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _invoiceStatusColor(status),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _paymentColor(paymentStatus),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    paymentStatus,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -1796,6 +1831,34 @@ class _ActiveRequestCard extends StatelessWidget {
             .collection('users')
             .doc(mechanicId)
             .update({'completedJobs': FieldValue.increment(1)});
+
+        // Ask mechanic if payment was collected in person
+        final paidInPerson = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Mark as Paid in Person?'),
+              content: const Text(
+                  'Has the customer paid you directly for this job?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (paidInPerson == true) {
+          await docRef.update({'paymentStatus': 'paid_in_person'});
+        } else if (paidInPerson == false) {
+          await docRef.update({'paymentStatus': 'unpaid'});
+        }
       }
     }
   }

@@ -89,10 +89,12 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'paid':
+      case 'paid_in_person':
         return Colors.green;
       case 'overdue':
         return Colors.red;
       case 'pending':
+      case 'unpaid':
         return Colors.yellow;
       case 'closed':
         return Colors.grey;

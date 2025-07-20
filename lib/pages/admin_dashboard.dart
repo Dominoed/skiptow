@@ -891,6 +891,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     switch (status) {
       case 'Paid':
       case 'paid':
+      case 'paid_in_person':
         return Colors.green;
       case 'Overdue':
       case 'overdue':
@@ -898,6 +899,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       case 'Pending':
       case 'pending':
         return Colors.yellow;
+      case 'Unpaid':
+      case 'unpaid':
+        return Colors.orange;
       case 'Closed':
       case 'closed':
         return Colors.grey;
@@ -1056,7 +1060,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ? 'Closed'
         : (overdue
             ? 'Overdue'
-            : (paymentStatus == 'paid' ? 'Paid' : 'Pending'));
+            : (paymentStatus == 'paid' || paymentStatus == 'paid_in_person'
+                ? 'Paid'
+                : (paymentStatus == 'unpaid' ? 'Unpaid' : 'Pending')));
     return Container(
       color: overdue ? Colors.red.shade50 : null,
       child: ListTile(
@@ -1111,6 +1117,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               ],
             ),
             Text('Status: $status'),
+            Text('Payment: $paymentStatus'),
             if ((data['customerReview'] ?? '').toString().isNotEmpty)
               Text('Customer Review: ${data['customerReview']}')
             else
