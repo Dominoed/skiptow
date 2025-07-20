@@ -682,6 +682,55 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Widget _buildActiveJobs() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('invoices')
+          .where('mechanicId', isEqualTo: widget.userId)
+          .where('invoiceStatus', whereIn: [
+            'accepted',
+            'arrived',
+            'in_progress'
+          ])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          );
+        }
+        final docs = (snapshot.data?.docs ?? [])
+            .where((d) => d.data()['flagged'] != true)
+            .toList();
+        if (docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: Text('No active jobs'),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text(
+                'Your Active Jobs',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...docs.map(
+              (d) => _ActiveJobCard(
+                invoiceId: d.id,
+                data: d.data(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildActiveRequests() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
@@ -1098,7 +1147,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: Text(
-                        'Active Jobs: $activeCount',
+                        'Your Active Jobs: $activeCount',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1215,7 +1264,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     );
                   },
                 ),
-                _buildActiveRequests(),
+                _buildActiveJobs(),
                 _buildRecentActivity(),
                 Container(
                   width: double.infinity,
@@ -1360,7 +1409,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             .collection('invoices')
             .where('mechanicId', isEqualTo: widget.userId)
             .where('invoiceStatus', whereIn: ['accepted', 'in_progress'])
-            .limit(1)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1372,7 +1420,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           final docs = (snapshot.data?.docs ?? [])
               .where((d) => d.data()['flagged'] != true)
               .toList();
-          if (docs.isEmpty) return const SizedBox.shrink();
+          if (docs.length != 1) return const SizedBox.shrink();
           final doc = docs.first;
           return FloatingActionButton.extended(
             onPressed: () {
@@ -1506,6 +1554,70 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     backgroundTimer = Timer.periodic(const Duration(minutes: 2), (_) {
       _storeLocationHistory();
     });
+  }
+}
+
+class _ActiveJobCard extends StatelessWidget {
+  final String invoiceId;
+  final Map<String, dynamic> data;
+
+  const _ActiveJobCard({required this.invoiceId, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final description = data['description'] ?? '';
+    final status =
+        (data['invoiceStatus'] ?? data['status'] ?? '').toString();
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(data['customerId'])
+          .get(),
+      builder: (context, snapshot) {
+        final customerName =
+            snapshot.data?.data()?['username'] ?? data['customerId'];
+        return Card(
+          margin: const EdgeInsets.all(8),
+          child: ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvoiceDetailPage(
+                    invoiceId: invoiceId,
+                    role: 'mechanic',
+                  ),
+                ),
+              );
+            },
+            title: Text('Invoice $invoiceId'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Customer: $customerName'),
+                if (description.toString().isNotEmpty)
+                  Text(
+                    description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _invoiceStatusColor(status),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                status,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
