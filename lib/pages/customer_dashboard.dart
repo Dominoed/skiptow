@@ -15,6 +15,7 @@ import 'customer_profile_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'emergency_support_page.dart';
+import 'customer_mechanic_tracking_page.dart';
 
 class CustomerDashboard extends StatefulWidget {
   final String userId;
@@ -758,6 +759,49 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
+  Widget _buildTrackMechanicButton() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', whereIn: ['accepted', 'arrived', 'in_progress'])
+        .limit(1)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        final doc = docs.first;
+        final data = doc.data();
+        final mechanicId = data['mechanicId'] as String?;
+        if (mechanicId == null) return const SizedBox.shrink();
+
+        return ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CustomerMechanicTrackingPage(
+                  customerId: widget.userId,
+                  mechanicId: mechanicId,
+                  invoiceId: doc.id,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.directions_car),
+          label: const Text('Track Mechanic'),
+        );
+      },
+    );
+  }
+
   void _startEtaUpdates(String mechanicId) {
     _acceptedMechanicId = mechanicId;
     _etaTimer?.cancel();
@@ -1251,10 +1295,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                                             content: Text('No mechanics available nearby.')),
                                       );
                                     },
-                              child: const Text("Choose Tech"),
-                            ),
-                          ],
-                        )
+                            child: const Text("Choose Tech"),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      _buildTrackMechanicButton(),
                     ],
                   ),
                 ),
