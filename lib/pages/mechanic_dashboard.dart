@@ -20,6 +20,7 @@ import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
 import 'mechanic_location_history_page.dart';
 import 'help_support_page.dart';
+import 'mechanic_performance_stats_page.dart';
 import '../services/alert_service.dart';
 import 'mechanic_current_job_page.dart';
 import 'invoice_detail_page.dart';
@@ -55,6 +56,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _suspicious = false;
   int completedJobs = 0;
   bool unavailable = false;
+  String? _currentSessionId;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -372,6 +374,10 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       // ✅ Start live updates if mechanic is active and permission granted
       if (isActive && _locationPermissionGranted) {
         _startPositionUpdates();
+        await _fetchActiveSession();
+        if (_currentSessionId == null) {
+          await _startSession();
+        }
       }
     }
   }
@@ -433,9 +439,13 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       status = isActive ? 'Active' : 'Inactive';
     });
 
-    if (isActive && _locationPermissionGranted) {
-      _startPositionUpdates();
+    if (isActive) {
+      await _startSession();
+      if (_locationPermissionGranted) {
+        _startPositionUpdates();
+      }
     } else {
+      await _endSession();
       positionStream?.cancel();
       backgroundTimer?.cancel();
     }
@@ -481,11 +491,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     if (value) {
       positionStream?.cancel();
       backgroundTimer?.cancel();
+      await _endSession();
       _showUnavailableBanner();
     } else {
       _hideUnavailableBanner();
-      if (isActive && _locationPermissionGranted) {
-        _startPositionUpdates();
+      if (isActive) {
+        await _startSession();
+        if (_locationPermissionGranted) {
+          _startPositionUpdates();
+        }
       }
     }
   }
@@ -966,6 +980,19 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   builder: (_) => MechanicEarningsReportPage(
                     mechanicId: widget.userId,
                   ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.query_stats),
+            tooltip: 'Performance Stats',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MechanicPerformanceStatsPage(mechanicId: widget.userId),
                 ),
               );
             },
@@ -1480,6 +1507,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   @override
   void dispose() {
+    if (isActive) {
+      _endSession();
+    }
     positionStream?.cancel();
     backgroundTimer?.cancel();
     invoiceSubscription?.cancel();
@@ -1543,6 +1573,62 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
     } catch (e) {
       logError('Location history save error: $e');
+    }
+  }
+
+  Future<void> _startSession() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('mechanic_sessions')
+          .doc(widget.userId)
+          .collection('sessions')
+          .add({'startTime': DateTime.now(), 'endTime': null});
+      _currentSessionId = doc.id;
+    } catch (e) {
+      logError('Start session error: $e');
+    }
+  }
+
+  Future<void> _endSession() async {
+    try {
+      String? id = _currentSessionId;
+      if (id == null) {
+        final snap = await FirebaseFirestore.instance
+            .collection('mechanic_sessions')
+            .doc(widget.userId)
+            .collection('sessions')
+            .where('endTime', isNull: true)
+            .orderBy('startTime', descending: true)
+            .limit(1)
+            .get();
+        if (snap.docs.isNotEmpty) id = snap.docs.first.id;
+      }
+      if (id != null) {
+        await FirebaseFirestore.instance
+            .collection('mechanic_sessions')
+            .doc(widget.userId)
+            .collection('sessions')
+            .doc(id)
+            .update({'endTime': DateTime.now()});
+      }
+    } catch (e) {
+      logError('End session error: $e');
+    } finally {
+      _currentSessionId = null;
+    }
+  }
+
+  Future<void> _fetchActiveSession() async {
+    final snap = await FirebaseFirestore.instance
+        .collection('mechanic_sessions')
+        .doc(widget.userId)
+        .collection('sessions')
+        .where('endTime', isNull: true)
+        .orderBy('startTime')
+        .limit(1)
+        .get();
+    if (snap.docs.isNotEmpty) {
+      _currentSessionId = snap.docs.first.id;
     }
   }
 
