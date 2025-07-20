@@ -440,11 +440,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   Future<void> _toggleUnavailable(bool value) async {
     final data = <String, dynamic>{
       'unavailable': value,
+      'isActive': !value,
       'timestamp': DateTime.now(),
     };
-    if (value) {
-      data['isActive'] = false;
-    }
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -462,10 +460,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
     setState(() {
       unavailable = value;
-      if (value) {
-        isActive = false;
-        status = 'Inactive';
-      }
+      isActive = !value;
+      status = isActive ? 'Active' : 'Inactive';
     });
 
     if (value) {
@@ -474,6 +470,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       _showUnavailableBanner();
     } else {
       _hideUnavailableBanner();
+      if (isActive && _locationPermissionGranted) {
+        _startPositionUpdates();
+      }
     }
   }
 
