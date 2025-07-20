@@ -1096,7 +1096,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           ]);
         }
 
-        if (widget.role == 'customer') {
+        if (widget.role == 'customer' || widget.role == 'mechanic') {
           children.add(
             Align(
               alignment: Alignment.centerRight,
