@@ -577,6 +577,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             [];
         final paymentStatus = data['paymentStatus'] ?? 'pending';
         final Timestamp? createdAtTs = data['createdAt'];
+        final Timestamp? acceptedAtTs =
+            data['mechanicAcceptedAt'] ?? data['acceptedAt'];
+        final Timestamp? closedAtTs = data['closedAt'];
         _etaController.text = data['etaMinutes'] != null ? data['etaMinutes'].toString() : '';
 
         final children = <Widget>[];
@@ -626,6 +629,14 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
               const SizedBox(width: 8),
               Text('Created: ${_formatDate(createdAtTs)}'),
+              if (acceptedAtTs != null) ...[
+                const SizedBox(width: 8),
+                Text('Accepted: ${_formatDate(acceptedAtTs)}'),
+              ],
+              if (closedAtTs != null) ...[
+                const SizedBox(width: 8),
+                Text('Closed: ${_formatDate(closedAtTs)}'),
+              ],
             ],
           ),
         );
@@ -941,6 +952,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         'mechanicId': currentUid,
                         'mechanicUsername': username,
                         'mechanicAccepted': true,
+                        'mechanicAcceptedAt': FieldValue.serverTimestamp(),
+                        'acceptedAt': FieldValue.serverTimestamp(),
                         'status': 'accepted',
                       });
                     });

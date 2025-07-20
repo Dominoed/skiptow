@@ -259,8 +259,9 @@ class _RequestCard extends StatelessWidget {
           'mechanicId': mechanicId,
           'mechanicUsername': username,
           'mechanicAccepted': true,
-          'status': 'accepted',
+          'mechanicAcceptedAt': FieldValue.serverTimestamp(),
           'acceptedAt': FieldValue.serverTimestamp(),
+          'status': 'accepted',
         });
       });
       if (context.mounted) {
@@ -321,8 +322,9 @@ class _RequestCard extends StatelessWidget {
   Future<void> _acceptDirect(BuildContext context) async {
     await FirebaseFirestore.instance.collection('invoices').doc(invoiceId).update({
       'mechanicAccepted': true,
-      'status': 'accepted',
+      'mechanicAcceptedAt': FieldValue.serverTimestamp(),
       'acceptedAt': FieldValue.serverTimestamp(),
+      'status': 'accepted',
     });
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
