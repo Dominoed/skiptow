@@ -12,6 +12,7 @@ import 'service_request_history_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
 import 'customer_profile_page.dart';
+import 'account_settings_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'emergency_support_page.dart';
@@ -1090,30 +1091,45 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             label: const Text(
               'Service History',
               style: TextStyle(color: Colors.white),
-            ),
           ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CustomerProfilePage(
-                    userId: widget.userId,
-                  ),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CustomerProfilePage(
+                  userId: widget.userId,
                 ),
-              );
-            },
-            icon: const Icon(Icons.person, color: Colors.white),
-            label: const Text(
-              'Profile',
-              style: TextStyle(color: Colors.white),
-            ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.person, color: Colors.white),
+          label: const Text(
+            'Profile',
+            style: TextStyle(color: Colors.white),
           ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AccountSettingsPage(userId: widget.userId),
+              ),
+            );
+          },
+          icon: const Icon(Icons.settings, color: Colors.white),
+          label: const Text(
+            'Account Settings',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
                   builder: (_) => const EmergencySupportPage(),
                 ),
               );
