@@ -843,63 +843,19 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         return ExpansionTile(
           title: const Text('Recent Activity'),
           children: docs.isEmpty
-              ? [
-                  const ListTile(
+              ? const [
+                  ListTile(
                     title: Text('No recent activity'),
                   )
                 ]
-              : docs.map((doc) {
-                  final data = doc.data();
-                  final status =
-                      (data['invoiceStatus'] ?? data['status'] ?? '').toString();
-                  final priceNum = data['finalPrice'] as num?;
-                  final price = priceNum != null
-                      ? '\$${priceNum.toDouble().toStringAsFixed(2)}'
-                      : null;
-                  final Timestamp? ts =
-                      data['createdAt'] ?? data['mechanicAcceptedAt'];
-                  final date = ts != null
-                      ? DateFormat('MMM d, h:mm a')
-                          .format(ts.toDate().toLocal())
-                      : '';
-                  return ListTile(
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Job ID: ${doc.id}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Chip(
-                          label: Text(
-                            status,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: _invoiceStatusColor(status),
-                        ),
-                      ],
+              : docs
+                  .map(
+                    (doc) => _RecentActivityTile(
+                      invoiceId: doc.id,
+                      data: doc.data(),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (price != null && status == 'closed')
-                          Text('Final Price: $price'),
-                        if (date.isNotEmpty) Text(date),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => InvoiceDetailPage(
-                            invoiceId: doc.id,
-                            role: 'mechanic',
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }).toList(),
+                  )
+                  .toList(),
         );
       },
     );
@@ -1978,6 +1934,79 @@ class _ActiveRequestCard extends StatelessWidget {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+class _RecentActivityTile extends StatelessWidget {
+  final String invoiceId;
+  final Map<String, dynamic> data;
+
+  const _RecentActivityTile({required this.invoiceId, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final status =
+        (data['invoiceStatus'] ?? data['status'] ?? '').toString();
+    final priceNum = data['finalPrice'] ?? data['estimatedPrice'];
+    final priceVal = priceNum is num ? priceNum.toDouble() : null;
+    final price =
+        priceVal != null ? '\$${priceVal.toStringAsFixed(2)}' : null;
+    final Timestamp? ts = data['createdAt'] ?? data['mechanicAcceptedAt'];
+    final date = ts != null
+        ? DateFormat('MMM d, h:mm a').format(ts.toDate().toLocal())
+        : '';
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(data['customerId'])
+          .get(),
+      builder: (context, snapshot) {
+        final customerName = snapshot.data?.data()?['username'];
+        return ListTile(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Invoice $invoiceId',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Chip(
+                label: Text(
+                  status,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: _invoiceStatusColor(status),
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (customerName != null) Text('Customer: $customerName'),
+              if (price != null)
+                Text(
+                  status == 'closed'
+                      ? 'Final Price: $price'
+                      : 'Est. Price: $price',
+                ),
+              if (date.isNotEmpty) Text(date),
+            ],
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => InvoiceDetailPage(
+                  invoiceId: invoiceId,
+                  role: 'mechanic',
+                ),
+              ),
+            );
+          },
         );
       },
     );
