@@ -1087,8 +1087,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     'Created: ${_formatPrettyDate(createdAtTs)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (data['closedAt'] != null)
+                  Text(
+                    'Closed: ${_formatPrettyDate(data['closedAt'] as Timestamp?)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (finalPrice != null)
-                  Text('Total: $' + finalPrice.toStringAsFixed(2)),
+                  Text('Total: \$' + finalPrice.toStringAsFixed(2)),
               ],
             ),
             Text('Status: $status'),

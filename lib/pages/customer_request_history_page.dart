@@ -166,14 +166,20 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                       children: [
                                         ElevatedButton(
                                           onPressed: () async {
-                                            await FirebaseFirestore.instance
+                                            final docRef = FirebaseFirestore.instance
                                                 .collection('invoices')
-                                                .doc(doc.id)
-                                                .update({
+                                                .doc(doc.id);
+                                            final existing = await docRef.get();
+                                            final updateData = {
                                               'invoiceStatus': 'closed',
                                               'status': 'closed',
                                               'customerConfirmed': true
-                                            });
+                                            };
+                                            if (existing.data()?['closedAt'] == null) {
+                                              updateData['closedAt'] =
+                                                  FieldValue.serverTimestamp();
+                                            }
+                                            await docRef.update(updateData);
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 const SnackBar(content: Text('Price accepted. Invoice closed.')),

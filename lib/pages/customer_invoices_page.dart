@@ -121,6 +121,8 @@ class CustomerInvoicesPage extends StatelessWidget {
                         Text('Mechanic: $mechanic'),
                         if (carText.isNotEmpty) Text('Vehicle: $carText'),
                         Text('Submitted on ${_formatDate(ts)}'),
+                        if (data['closedAt'] != null)
+                          Text('Closed on ${_formatDate(data['closedAt'] as Timestamp?)}'),
                         if (finalPrice != null)
                           Text('Final Price: \\$${finalPrice.toStringAsFixed(2)}'),
                       ],

@@ -249,13 +249,17 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
     );
     if (confirm != true) return;
 
-    await FirebaseFirestore.instance
-        .collection('invoices')
-        .doc(widget.invoiceId)
-        .update({
+    final docRef =
+        FirebaseFirestore.instance.collection('invoices').doc(widget.invoiceId);
+    final existing = await docRef.get();
+    final updateData = {
       'invoiceStatus': 'closed',
       'adminOverride': true,
-    });
+    };
+    if (existing.data()?['closedAt'] == null) {
+      updateData['closedAt'] = FieldValue.serverTimestamp();
+    }
+    await docRef.update(updateData);
 
     await FirebaseFirestore.instance.collection('admin_logs').add({
       'action': 'forceCloseInvoice',
