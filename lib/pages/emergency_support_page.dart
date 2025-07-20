@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'terms_of_service_page.dart';
+import 'terms_and_conditions_page.dart';
 
 /// Page with emergency contact info and dispute instructions for customers.
 class EmergencySupportPage extends StatelessWidget {
@@ -42,7 +42,7 @@ class EmergencySupportPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TermsOfServicePage(),
+                    builder: (_) => const TermsAndConditionsPage(),
                   ),
                 );
               },
