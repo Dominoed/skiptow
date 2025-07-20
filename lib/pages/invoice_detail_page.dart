@@ -39,6 +39,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   final TextEditingController _reportController = TextEditingController();
   File? _reportImage;
   final TextEditingController _feedbackController = TextEditingController();
+  final TextEditingController _paymentIssueController = TextEditingController();
 
   Widget _buildTimeline(Map<String, dynamic> data) {
     final Timestamp? createdAt = data['createdAt'] as Timestamp?;
@@ -408,6 +409,79 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     }
   }
 
+  Future<void> _showPaymentIssueDialog(Map<String, dynamic> data) async {
+    String? errorText;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Report Payment Issue'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _paymentIssueController,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      labelText: 'Describe the issue',
+                    ),
+                  ),
+                  if (errorText != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        errorText!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (_paymentIssueController.text.trim().isEmpty) {
+                      setState(() {
+                        errorText = 'Please enter a description.';
+                      });
+                    } else {
+                      Navigator.of(context).pop(true);
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      final doc = FirebaseFirestore.instance.collection('reports').doc();
+      await doc.set({
+        'type': 'payment_issue',
+        'invoiceId': widget.invoiceId,
+        'customerId': data['customerId'],
+        'reportText': _paymentIssueController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': 'open',
+      });
+      _paymentIssueController.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment issue reported.')),
+        );
+      }
+    }
+  }
+
   Future<void> _showFeedbackDialog(String invoiceId) async {
     int rating = 0;
     _feedbackController.clear();
@@ -640,6 +714,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     _chatScrollController.dispose();
     _etaController.dispose();
     _reportController.dispose();
+    _paymentIssueController.dispose();
     super.dispose();
   }
 
@@ -1406,13 +1481,26 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
             ),
           );
-        }        if (widget.role == 'customer' || widget.role == 'mechanic') {
+        }
+        if (widget.role == 'customer' || widget.role == 'mechanic') {
           children.add(
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () => _showReportDialog(data),
                 child: const Text('Report an Issue'),
+              ),
+            ),
+          );
+        }
+
+        if (widget.role == 'customer' && customerConfirmed) {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: OutlinedButton(
+                onPressed: () => _showPaymentIssueDialog(data),
+                child: const Text('Report Payment Issue'),
               ),
             ),
           );
