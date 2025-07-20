@@ -90,6 +90,11 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: null,
+                  child: const Text('Change Password'),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: null,
                   child: const Text('Delete My Account'),
                 ),
               ],
