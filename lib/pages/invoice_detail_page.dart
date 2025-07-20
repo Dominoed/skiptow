@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'payment_processing_page.dart';
 
 /// Page to show full invoice details.
@@ -114,11 +116,38 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     }
   }
 
+  Color _invoiceStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'accepted':
+        return Colors.blue;
+      case 'arrived':
+      case 'in_progress':
+        return Colors.orange;
+      case 'completed':
+        return Colors.purple;
+      case 'closed':
+        return Colors.grey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   void _scrollChatToBottom() {
     if (_chatScrollController.hasClients) {
       _chatScrollController.jumpTo(
         _chatScrollController.position.maxScrollExtent,
       );
+    }
+  }
+
+  Future<void> _openNavigation(double lat, double lng) async {
+    final uri =
+        Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
   }
 
@@ -464,6 +493,14 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         final invoiceStatus = data['invoiceStatus'] ?? status;
         final customerConfirmed = data['customerConfirmed'] == true;
         final finalPrice = data['finalPrice'];
+        final estimatedPrice = finalPrice == null
+            ? (data['estimatedPrice'] ?? data['quotedPrice'])
+            : null;
+        final List<String> attachments =
+            (data['photoUrls'] as List?)?.cast<String>() ??
+            (data['photos'] as List?)?.cast<String>() ??
+            (data['images'] as List?)?.cast<String>() ??
+            [];
         final paymentStatus = data['paymentStatus'] ?? 'pending';
         final Timestamp? createdAtTs = data['createdAt'];
         _etaController.text = data['etaMinutes'] != null ? data['etaMinutes'].toString() : '';
@@ -502,6 +539,39 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             ),
           ),
         );
+        children.add(
+          Row(
+            children: [
+              const Text('Status: '),
+              Chip(
+                label: Text(
+                  invoiceStatus,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: _invoiceStatusColor(invoiceStatus),
+              ),
+              const SizedBox(width: 8),
+              Text('Created: ${_formatDate(createdAtTs)}'),
+            ],
+          ),
+        );
+        if (data['adminOverride'] == true)
+          children.add(
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: Chip(
+                label: Text(
+                  invoiceStatus == 'cancelled'
+                      ? 'Force Cancelled by Admin'
+                      : 'Force Closed by Admin',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: invoiceStatus == 'cancelled'
+                    ? Colors.red
+                    : Colors.orange,
+              ),
+            ),
+          );
         if (widget.role == 'mechanic') {
           final name = data['customerName'] ?? data['customerUsername'];
           children.add(
@@ -573,12 +643,44 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Customer Notes:\n${data['notes']}')
           else
             const Text('No additional notes.'),
-          if (widget.role == 'customer')
-            Text(
-              finalPrice != null
-                  ? 'Final Total: \$${finalPrice.toStringAsFixed(2)}'
-                  : 'Final Total: Pending',
+          if (attachments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Attachments:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: attachments
+                        .map(
+                          (url) => SizedBox(
+                            height: 80,
+                            width: 80,
+                            child: Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) =>
+                                  const Icon(Icons.broken_image),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
             ),
+          if (finalPrice != null)
+            Text('Final Total: \$${(finalPrice as num).toStringAsFixed(2)}')
+          else if (estimatedPrice != null)
+            Text('Estimated Total: \$${(estimatedPrice as num).toStringAsFixed(2)}')
+          else
+            const Text('Estimated Total: Pending'),
           if (widget.role == 'customer')
             Container(
               margin: const EdgeInsets.symmetric(vertical: 4),
@@ -610,12 +712,48 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           if (widget.role != 'customer' &&
               (data['mechanicEmail'] ?? '').toString().isNotEmpty)
             Text('Mechanic Email: ${data['mechanicEmail']}'),
-          if (location != null)
-            Text('Location: ${location['lat']}, ${location['lng']}'),
+          if (location != null &&
+              location['lat'] != null &&
+              location['lng'] != null)
+            SizedBox(
+              height: 200,
+              child: Stack(
+                children: [
+                  GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(
+                        (location['lat'] as num).toDouble(),
+                        (location['lng'] as num).toDouble(),
+                      ),
+                      zoom: 14,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('service'),
+                        position: LatLng(
+                          (location['lat'] as num).toDouble(),
+                          (location['lng'] as num).toDouble(),
+                        ),
+                      ),
+                    },
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openNavigation(
+                        (location['lat'] as num).toDouble(),
+                        (location['lng'] as num).toDouble(),
+                      ),
+                      icon: const Icon(Icons.navigation),
+                      label: const Text('Navigate'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (data['distance'] != null)
             Text('Distance: ${data['distance'].toStringAsFixed(1)} mi'),
-          Text('Submitted: ${_formatDate(data['timestamp'])}'),
-          Text('Status: $status'),
           if (data['etaMinutes'] != null)
             Text('ETA: ${data['etaMinutes']} minutes'),
           if (finalPrice != null && widget.role != 'customer')
