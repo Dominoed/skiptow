@@ -16,7 +16,7 @@ SkipTow is currently open source for community contributions; it may become clos
 - View and manage all service requests, invoices and vehicle history
 - Receive push notifications for request updates and payment reminders
 - Report payment issues after confirming final price
-- Access emergency support and app help pages
+- Access emergency support and app help page
 - Manage profile, saved vehicles and account settings
 
 ### Mechanic Features

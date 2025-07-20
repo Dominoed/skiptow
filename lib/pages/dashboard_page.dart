@@ -7,7 +7,7 @@ import 'login_page.dart';
 import 'settings_page.dart';
 import 'admin_dashboard.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'help_page.dart';
+import 'help_support_page.dart';
 import 'service_request_history_page.dart';
 import 'vehicle_history_page.dart';
 
@@ -147,7 +147,10 @@ class DashboardPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const HelpPage(),
+                      builder: (_) => HelpSupportPage(
+                        userId: userId,
+                        userRole: role ?? 'user',
+                      ),
                     ),
                   );
                 },
