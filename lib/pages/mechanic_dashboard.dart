@@ -52,6 +52,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _activeRequestsSub;
   bool _hasAccountData = true;
   bool _blocked = false;
+  bool _suspicious = false;
   int completedJobs = 0;
   bool unavailable = false;
 
@@ -327,6 +328,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         });
         return;
       }
+      _suspicious = data['suspicious'] == true;
       setState(() {
         isActive = getBool(data, 'isActive');
         radiusMiles = (data['radiusMiles'] ?? 5).toDouble();
@@ -1049,6 +1051,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 )
               : Column(
               children: [
+                if (_suspicious)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    color: Colors.red,
+                    child: const Text(
+                      '⚠️ Suspicious User',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                if (_suspicious) const SizedBox(height: 8),
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   stream: FirebaseFirestore.instance
                       .collection('invoices')
@@ -1164,11 +1181,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     final data = snapshot.data?.data();
                     final completedCount = data?['completedJobs'] ?? completedJobs;
                     final blocked = data?['blocked'] == true;
+                    final suspicious = data?['suspicious'] == true;
                     if (blocked != _blocked) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) {
                           setState(() {
                             _blocked = blocked;
+                          });
+                        }
+                      });
+                    }
+                    if (suspicious != _suspicious) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          setState(() {
+                            _suspicious = suspicious;
                           });
                         }
                       });
