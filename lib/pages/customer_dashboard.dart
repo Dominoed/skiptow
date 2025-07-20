@@ -42,6 +42,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _locationBannerVisible = false;
   bool _alertBannerVisible = false;
   bool _hasAccountData = true;
+  bool _suspicious = false;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
   bool _requestAcceptedBannerVisible = false;
@@ -252,6 +253,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       });
       return;
     }
+
+    final data = doc.data();
+    _suspicious = data?['suspicious'] == true;
 
     _loadWrenchIcon();
     _checkLocationPermissionOnLoad();
@@ -1292,6 +1296,24 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     )
                   : Stack(
               children: [
+                if (_suspicious)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.red,
+                      child: const Text(
+                        '⚠️ Suspicious User',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   markers: markers,

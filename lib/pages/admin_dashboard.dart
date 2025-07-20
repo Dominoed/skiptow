@@ -723,6 +723,32 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Future<void> _markSuspicious(String userId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .update({'suspicious': true});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User marked suspicious')),
+      );
+    }
+  }
+
+  Future<void> _removeSuspicious(String userId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .update({'suspicious': false});
+    await _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Suspicious tag removed')),
+      );
+    }
+  }
+
   Future<void> _loadAppVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
@@ -1389,6 +1415,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               },
               child: const Text('View History'),
             ),
+          TextButton(
+            onPressed: () => data['suspicious'] == true
+                ? _removeSuspicious(doc.id)
+                : _markSuspicious(doc.id),
+            child: Text(data['suspicious'] == true
+                ? 'Remove Suspicious Tag'
+                : 'Mark as Suspicious'),
+          ),
           _buildStatusBadges(data),
         ],
       ),
@@ -1597,6 +1631,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             ...filteredDocs.map((d) {
               final data = d.data();
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1654,6 +1689,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onPressed: () => _blockMechanic(d.id),
                       child: const Text('Block Mechanic'),
                     ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
+                    ),
                   ],
                 ),
               );
@@ -1689,6 +1732,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             ...filteredDocs.map((d) {
               final data = d.data();
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1741,6 +1785,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onPressed: () => _unblockMechanic(d.id),
                       child: const Text('Unblock Mechanic'),
                     ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
+                    ),
                   ],
                 ),
               );
@@ -1777,6 +1829,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             ...filteredDocs.map((d) {
               final data = d.data();
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1828,6 +1881,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     TextButton(
                       onPressed: () => _unflagMechanic(d.id),
                       child: const Text('Remove Flag'),
+                    ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
                     ),
                   ],
                 ),
@@ -1915,6 +1976,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onPressed: () => _unblockCustomer(d.id),
                       child: const Text('Unblock Customer'),
                     ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
+                    ),
                   ],
                 ),
               );
@@ -1952,6 +2021,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ...filteredDocs.map((d) {
               final data = d.data();
               final flagged = data['flagged'] == true;
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2002,6 +2072,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     TextButton(
                       onPressed: flagged ? null : () => _flagCustomer(d.id),
                       child: const Text('Flag Customer'),
+                    ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
                     ),
                   ],
                 ),
@@ -2089,6 +2167,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     TextButton(
                       onPressed: () => _unflagCustomer(d.id),
                       child: const Text('Remove Flag'),
+                    ),
+                    TextButton(
+                      onPressed: () => suspicious
+                          ? _removeSuspicious(d.id)
+                          : _markSuspicious(d.id),
+                      child: Text(suspicious
+                          ? 'Remove Suspicious Tag'
+                          : 'Mark as Suspicious'),
                     ),
                   ],
                 ),
