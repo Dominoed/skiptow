@@ -11,6 +11,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'payment_processing_page.dart';
 import 'image_viewer_page.dart';
+import 'customer_mechanic_tracking_page.dart';
 
 /// Page to show full invoice details.
 class InvoiceDetailPage extends StatefulWidget {
@@ -1498,6 +1499,32 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                     ],
                   ),
                 ],
+              ),
+            ),
+          );
+        }
+        if (widget.role == 'customer' &&
+            data['mechanicId'] != null &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled') {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CustomerMechanicTrackingPage(
+                        customerId: data['customerId'],
+                        mechanicId: data['mechanicId'],
+                        invoiceId: widget.invoiceId,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.directions_car),
+                label: const Text('Track Mechanic'),
               ),
             ),
           );
