@@ -46,10 +46,11 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
     final data = doc.data();
     if (data == null) return null;
 
-    if (data['invoiceId'] != null) {
+    final invId = data['relatedInvoiceId'] ?? data['invoiceId'];
+    if (invId != null) {
       final invDoc = await FirebaseFirestore.instance
           .collection('invoices')
-          .doc(data['invoiceId'])
+          .doc(invId)
           .get();
       if (invDoc.exists) {
         data['invoiceNumber'] = invDoc.data()?['invoiceNumber'];
@@ -120,8 +121,8 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Report ID: ${widget.reportId}'),
-          if (data['invoiceId'] != null)
-            Text('Invoice ID: ${data['invoiceId']}'),
+          if (data['relatedInvoiceId'] != null || data['invoiceId'] != null)
+            Text('Invoice ID: ${data['relatedInvoiceId'] ?? data['invoiceId']}'),
           if (data['reportedBy'] != null)
             Text('Reported By: ${data['reportedBy']}'),
           if ((data['reportText'] ?? '').toString().isNotEmpty)
@@ -135,14 +136,16 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
           Wrap(
             spacing: 8,
             children: [
-              if (data['invoiceId'] != null)
+              if (data['relatedInvoiceId'] != null || data['invoiceId'] != null)
                 ElevatedButton(
                   onPressed: () {
+                    final invId =
+                        data['relatedInvoiceId'] ?? data['invoiceId'];
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => AdminInvoiceDetailPage(
-                          invoiceId: data['invoiceId'],
+                          invoiceId: invId,
                           userId: widget.userId,
                         ),
                       ),

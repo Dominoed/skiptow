@@ -1513,7 +1513,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Invoice: ${data['invoiceId'] ?? ''}'),
+          Text('Invoice: ${data['relatedInvoiceId'] ?? data['invoiceId'] ?? ''}'),
           if (data['reportedBy'] != null)
             Text('Reported By: ${data['reportedBy']}'),
           if (preview.isNotEmpty) Text(shortText),
