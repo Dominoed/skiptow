@@ -1143,6 +1143,78 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                     );
                   },
                 ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('invoices')
+                      .where('mechanicId', isEqualTo: widget.userId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    final docs = snapshot.data?.docs ?? [];
+                    final ratedDocs = docs.where((d) {
+                      final fb = d.data()['feedback'];
+                      return fb is Map && fb['rating'] != null;
+                    }).toList();
+                    final totalRated = ratedDocs.length;
+                    double ratingSum = 0.0;
+                    final feedbackList = <Map<String, dynamic>>[];
+                    for (final doc in ratedDocs) {
+                      final data = doc.data();
+                      final fb = data['feedback'] as Map<String, dynamic>;
+                      ratingSum += (fb['rating'] as num).toDouble();
+                      final text = fb['text'];
+                      Timestamp? ts = fb['timestamp'];
+                      ts ??= data['closedAt'] ?? data['completedAt'];
+                      if (text != null && text.toString().trim().isNotEmpty) {
+                        feedbackList.add({'text': text.toString(), 'ts': ts});
+                      }
+                    }
+                    final avgRating =
+                        totalRated > 0 ? ratingSum / totalRated : 0.0;
+                    feedbackList.sort((a, b) {
+                      final ta = a['ts'];
+                      final tb = b['ts'];
+                      if (ta is Timestamp && tb is Timestamp) {
+                        return tb.compareTo(ta);
+                      }
+                      return 0;
+                    });
+                    final latestTexts = feedbackList
+                        .map((f) => f['text'] as String)
+                        .take(3)
+                        .toList();
+
+                    return Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Average Rating: ${avgRating.toStringAsFixed(1)} stars",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text("Total Jobs Rated: $totalRated"),
+                          for (final text in latestTexts)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text(
+                                text,
+                                style: const TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 _buildActiveRequests(),
                 _buildRecentActivity(),
                 Container(
