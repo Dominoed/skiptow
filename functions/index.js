@@ -343,3 +343,39 @@ exports.autoCancelStaleInvoices = functions.pubsub
     return null;
   });
 
+exports.autoResetInactiveMechanics = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('Etc/UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+    const weekMs = 1000 * 60 * 60 * 24 * 7;
+    const cutoff = new Date(Date.now() - weekMs);
+
+    const snapshot = await db
+      .collection('users')
+      .where('role', '==', 'mechanic')
+      .where('isActive', '==', true)
+      .where('lastActiveAt', '<', cutoff)
+      .get();
+
+    const updates = [];
+    snapshot.forEach(doc => {
+      updates.push(doc.ref.update({ isActive: false }));
+      updates.push(
+        db
+          .collection('notifications_mechanics')
+          .doc(doc.id)
+          .collection('notifications')
+          .add({
+            title: 'Status Auto-Reset',
+            message: 'Your status was auto-reset due to inactivity.',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            read: false,
+          })
+      );
+    });
+
+    await Promise.all(updates);
+    return null;
+  });
+

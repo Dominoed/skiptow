@@ -200,9 +200,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
   }
 
+  Future<void> _updateLastActive() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .update({'lastActiveAt': FieldValue.serverTimestamp()});
+    } catch (e) {
+      logError('Update lastActiveAt error: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _updateLastActive();
     _verifyAccountData();
     _checkGlobalAlert();
     _listenForActiveRequests();

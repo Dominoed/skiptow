@@ -74,6 +74,7 @@ firebase_options.dart
   - lat: number
   - lng: number
 - timestamp: DateTime
+- lastActiveAt: timestamp (dashboard updates this when opened)
 
 ### invoices/{invoiceId}
 - mechanicId
