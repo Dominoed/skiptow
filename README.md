@@ -1,33 +1,51 @@
 # SkipTow
 
-SkipTow is a cross-platform mobile and web app for requesting mobile mechanic services. Customers can find mechanics nearby, message them, and submit service requests without needing a tow truck. Mechanics can set their availability, define their working radius, and receive service requests directly from customers.
+SkipTow is a cross-platform mobile and web app for requesting mobile mechanic services. Customers can locate nearby mechanics, chat with them and submit service requests without needing a tow truck. Mechanics manage their availability, working radius and jobs directly from the app.
 
-SkipTow is open source right now for ease-of-contributions from community and LLM, however the project may not always be open source in the future.
+SkipTow is currently open source for community contributions; it may become closed source later.
 
 ## Features
 
-### For Customers:
-- Interactive map showing nearby mechanics.
-- Availability status of mechanics (active or extended radius).
-- Submit service requests (invoices) with vehicle and problem details.
-- Real-time messaging with mechanics.
-- View active and past service requests.
-- Custom "my location" button for web.
+### Customer Features
+- Interactive map of active mechanics with a web "my location" button
+- Choose a specific mechanic or request help from *Any Tech*
+- Submit service requests with vehicle details, contact info and notes
+- Real-time status banners when a mechanic accepts, arrives or completes a job
+- Track the mechanic’s live location and view estimated arrival time
+- In-app chat thread on each invoice with photo attachments
+- View and manage all service requests, invoices and vehicle history
+- Receive push notifications for request updates and payment reminders
+- Access emergency support and app help pages
+- Manage profile, saved vehicles and account settings
 
-### For Mechanics:
-- Interactive map showing own location, service radius, and active/inactive status.
-- Set active/inactive status.
-- Define working radius.
-- Receive and respond to customer service requests.
-- Real-time location updates.
-- Wrench icon replaces blue dot when active.
+### Mechanic Features
+- Toggle active/inactive status and mark temporarily unavailable
+- Set working radius using a slider and view it on the map
+- Request queue showing nearby jobs to accept or decline
+- Map view of own location with wrench icon when active
+- Track job progress: confirm arrival, start work and mark completed with final price
+- Earnings report and job history with statistics
+- Real-time messaging with customers from invoice detail pages
+- Notifications for new requests, messages and invoices
+- Location history stored automatically while active
 
-### Technology Stack:
-- Flutter (mobile and web)
-- Firebase Authentication (user accounts)
-- Firebase Firestore (real-time database)
-- Firebase Hosting (for web app)
-- Google Maps Flutter plugin
+### Admin Features
+- Admin dashboard with platform statistics and recent activity
+- Search and filter invoices by status and date range
+- Export invoices and user lists to CSV
+- Manage users, view profiles and see flagged or suspicious accounts
+- Broadcast messages and notifications to any user
+- View and close user reports or disputes
+- Financial reporting and basic revenue estimates
+- Ability to enable maintenance mode with a custom message
+
+### General Functionality
+- Firebase Authentication and Firestore for real-time data storage
+- Firebase Cloud Functions send push notifications for new requests and updates
+- Offline banner when connectivity is lost
+- Global alerts banner for important announcements
+- Step-by-step invoice timeline showing request lifecycle
+- Web and Android builds provided by Flutter
 
 ## File Structure
 lib/main.dart
@@ -42,11 +60,10 @@ lib/pages/
 lib/services/auth_service.dart
 firebase_options.dart
 
-
 ## Data Structure (Firestore)
 
 ### users/{userId}
-- role: `"mechanic"` or `"customer"`
+- role: `"mechanic"`, `"customer"` or `"admin"`
 - isActive: `true` or `false`
 - radiusMiles: number
 - location:
@@ -65,7 +82,8 @@ firebase_options.dart
 - customerPhone
 - customerEmail
 - timestamp
-- status: `"active"` or `"completed"`
+- status: `"active"`, `"completed"`, `"closed"` or `"cancelled"`
+- paymentStatus
 
 ### messages/{conversationId}/threads/{messageId}
 - senderId
@@ -81,20 +99,18 @@ firebase_options.dart
 
 1. Clone the repository.
 2. Run `flutter pub get`.
-3. Set up Firebase project and Firebase CLI.
-4. Connect Flutter to Firebase using `firebase_options.dart`.
+3. Set up a Firebase project and install the Firebase CLI.
+4. Configure `firebase_options.dart` for your Firebase project.
 5. For web:
-   - Add Google Maps API key in `web/index.html`.
+   - Add your Google Maps API key in `web/index.html`.
    - Deploy using `firebase deploy`.
 6. For Android/iOS:
-   - Add Google Maps API key in platform-specific configs.
-   - Run using `flutter run`.
+   - Add your Google Maps API key in the platform specific config files.
+   - Run the app with `flutter run`.
 7. Deploy Cloud Functions:
    - From the `functions` directory run `npm install`.
-   - Deploy using `firebase deploy --only functions`.
+   - Deploy with `firebase deploy --only functions`.
 
-## Next Steps (Planned)
-- Real-time messaging system (in development).
-- Admin dashboard (future feature).
-- Payment processing (future feature).
-- Improved UI/UX enhancements.
+## Next Steps
+- Payment processing integration
+- Additional UI/UX improvements
