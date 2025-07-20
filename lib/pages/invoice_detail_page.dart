@@ -1036,14 +1036,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             },
                           );
                           if (confirmed == true) {
-                            await FirebaseFirestore.instance
+                            final docRef = FirebaseFirestore.instance
                                 .collection('invoices')
-                                .doc(widget.invoiceId)
-                                .update({
+                                .doc(widget.invoiceId);
+                            final existing = await docRef.get();
+                            final updateData = {
                               'invoiceStatus': 'closed',
                               'status': 'closed',
                               'customerConfirmed': true,
-                            });
+                            };
+                            if (existing.data()?['closedAt'] == null) {
+                              updateData['closedAt'] = FieldValue.serverTimestamp();
+                            }
+                            await docRef.update(updateData);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Price accepted. Invoice closed.')),

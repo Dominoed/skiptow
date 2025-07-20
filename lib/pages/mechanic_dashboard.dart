@@ -1356,15 +1356,19 @@ class _ActiveRequestCard extends StatelessWidget {
 
       if (confirmed == true) {
         final double fee = double.parse((price * 0.15).toStringAsFixed(2));
-        await FirebaseFirestore.instance
-            .collection('invoices')
-            .doc(invoiceId)
-            .update({
+        final docRef =
+            FirebaseFirestore.instance.collection('invoices').doc(invoiceId);
+        final existing = await docRef.get();
+        final updateData = {
           'status': 'completed',
           'finalPrice': price,
           'postJobNotes': notes,
           'platformFee': fee,
-        });
+        };
+        if (existing.data()?['closedAt'] == null) {
+          updateData['closedAt'] = FieldValue.serverTimestamp();
+        }
+        await docRef.update(updateData);
         await FirebaseFirestore.instance
             .collection('users')
             .doc(mechanicId)
