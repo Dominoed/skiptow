@@ -15,7 +15,6 @@ import 'customer_profile_page.dart';
 import 'account_settings_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
-import 'emergency_support_page.dart';
 import 'help_support_page.dart';
 import 'customer_mechanic_tracking_page.dart';
 import 'invoice_detail_page.dart';
@@ -1276,24 +1275,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const EmergencySupportPage(),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.help,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            label: Text(
-              'Support',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-          ),
           _buildMessagesIcon(),
           _buildNotificationsIcon(),
         ],
