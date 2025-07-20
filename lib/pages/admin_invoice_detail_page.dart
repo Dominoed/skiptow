@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../services/csv_downloader.dart';
+import '../services/pdf_downloader.dart';
+import '../services/invoice_pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'dashboard_page.dart';
 
 /// Detailed view of a single invoice for admins.
@@ -466,6 +469,20 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
               onPressed: () => _exportInvoice(data),
               child: const Text('Export This Invoice'),
             ),
+            if (data['invoiceStatus'] == 'closed')
+              ElevatedButton(
+                onPressed: () async {
+                  final bytes = await generateInvoicePdf(data, widget.invoiceId);
+                  final num = data['invoiceNumber'] ?? widget.invoiceId;
+                  await downloadPdf(bytes, fileName: 'invoice_\$num.pdf');
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invoice PDF downloaded')),
+                    );
+                  }
+                },
+                child: const Text('Download Invoice PDF'),
+              ),
           ],
         ),
         const SizedBox(height: 8),
