@@ -27,7 +27,7 @@ class InvoiceDetailPage extends StatefulWidget {
 class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   late final Stream<Map<String, dynamic>?> _invoiceStream;
   StreamSubscription<Map<String, dynamic>?>? _invoiceSub;
-  bool _paymentPageOpened = false;
+  // bool _paymentPageOpened = false; // payment flow disabled
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
@@ -419,29 +419,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     super.initState();
     _invoiceStream = _buildInvoiceStream();
     _invoiceSub = _invoiceStream.listen((data) {
-      if (!_paymentPageOpened &&
-          mounted &&
-          widget.role == 'customer' &&
-          data != null &&
-          data['status'] == 'completed' &&
-          (data['paymentStatus'] ?? 'pending') == 'pending') {
-        _paymentPageOpened = true;
-        Future.microtask(() {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PaymentProcessingPage(
-                invoiceId: widget.invoiceId,
-              ),
-            ),
-          ).then((_) {
-            if (mounted) {
-              setState(() {});
-            }
-            _paymentPageOpened = false;
-          });
-        });
-      }
+      // No automatic payment processing in the confirmation flow
     });
   }
 
@@ -478,6 +456,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             '${car['year'] ?? ''} ${car['make'] ?? ''} ${car['model'] ?? ''}'.trim();
         final location = data['location'];
         final status = data['status'] ?? 'active';
+        final invoiceStatus = data['invoiceStatus'] ?? status;
+        final customerConfirmed = data['customerConfirmed'] == true;
         final finalPrice = data['finalPrice'];
         final paymentStatus = data['paymentStatus'] ?? 'pending';
         final Timestamp? createdAtTs = data['createdAt'];
@@ -916,6 +896,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             .doc(widget.invoiceId)
                             .update({
                               'status': 'completed',
+                              'invoiceStatus': 'completed',
                               'finalPrice': price,
                               'postJobNotes': notes,
                               'platformFee': fee,
@@ -994,110 +975,83 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
 
-        if (widget.role == 'customer' && status == 'completed') {
-          children.addAll([
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PaymentProcessingPage(
-                        invoiceId: widget.invoiceId,
+
+        if (widget.role == 'customer' &&
+            invoiceStatus == 'completed' &&
+            !customerConfirmed) {
+          children.add(
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.all(8),
+              color: Colors.yellow[100],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Job Completed – Please Confirm Final Price: '
+                    '\$${finalPrice != null ? (finalPrice as num).toDouble().toStringAsFixed(2) : '0.00'}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('Confirm Price'),
+                                content: Text(
+                                  'Accept final price of \$${finalPrice != null ? (finalPrice as num).toDouble().toStringAsFixed(2) : '0.00'}?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Accept'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (confirmed == true) {
+                            await FirebaseFirestore.instance
+                                .collection('invoices')
+                                .doc(widget.invoiceId)
+                                .update({
+                              'invoiceStatus': 'closed',
+                              'status': 'closed',
+                              'customerConfirmed': true,
+                            });
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Price accepted. Invoice closed.')),
+                              );
+                              setState(() {});
+                            }
+                          }
+                        },
+                        child: const Text('Accept Price & Close'),
                       ),
-                    ),
-                  );
-                  if (context.mounted) {
-                    setState(() {});
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                child: const Text('Pay Now'),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Dispute feature coming soon.')),
+                          );
+                        },
+                        child: const Text('Dispute Price'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            if (paymentStatus != 'paid') ...[
-              const Text(
-                'Please complete payment to close the request.',
-                style: TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 12),
-            ],
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: paymentStatus == 'paid'
-                    ? () async {
-                  final reviewController = TextEditingController();
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Close Request'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Mark this service request as closed?'),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: reviewController,
-                              minLines: 3,
-                              maxLines: 5,
-                              decoration: const InputDecoration(
-                                labelText: 'Leave a review for your mechanic (optional)',
-                              ),
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Confirm'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirmed == true) {
-                    final Map<String, dynamic> updateData = {
-                      'status': 'closed',
-                      'closedAt': FieldValue.serverTimestamp(),
-                    };
-                    final review = reviewController.text.trim();
-                    if (review.isNotEmpty) {
-                      updateData['customerReview'] = review;
-                    }
-                    await FirebaseFirestore.instance
-                        .collection('invoices')
-                        .doc(widget.invoiceId)
-                        .update(updateData);
-
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Request closed. Thank you for using SkipTow.'),
-                        ),
-                      );
-                    Navigator.pop(context);
-                  }
-                }
-              }
-                    : null,
-                child: const Text('Close Request'),
-              ),
-            ),
-          ]);
-        }
-
-        if (widget.role == 'customer' || widget.role == 'mechanic') {
+          );
+        }        if (widget.role == 'customer' || widget.role == 'mechanic') {
           children.add(
             Align(
               alignment: Alignment.centerRight,

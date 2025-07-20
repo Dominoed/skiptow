@@ -123,6 +123,7 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                     final Timestamp? createdAt = data['createdAt'] ?? data['timestamp'];
                     final estimated = (data['estimatedPrice'] ?? data['quotedPrice']) as num?;
                     final finalPrice = data['finalPrice'] as num?;
+                    final bool customerConfirmed = data['customerConfirmed'] == true;
 
                     return Card(
                       margin: const EdgeInsets.all(8),
@@ -156,6 +157,42 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                               Text('Estimated: \${estimated.toDouble().toStringAsFixed(2)}'),
                             if (finalPrice != null)
                               Text('Final Price: \${finalPrice.toDouble().toStringAsFixed(2)}'),
+                              if (status == 'completed' && !customerConfirmed && finalPrice != null)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Job Completed – Please Confirm Final Price: \${finalPrice.toDouble().toStringAsFixed(2)}'),
+                                    Row(
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            await FirebaseFirestore.instance
+                                                .collection('invoices')
+                                                .doc(doc.id)
+                                                .update({
+                                              'invoiceStatus': 'closed',
+                                              'status': 'closed',
+                                              'customerConfirmed': true
+                                            });
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Price accepted. Invoice closed.')),
+                                              );
+                                            }
+                                          },
+                                          child: const Text('Accept Price & Close'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dispute feature coming soon.')));
+                                          },
+                                          child: const Text('Dispute Price'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                             Row(
                               children: [
                                 const Text('Mechanic Accepted: '),
