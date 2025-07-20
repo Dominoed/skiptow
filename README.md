@@ -92,9 +92,9 @@ firebase_options.dart
 - text
 - timestamp
 
-### system/config
-- maintenanceMode: `true` or `false`
-- maintenanceMessage: string
+### config/maintenance
+- enabled: `true` or `false`
+- message: string (optional)
 
 ## General Messaging & Support
 - Admin can message any user outside of invoices.
