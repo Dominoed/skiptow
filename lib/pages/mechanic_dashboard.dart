@@ -17,6 +17,7 @@ import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
 import 'mechanic_location_history_page.dart';
 import '../services/alert_service.dart';
+import 'mechanic_current_job_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -1079,6 +1080,34 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ),
               ],
             ),
+      floatingActionButton: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('invoices')
+            .where('mechanicId', isEqualTo: widget.userId)
+            .where('invoiceStatus', whereIn: ['accepted', 'in_progress'])
+            .limit(1)
+            .snapshots(),
+        builder: (context, snapshot) {
+          final docs = (snapshot.data?.docs ?? [])
+              .where((d) => d.data()['flagged'] != true)
+              .toList();
+          if (docs.isEmpty) return const SizedBox.shrink();
+          final doc = docs.first;
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MechanicCurrentJobPage(invoiceId: doc.id),
+                ),
+              );
+            },
+            label: const Text('View Current Job'),
+            icon: const Icon(Icons.work),
+          );
+        },
+      ),
     );
   }
 
