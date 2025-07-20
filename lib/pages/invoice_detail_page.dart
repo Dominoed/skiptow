@@ -38,6 +38,80 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   final TextEditingController _reportController = TextEditingController();
   File? _reportImage;
 
+  Widget _buildTimeline(Map<String, dynamic> data) {
+    final Timestamp? createdAt = data['createdAt'] as Timestamp?;
+    final Timestamp? acceptedAt =
+        data['acceptedAt'] as Timestamp? ??
+        data['mechanicAcceptedAt'] as Timestamp? ??
+        data['mechanicAcceptedTimestamp'] as Timestamp?;
+    final Timestamp? completedAt =
+        data['completedAt'] as Timestamp? ??
+        data['jobCompletedTimestamp'] as Timestamp?;
+    final Timestamp? closedAt = data['closedAt'] as Timestamp?;
+    final bool mechanicAccepted = data['mechanicAccepted'] == true;
+    final bool etaProvided = data['etaMinutes'] != null;
+    final bool mechanicCompleted = completedAt != null;
+    final bool customerConfirmed = data['customerConfirmed'] == true;
+    final bool paymentCompleted = (data['paymentStatus'] ?? '') == 'paid';
+    final bool invoiceClosed = closedAt != null ||
+        (data['invoiceStatus'] ?? data['status']) == 'closed';
+
+    int currentStep = 0;
+    if (invoiceClosed) {
+      currentStep = 6;
+    } else if (paymentCompleted) {
+      currentStep = 5;
+    } else if (customerConfirmed) {
+      currentStep = 4;
+    } else if (mechanicCompleted) {
+      currentStep = 3;
+    } else if (etaProvided) {
+      currentStep = 2;
+    } else if (mechanicAccepted) {
+      currentStep = 1;
+    }
+
+    Step buildStep(String title, {String subtitle = '', required int index}) {
+      return Step(
+        title: Text(title),
+        subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
+        content: const SizedBox.shrink(),
+        isActive: currentStep >= index,
+        state: currentStep > index
+            ? StepState.complete
+            : currentStep == index
+                ? StepState.editing
+                : StepState.indexed,
+      );
+    }
+
+    final steps = [
+      buildStep('Request Submitted',
+          subtitle: _formatDate(createdAt), index: 0),
+      buildStep('Mechanic Accepted',
+          subtitle: _formatDate(acceptedAt), index: 1),
+      buildStep('ETA Provided',
+          subtitle:
+              data['etaMinutes'] != null ? '${data['etaMinutes']} min' : '',
+          index: 2),
+      buildStep('Mechanic Marked Completed',
+          subtitle: _formatDate(completedAt), index: 3),
+      buildStep('Customer Confirmed Price',
+          subtitle: customerConfirmed ? _formatDate(closedAt) : '', index: 4),
+      buildStep('Payment Completed',
+          subtitle: paymentCompleted ? _formatDate(closedAt) : '', index: 5),
+      buildStep('Invoice Closed',
+          subtitle: _formatDate(closedAt), index: 6),
+    ];
+
+    return Stepper(
+      currentStep: currentStep,
+      type: StepperType.vertical,
+      controlsBuilder: (_, __) => const SizedBox.shrink(),
+      steps: steps,
+    );
+  }
+
   Stream<Map<String, dynamic>?> _buildInvoiceStream() {
     return FirebaseFirestore.instance
         .collection('invoices')
@@ -555,6 +629,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             ],
           ),
         );
+        children.add(_buildTimeline(data));
         if (data['adminOverride'] == true)
           children.add(
             Padding(
