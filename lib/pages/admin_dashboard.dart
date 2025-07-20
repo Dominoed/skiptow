@@ -14,6 +14,7 @@ import 'admin_invoice_detail_page.dart';
 import 'admin_mechanic_performance_page.dart';
 import 'admin_customer_history_page.dart';
 import 'admin_broadcast_message_page.dart';
+import 'admin_report_detail_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -1396,13 +1397,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _reportTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     final ts = data['timestamp'] as Timestamp?;
+    final preview = (data['reportText'] ?? '').toString();
+    final shortText = preview.length > 40 ? '${preview.substring(0, 40)}...' : preview;
     return ListTile(
-      title: Text('Invoice: ${data['invoiceId'] ?? ''}'),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdminReportDetailPage(
+              reportId: doc.id,
+              userId: widget.userId,
+            ),
+          ),
+        );
+      },
+      title: Text('Report ID: ${doc.id}'),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if ((data['reportText'] ?? '').toString().isNotEmpty)
-            Text(data['reportText']),
+          Text('Invoice: ${data['invoiceId'] ?? ''}'),
+          if (data['reportedBy'] != null)
+            Text('Reported By: ${data['reportedBy']}'),
+          if (preview.isNotEmpty) Text(shortText),
           Text('Customer: ${data['customerId'] ?? ''}'),
           Text('Mechanic: ${data['mechanicId'] ?? ''}'),
           if (ts != null) Text('Time: ${_formatPrettyDate(ts)}'),
