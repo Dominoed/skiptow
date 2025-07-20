@@ -857,13 +857,17 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         if (docs.isEmpty) return const SizedBox.shrink();
 
         return ExpansionTile(
-          title: const Text('Recent Service Requests'),
+          title: const Text('Your Recent Requests'),
           children: docs.map((doc) {
             final data = doc.data();
             final invoiceNum = data['invoiceNumber'] ?? doc.id;
             final status =
                 (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
             final mechanic = data['mechanicUsername'];
+            final issueRaw = (data['description'] ?? '').toString();
+            final issue = issueRaw.length > 50
+                ? '${issueRaw.substring(0, 50)}...'
+                : issueRaw;
             final priceNum =
                 (data['finalPrice'] ?? data['estimatedPrice'] ?? data['quotedPrice'])
                     as num?;
@@ -894,6 +898,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (mechanic != null) Text('Mechanic: $mechanic'),
+                  if (issue.isNotEmpty) Text(issue),
                   if (price != null) Text('Price: $price'),
                   if (date.isNotEmpty) Text('Submitted: $date'),
                 ],
