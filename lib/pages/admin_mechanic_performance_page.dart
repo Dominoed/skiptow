@@ -67,6 +67,8 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
     double totalPaid = 0.0;
     double highest = 0.0;
     double fees = 0.0;
+    int timeCount = 0;
+    int totalMinutes = 0;
 
     final now = DateTime.now();
     final start = DateTime(now.year, now.month - 11, 1);
@@ -97,6 +99,15 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
           DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
         overdue++;
       }
+
+      if (paymentStatus == 'paid' || status == 'completed') {
+        final Timestamp? start = data['acceptedAt'] ?? data['mechanicAcceptedAt'] ?? data['mechanicAcceptedTimestamp'];
+        final Timestamp? end = data['completedAt'] ?? data['jobCompletedTimestamp'] ?? data['closedAt'];
+        if (start != null && end != null) {
+          totalMinutes += end.toDate().difference(start.toDate()).inMinutes;
+          timeCount++;
+        }
+      }
     }
 
     for (final doc in paidInvoicesQuery.docs) {
@@ -114,6 +125,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
     }
 
     final avg = paidCount > 0 ? totalPaid / paidCount : 0.0;
+    final avgCompletion = timeCount > 0 ? (totalMinutes / timeCount) / 60.0 : 0.0;
     final List<_MonthEarnings> months = [];
     for (int i = 11; i >= 0; i--) {
       final m = DateTime(now.year, now.month - i, 1);
@@ -130,6 +142,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
       'totalEarnings': totalPaid,
       'platformFees': fees,
       'averagePayment': avg,
+      'averageCompletion': avgCompletion,
       'highestPayment': highest,
       'overdueInvoices': overdue,
       'months': months,
@@ -261,6 +274,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
                   _statItem('Total Earnings Paid Out', _currency(data['totalEarnings'] as double)),
                   _statItem('Platform Fees Generated', _currency(data['platformFees'] as double)),
                   _statItem('Average Payment Per Job', _currency(data['averagePayment'] as double)),
+                  _statItem('Average Completion Time (hrs)', (data['averageCompletion'] as double).toStringAsFixed(2)),
                   _statItem('Highest Single Payment', _currency(data['highestPayment'] as double)),
                   _statItem('Number of Overdue Invoices', '${data['overdueInvoices']}'),
                   const SizedBox(height: 16),

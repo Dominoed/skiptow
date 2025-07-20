@@ -826,15 +826,35 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   stream: FirebaseFirestore.instance
                       .collection('invoices')
                       .where('mechanicId', isEqualTo: widget.userId)
-                      .where('paymentStatus', isEqualTo: 'paid')
                       .snapshots(),
                   builder: (context, snapshot) {
                     final docs = snapshot.data?.docs ?? [];
-                    final jobs = docs.length;
+                    final filtered = docs.where((d) {
+                      final data = d.data();
+                      if (data['flagged'] == true) return false;
+                      final status = data['status'] ?? '';
+                      final pay = data['paymentStatus'] ?? '';
+                      return pay == 'paid' || status == 'completed';
+                    }).toList();
+
+                    final jobs = filtered.length;
                     double earnings = 0.0;
-                    for (final doc in docs) {
-                      earnings += (doc.data()['finalPrice'] as num?)?.toDouble() ?? 0.0;
+                    int totalMinutes = 0;
+                    int timeCount = 0;
+
+                    for (final doc in filtered) {
+                      final data = doc.data();
+                      earnings += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+                      final Timestamp? start = data['acceptedAt'] ?? data['mechanicAcceptedAt'] ?? data['mechanicAcceptedTimestamp'];
+                      final Timestamp? end = data['completedAt'] ?? data['jobCompletedTimestamp'] ?? data['closedAt'];
+                      if (start != null && end != null) {
+                        totalMinutes += end.toDate().difference(start.toDate()).inMinutes;
+                        timeCount++;
+                      }
                     }
+
+                    final avgHours = timeCount > 0 ? (totalMinutes / timeCount) / 60.0 : 0.0;
+
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: Column(
@@ -845,6 +865,15 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Average Completion Time: ${avgHours.toStringAsFixed(2)} hrs',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
                             ),
                           ),
                           const SizedBox(height: 4),
