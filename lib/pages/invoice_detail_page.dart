@@ -296,6 +296,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     }
 
     final mechanicId = data['mechanicId'];
+    final String invoiceState =
+        (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
+    final bool chatDisabled =
+        invoiceState == 'closed' || invoiceState == 'cancelled';
     final stream = FirebaseFirestore.instance
         .collection('invoices')
         .doc(widget.invoiceId)
@@ -373,42 +377,43 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               },
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message',
-                        border: OutlineInputBorder(),
+          if (!chatDisabled)
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: const InputDecoration(
+                          hintText: 'Type a message',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.photo),
-                    onPressed: _pickImage,
-                  ),
-                  if (_selectedImage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: SizedBox(
-                        height: 40,
-                        width: 40,
-                        child: Image.file(_selectedImage!),
-                      ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.photo),
+                      onPressed: _pickImage,
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _sendChatMessage,
-                  ),
-                ],
+                    if (_selectedImage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: SizedBox(
+                          height: 40,
+                          width: 40,
+                          child: Image.file(_selectedImage!),
+                        ),
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: _sendChatMessage,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -650,7 +655,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 : const Text('No customer review provided.'),
         ]);
 
-        if (widget.role == 'mechanic' && (status == 'accepted' || status == 'arrived' || status == 'in_progress')) {
+        if (widget.role == 'mechanic' &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled' &&
+            (status == 'accepted' || status == 'arrived' || status == 'in_progress')) {
           children.add(
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -692,7 +700,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             data['mechanicId'] == null &&
             currentUid != null &&
             (candidates?.contains(currentUid) ?? false) &&
-            !(responded?.contains(currentUid) ?? false);
+            !(responded?.contains(currentUid) ?? false) &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled';
 
         if (canAccept) {
           children.add(
@@ -741,7 +751,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
 
-        if (widget.role == 'mechanic' && status == 'accepted') {
+        if (widget.role == 'mechanic' &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled' &&
+            status == 'accepted') {
           children.add(
             Align(
               alignment: Alignment.centerRight,
@@ -764,7 +777,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           );
         }
 
-        if (widget.role == 'mechanic' && status == 'arrived') {
+        if (widget.role == 'mechanic' &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled' &&
+            status == 'arrived') {
           children.add(
             Align(
               alignment: Alignment.centerRight,
@@ -788,6 +804,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         }
 
         if (widget.role == 'mechanic' &&
+            invoiceStatus != 'closed' &&
+            invoiceStatus != 'cancelled' &&
             (status == 'active' ||
                 status == 'accepted' ||
                 status == 'arrived' ||

@@ -1390,9 +1390,11 @@ class _ActiveRequestCard extends StatelessWidget {
     final description = data['description'] ?? '';
     final location = data['location'];
     final status = (data['status'] ?? 'active').toString();
+    final invoiceStatus =
+        (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
 
     final actions = <Widget>[];
-    if (status != 'completed' && status != 'closed' && status != 'cancelled') {
+    if (invoiceStatus != 'closed' && invoiceStatus != 'cancelled') {
       actions.add(
         ElevatedButton(
           onPressed: () => _markCompleted(context),

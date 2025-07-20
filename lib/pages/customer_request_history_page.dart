@@ -237,7 +237,8 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                             ),
                             if ((data['mechanicId'] == null ||
                                     data['mechanicAccepted'] != true) &&
-                                data['invoiceStatus'] != 'cancelled')
+                                data['invoiceStatus'] != 'cancelled' &&
+                                data['invoiceStatus'] != 'closed')
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
