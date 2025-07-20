@@ -96,6 +96,12 @@ firebase_options.dart
 - maintenanceMode: `true` or `false`
 - maintenanceMessage: string
 
+## General Messaging & Support
+- Admin can message any user outside of invoices.
+- Users can chat with support/admin directly.
+- All chats stored in Firestore (`messages_general`).
+- Admin receives visual notifications in the admin dashboard.
+
 ## Setup Instructions
 
 1. Clone the repository.

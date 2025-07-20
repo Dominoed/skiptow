@@ -15,6 +15,7 @@ import 'admin_mechanic_performance_page.dart';
 import 'admin_customer_history_page.dart';
 import 'admin_broadcast_message_page.dart';
 import 'admin_report_detail_page.dart';
+import 'admin_message_center_page.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -745,6 +746,48 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         (route) => false,
       );
     }
+  }
+
+  Widget _buildMessageCenterIcon() {
+    final stream = FirebaseFirestore.instance
+        .collection('notifications_admin')
+        .where('unread', isEqualTo: true)
+        .snapshots();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        final count = snapshot.data?.docs.length ?? 0;
+        return Stack(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.support_agent),
+              tooltip: 'Message Center',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AdminMessageCenterPage(adminId: widget.userId),
+                  ),
+                );
+              },
+            ),
+            if (count > 0)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: CircleAvatar(
+                  radius: 8,
+                  backgroundColor: Colors.red,
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _summaryCard(String title, String value, Color color) {
@@ -2108,6 +2151,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           appBar: AppBar(
             title: const Text('Admin Dashboard'),
             actions: [
+              _buildMessageCenterIcon(),
               IconButton(
                 icon: const Icon(Icons.logout),
                 onPressed: _logout,

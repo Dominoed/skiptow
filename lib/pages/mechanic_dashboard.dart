@@ -18,6 +18,7 @@ import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
 import 'mechanic_location_history_page.dart';
+import 'help_support_page.dart';
 import '../services/alert_service.dart';
 import 'mechanic_current_job_page.dart';
 import 'invoice_detail_page.dart';
@@ -1050,14 +1051,35 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               Icons.settings,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
-            label: Text(
-              'Account Settings',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
+          label: Text(
+            'Account Settings',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
-          _buildMessagesIcon(),
-          _buildNotificationsIcon(),
-        ],
+        ),
+        TextButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HelpSupportPage(
+                  userId: widget.userId,
+                  userRole: 'mechanic',
+                ),
+              ),
+            );
+          },
+          icon: Icon(
+            Icons.support_agent,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          label: Text(
+            'Help & Support',
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+        ),
+        _buildMessagesIcon(),
+        _buildNotificationsIcon(),
+      ],
       ),
       body: _blocked
           ? const Center(
