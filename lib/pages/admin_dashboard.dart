@@ -71,11 +71,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   String _invoiceNumberSearch = '';
   String _customerUsernameSearch = '';
   String _mechanicUsernameSearch = '';
+  String _invoiceIdOrCustomerSearch = '';
 
   final TextEditingController _invoiceNumberController = TextEditingController();
   final TextEditingController _customerUsernameController =
       TextEditingController();
   final TextEditingController _mechanicUsernameController =
+      TextEditingController();
+  final TextEditingController _invoiceIdOrCustomerController =
       TextEditingController();
 
   // Current search query for users
@@ -1023,9 +1026,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _invoiceNumberSearch = '';
       _customerUsernameSearch = '';
       _mechanicUsernameSearch = '';
+      _invoiceIdOrCustomerSearch = '';
       _invoiceNumberController.clear();
       _customerUsernameController.clear();
       _mechanicUsernameController.clear();
+      _invoiceIdOrCustomerController.clear();
       _startDate = null;
       _endDate = null;
       _startDateController.clear();
@@ -1234,14 +1239,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           }
           return true;
         }).toList();
-        if (searchDocs.isEmpty) {
+        final idCustLower = _invoiceIdOrCustomerSearch.toLowerCase();
+        final resultDocs = searchDocs.where((d) {
+          if (idCustLower.isEmpty) return true;
+          final data = d.data();
+          final custName = (_usernames[data['customerId']] ?? '').toLowerCase();
+          final idMatch = d.id.toLowerCase() == idCustLower;
+          return idMatch || custName.contains(idCustLower);
+        }).toList();
+        if (resultDocs.isEmpty) {
           return const Text('No invoices');
         }
-        final total = searchDocs.fold<double>(
+        final total = resultDocs.fold<double>(
           0.0,
           (sum, d) => sum + ((d.data()['finalPrice'] as num?)?.toDouble() ?? 0.0),
         );
-        final count = searchDocs.length;
+        final count = resultDocs.length;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1265,7 +1278,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ListView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              children: searchDocs.map((e) => _invoiceTile(e)).toList(),
+              children: resultDocs.map((e) => _invoiceTile(e)).toList(),
             ),
           ],
         );
@@ -2050,6 +2063,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _invoiceNumberController.dispose();
     _customerUsernameController.dispose();
     _mechanicUsernameController.dispose();
+    _invoiceIdOrCustomerController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
     super.dispose();
@@ -2134,6 +2148,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const SizedBox(height: 16),
                   const Divider(),
                   const Text('Invoices', style: TextStyle(fontSize: 16)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: TextField(
+                      controller: _invoiceIdOrCustomerController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search by ID or Customer',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _invoiceIdOrCustomerSearch = value;
+                        });
+                      },
+                    ),
+                  ),
                   ExpansionTile(
                     title: const Text('Advanced Filters'),
                     children: [
