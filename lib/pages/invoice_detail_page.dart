@@ -919,6 +919,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                               'finalPrice': price,
                               'postJobNotes': notes,
                               'platformFee': fee,
+                              'completedAt': FieldValue.serverTimestamp(),
                             });
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid != null) {
