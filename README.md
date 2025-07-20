@@ -39,6 +39,7 @@ SkipTow is currently open source for community contributions; it may become clos
 - View and close user reports or disputes
 - Financial reporting and basic revenue estimates
 - Ability to enable maintenance mode with a custom message
+- Automatic cancellation of requests left pending for over six weeks
 
 ### General Functionality
 - Firebase Authentication and Firestore for real-time data storage

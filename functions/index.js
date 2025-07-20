@@ -313,3 +313,33 @@ exports.notifyInvoiceMessage = functions.firestore
     return null;
   });
 
+exports.autoCancelStaleInvoices = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('Etc/UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+    const sixWeeksMs = 1000 * 60 * 60 * 24 * 7 * 6;
+    const cutoff = new Date(Date.now() - sixWeeksMs);
+
+    const snapshot = await db
+      .collection('invoices')
+      .where('invoiceStatus', '==', 'pending')
+      .where('createdAt', '<', cutoff)
+      .get();
+
+    const updates = [];
+    snapshot.forEach(doc => {
+      updates.push(
+        doc.ref.update({
+          invoiceStatus: 'cancelled',
+          status: 'cancelled',
+          adminOverride: true,
+          cancellationReason: 'Auto-cancelled after 6 weeks of inactivity.'
+        })
+      );
+    });
+
+    await Promise.all(updates);
+    return null;
+  });
+
