@@ -97,6 +97,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   late Stream<QuerySnapshot<Map<String, dynamic>>> _invoiceStream;
   String _invoiceStatusFilter = 'all';
+  String _reportStatusFilter = 'open';
 
   String _appVersion = '1.0.0';
 
@@ -1392,6 +1393,69 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  Widget _reportTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final ts = data['timestamp'] as Timestamp?;
+    return ListTile(
+      title: Text('Invoice: ${data['invoiceId'] ?? ''}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if ((data['reportText'] ?? '').toString().isNotEmpty)
+            Text(data['reportText']),
+          Text('Customer: ${data['customerId'] ?? ''}'),
+          Text('Mechanic: ${data['mechanicId'] ?? ''}'),
+          if (ts != null) Text('Time: ${_formatPrettyDate(ts)}'),
+          Text('Status: ${data['status'] ?? 'open'}'),
+          if (data['imageUrl'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Image.network(
+                data['imageUrl'],
+                height: 80,
+                errorBuilder: (c, e, s) => const Icon(Icons.broken_image),
+              ),
+            ),
+        ],
+      ),
+      trailing: data['status'] == 'open'
+          ? TextButton(
+              onPressed: () {
+                FirebaseFirestore.instance
+                    .collection('reports')
+                    .doc(doc.id)
+                    .update({'status': 'closed'});
+              },
+              child: const Text('Mark Closed'),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildReports() {
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+        .collection('reports')
+        .orderBy('timestamp', descending: true);
+    if (_reportStatusFilter != 'all') {
+      query = query.where('status', isEqualTo: _reportStatusFilter);
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) return const Text('No reports');
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: docs.map(_reportTile).toList(),
+        );
+      },
+    );
+  }
+
   Widget _buildActiveMechanics() {
     return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
@@ -2158,6 +2222,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ],
                   ),
                   _buildInvoices(),
+                  const SizedBox(height: 16),
+                  const Text('Reports', style: TextStyle(fontSize: 16)),
+                  Row(
+                    children: [
+                      const Text('Status: '),
+                      DropdownButton<String>(
+                        value: _reportStatusFilter,
+                        items: const [
+                          DropdownMenuItem(value: 'open', child: Text('Open')),
+                          DropdownMenuItem(value: 'closed', child: Text('Closed')),
+                          DropdownMenuItem(value: 'all', child: Text('All')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _reportStatusFilter = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  _buildReports(),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

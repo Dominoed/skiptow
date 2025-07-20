@@ -33,6 +33,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _etaController = TextEditingController();
   File? _selectedImage;
+  final TextEditingController _reportController = TextEditingController();
+  File? _reportImage;
 
   Stream<Map<String, dynamic>?> _buildInvoiceStream() {
     return FirebaseFirestore.instance
@@ -171,6 +173,121 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
       _selectedImage = null;
     });
     _scrollChatToBottom();
+  }
+
+  Future<void> _pickReportImage() async {
+    final XFile? file =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+    setState(() {
+      _reportImage = File(file.path);
+    });
+  }
+
+  Future<void> _showReportDialog(Map<String, dynamic> data) async {
+    String? errorText;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Report an Issue'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _reportController,
+                      minLines: 3,
+                      maxLines: 5,
+                      decoration:
+                          const InputDecoration(labelText: 'Describe the issue'),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.photo),
+                          onPressed: () async {
+                            await _pickReportImage();
+                            setState(() {});
+                          },
+                        ),
+                        if (_reportImage != null)
+                          SizedBox(
+                            height: 40,
+                            width: 40,
+                            child: Image.file(_reportImage!),
+                          ),
+                      ],
+                    ),
+                    if (errorText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          errorText!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (_reportController.text.trim().isEmpty) {
+                      setState(() {
+                        errorText = 'Please enter a description.';
+                      });
+                    } else {
+                      Navigator.of(context).pop(true);
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      final doc = FirebaseFirestore.instance.collection('reports').doc();
+      String? imageUrl;
+      if (_reportImage != null) {
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${_reportImage!.path.split('/').last}';
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('reports/${doc.id}/$fileName');
+        await ref.putFile(_reportImage!);
+        imageUrl = await ref.getDownloadURL();
+      }
+      await doc.set({
+        'invoiceId': widget.invoiceId,
+        'mechanicId': data['mechanicId'],
+        'customerId': data['customerId'],
+        'reportText': _reportController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': 'open',
+        if (imageUrl != null) 'imageUrl': imageUrl,
+      });
+      _reportController.clear();
+      setState(() {
+        _reportImage = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report submitted.')),
+        );
+      }
+    }
   }
 
   Widget _buildChatSection(Map<String, dynamic> data) {
@@ -334,6 +451,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     _messageController.dispose();
     _chatScrollController.dispose();
     _etaController.dispose();
+    _reportController.dispose();
     super.dispose();
   }
 
@@ -976,6 +1094,18 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
             ),
           ]);
+        }
+
+        if (widget.role == 'customer') {
+          children.add(
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () => _showReportDialog(data),
+                child: const Text('Report an Issue'),
+              ),
+            ),
+          );
         }
 
         return Scaffold(
