@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -29,7 +31,9 @@ class _CustomerMechanicTrackingPageState
   Marker? _mechanicMarker;
   LatLng? _mechanicLatLng;
   Position? _customerPos;
-  String _etaText = '';
+  int? _etaCountdown;
+  int? _lastEtaMinutes;
+  Timer? _etaTimer;
   String? _distanceText;
   String _mechanicName = '';
   String? _mechanicPhone;
@@ -107,7 +111,14 @@ class _CustomerMechanicTrackingPageState
       if (data == null) return;
       final eta = data['etaMinutes'];
       final status = (data['invoiceStatus'] ?? data['status'] ?? '').toString();
-      _etaText = eta != null ? 'ETA: ${eta.toString()} min' : '';
+      if (eta != null) {
+        final etaInt = (eta as num).toInt();
+        if (_lastEtaMinutes != etaInt) {
+          _startEtaCountdown(etaInt);
+        }
+      } else {
+        _stopEtaCountdown();
+      }
       if (status == 'completed' || status == 'closed' || status == 'cancelled') {
         if (mounted) Navigator.pop(context);
       } else {
@@ -118,10 +129,37 @@ class _CustomerMechanicTrackingPageState
     });
   }
 
+  void _startEtaCountdown(int minutes) {
+    _etaTimer?.cancel();
+    _lastEtaMinutes = minutes;
+    _etaCountdown = minutes;
+    _etaTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (!mounted) return;
+      if (_etaCountdown != null && _etaCountdown! > 0) {
+        setState(() {
+          _etaCountdown = _etaCountdown! - 1;
+        });
+      } else {
+        timer.cancel();
+        setState(() {});
+      }
+    });
+    setState(() {});
+  }
+
+  void _stopEtaCountdown() {
+    _etaTimer?.cancel();
+    _etaTimer = null;
+    _etaCountdown = null;
+    _lastEtaMinutes = null;
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _locationSub?.cancel();
     _invoiceSub?.cancel();
+    _etaTimer?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -181,7 +219,10 @@ class _CustomerMechanicTrackingPageState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (_etaText.isNotEmpty) _infoBox(_etaText),
+                      if (_etaCountdown != null && _etaCountdown! > 0)
+                        _infoBox('Mechanic Arriving In: $_etaCountdown minutes'),
+                      if (_etaCountdown != null && _etaCountdown! <= 0)
+                        _infoBox('Mechanic should have arrived.'),
                       if (_distanceText != null) _infoBox(_distanceText!),
                       if (_mechanicName.isNotEmpty)
                         _infoBox('Mechanic: $_mechanicName'),
