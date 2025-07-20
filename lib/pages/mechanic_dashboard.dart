@@ -44,6 +44,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _locationBannerVisible = false;
   bool _alertBannerVisible = false;
   bool _unavailableBannerVisible = false;
+  bool _activeRequestsBannerVisible = false;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _activeRequestsSub;
   bool _hasAccountData = true;
   bool _blocked = false;
   int completedJobs = 0;
@@ -135,6 +137,57 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     _unavailableBannerVisible = false;
   }
 
+  void _showActiveRequestsBanner() {
+    if (_activeRequestsBannerVisible || !mounted) return;
+    _activeRequestsBannerVisible = true;
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: const Text('⚠️ You have active service requests.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MechanicRequestsPage(mechanicId: widget.userId),
+                ),
+              );
+            },
+            child: const Text('View Current Requests'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _hideActiveRequestsBanner() {
+    if (!_activeRequestsBannerVisible || !mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    _activeRequestsBannerVisible = false;
+  }
+
+  void _listenForActiveRequests() {
+    _activeRequestsSub?.cancel();
+    _activeRequestsSub = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .where('invoiceStatus', whereIn: ['accepted', 'in_progress'])
+        .snapshots()
+        .listen((snapshot) {
+      final docs = snapshot.docs
+          .where((d) => d.data()['flagged'] != true)
+          .toList();
+      if (docs.isNotEmpty) {
+        _showActiveRequestsBanner();
+      } else {
+        _hideActiveRequestsBanner();
+      }
+    }, onError: (e) {
+      logError('Active requests listen error: $e');
+    });
+  }
+
   Future<void> _checkGlobalAlert() async {
     final alert = await AlertService.fetchAlert();
     if (alert != null) {
@@ -147,6 +200,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     super.initState();
     _verifyAccountData();
     _checkGlobalAlert();
+    _listenForActiveRequests();
   }
 
   Future<void> _verifyAccountData() async {
@@ -1132,6 +1186,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     positionStream?.cancel();
     backgroundTimer?.cancel();
     invoiceSubscription?.cancel();
+    _activeRequestsSub?.cancel();
     super.dispose();
   }
 
