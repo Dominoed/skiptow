@@ -113,7 +113,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
   Future<void> _exportInvoice(Map<String, dynamic> data) async {
     final buffer = StringBuffer();
     buffer.writeln(
-        'Invoice Number,Customer Username,Mechanic Username,Final Price,Platform Fee,Payment Status,Created Date,Closed Date');
+        'Invoice Number,Customer Username,Mechanic Username,Final Price,Platform Fee,Payment Status,Created Date,Closed Date,Admin Override');
     final invoiceNum = (data['invoiceNumber'] ?? widget.invoiceId).toString();
     final customer = (data['customerUsername'] ?? '').toString();
     final mechanic = (data['mechanicUsername'] ?? '').toString();
@@ -122,6 +122,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
     final paymentStatus = (data['paymentStatus'] ?? '').toString();
     final created = _formatDate(data['createdAt'] as Timestamp?);
     final closed = _formatDate(data['closedAt'] as Timestamp?);
+    final override = (data['adminOverride'] == true).toString();
     final row = [
       invoiceNum,
       customer,
@@ -131,6 +132,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
       paymentStatus,
       created,
       closed,
+      override,
     ].map(_csvEscape).join(',');
     buffer.writeln(row);
     await downloadCsv(buffer.toString(), fileName: 'invoice_$invoiceNum.csv');
@@ -227,6 +229,95 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
     }
   }
 
+  Future<void> _forceCloseInvoice() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Force Close Invoice'),
+        content: const Text('Are you sure you want to force close this invoice?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    await FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(widget.invoiceId)
+        .update({
+      'invoiceStatus': 'closed',
+      'adminOverride': true,
+    });
+
+    await FirebaseFirestore.instance.collection('admin_logs').add({
+      'action': 'forceCloseInvoice',
+      'invoiceId': widget.invoiceId,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invoice forcibly closed.')),
+      );
+      setState(() {
+        _invoiceFuture = _loadInvoice();
+      });
+    }
+  }
+
+  Future<void> _forceCancelInvoice() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Force Cancel Invoice'),
+        content:
+            const Text('Are you sure you want to force cancel this invoice?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    await FirebaseFirestore.instance
+        .collection('invoices')
+        .doc(widget.invoiceId)
+        .update({
+      'invoiceStatus': 'cancelled',
+      'adminOverride': true,
+    });
+
+    await FirebaseFirestore.instance.collection('admin_logs').add({
+      'action': 'forceCancelInvoice',
+      'invoiceId': widget.invoiceId,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invoice forcibly cancelled.')),
+      );
+      setState(() {
+        _invoiceFuture = _loadInvoice();
+      });
+    }
+  }
+
   Widget _buildDetails(Map<String, dynamic> data) {
     final car = data['carInfo'] ?? {};
     final carText =
@@ -258,6 +349,21 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
             ),
           ],
         ),
+        if (data['adminOverride'] == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Chip(
+              label: Text(
+                data['invoiceStatus'] == 'cancelled'
+                    ? 'Force Cancelled by Admin'
+                    : 'Force Closed by Admin',
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: data['invoiceStatus'] == 'cancelled'
+                  ? Colors.red
+                  : Colors.orange,
+            ),
+          ),
         if (data['platformFee'] != null)
           Text(
               'Platform Fee: \$${(data['platformFee'] as num).toStringAsFixed(2)}'),
@@ -330,6 +436,22 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
             ElevatedButton(
               onPressed: () => _exportInvoice(data),
               child: const Text('Export This Invoice'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ElevatedButton(
+              onPressed: _forceCloseInvoice,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Force Close Invoice'),
+            ),
+            ElevatedButton(
+              onPressed: _forceCancelInvoice,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Force Cancel Invoice'),
             ),
           ],
         ),

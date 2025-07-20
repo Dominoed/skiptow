@@ -133,7 +133,7 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
     final snapshot = await FirebaseFirestore.instance.collection('invoices').get();
     final buffer = StringBuffer();
     buffer.writeln(
-        'Invoice Number,Customer Username,Mechanic Username,Final Price,Platform Fee,Payment Status,Created Date,Closed Date');
+        'Invoice Number,Customer Username,Mechanic Username,Final Price,Platform Fee,Payment Status,Created Date,Closed Date,Admin Override');
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final invoiceNum = (data['invoiceNumber'] ?? doc.id).toString();
@@ -144,6 +144,7 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
       final paymentStatus = (data['paymentStatus'] ?? '').toString();
       final created = _formatTimestamp(data['createdAt'] as Timestamp?);
       final closed = _formatTimestamp(data['closedAt'] as Timestamp?);
+      final override = (data['adminOverride'] == true).toString();
       final row = [
         invoiceNum,
         customer,
@@ -153,6 +154,7 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
         paymentStatus,
         created,
         closed,
+        override,
       ].map(_csvEscape).join(',');
       buffer.writeln(row);
     }
