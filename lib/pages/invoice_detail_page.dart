@@ -177,6 +177,14 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
         }
       }
 
+      final tipSnap = await doc.reference
+          .collection('tipIntent')
+          .doc('intent')
+          .get();
+      if (tipSnap.exists) {
+        data['tipIntent'] = tipSnap.data();
+      }
+
       return data;
     });
   }
@@ -504,6 +512,80 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payment issue reported.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showTipDialog() async {
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        bool custom = false;
+        final TextEditingController controller = TextEditingController();
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Tip Your Mechanic?'),
+              content: custom
+                  ? TextField(
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(labelText: 'Enter amount'),
+                    )
+                  : Wrap(
+                      spacing: 8,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, 5.0),
+                          child: const Text('\$5'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, 10.0),
+                          child: const Text('\$10'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, 15.0),
+                          child: const Text('\$15'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() => custom = true),
+                          child: const Text('Custom'),
+                        ),
+                      ],
+                    ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('No Thanks'),
+                ),
+                if (custom)
+                  TextButton(
+                    onPressed: () {
+                      final val = double.tryParse(controller.text);
+                      if (val != null && val > 0) {
+                        Navigator.pop(context, val);
+                      }
+                    },
+                    child: const Text('Submit'),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (amount != null) {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(widget.invoiceId)
+          .collection('tipIntent')
+          .doc('intent')
+          .set({'amount': amount, 'status': 'pending'});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment will be processed in-app soon.')),
         );
       }
     }
@@ -978,6 +1060,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             Text('Estimated Total: \$${(estimatedPrice as num).toStringAsFixed(2)}')
           else
             const Text('Estimated Total: Pending'),
+          if (widget.role == 'mechanic' && data['tipIntent'] != null)
+            Text(
+              "Intended Tip: \$${(data['tipIntent']['amount'] as num).toStringAsFixed(2)}",
+            ),
           Container(
             margin: const EdgeInsets.symmetric(vertical: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1506,6 +1592,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Price accepted. Invoice closed.')),
                               );
+                              await _showTipDialog();
                               await _showFeedbackDialog(widget.invoiceId);
                               setState(() {});
                             }
