@@ -678,10 +678,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Widget _buildNotificationsIcon() {
-    return IconButton(
-      icon: const Icon(Icons.notifications),
-      tooltip: 'Notifications',
+    return TextButton.icon(
       onPressed: _openNotifications,
+      icon: Icon(
+        Icons.notifications,
+        color: Theme.of(context).colorScheme.onPrimary,
+      ),
+      label: Text(
+        'Notifications',
+        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+      ),
     );
   }
 

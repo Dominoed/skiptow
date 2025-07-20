@@ -18,9 +18,9 @@ class MechanicNotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stream = FirebaseFirestore.instance
-        .collection('notifications')
+        .collection('notifications_mechanics')
         .doc(userId)
-        .collection('messages')
+        .collection('notifications')
         .orderBy('timestamp', descending: true)
         .snapshots();
 
@@ -44,7 +44,7 @@ class MechanicNotificationsPage extends StatelessWidget {
               final doc = docs[index];
               final data = doc.data();
               final title = data['title'] ?? '';
-              final body = data['body'] ?? '';
+              final message = data['message'] ?? '';
               final Timestamp? ts = data['timestamp'];
               final bool read = getBool(data, 'read');
               return ListTile(
@@ -57,16 +57,28 @@ class MechanicNotificationsPage extends StatelessWidget {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (body.isNotEmpty) Text(body),
+                    if (message.isNotEmpty)
+                      Text(
+                        message,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     Text(_formatDate(ts)),
                   ],
                 ),
+                trailing: read
+                    ? null
+                    : const Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: Colors.blue,
+                      ),
                 onTap: () {
                   if (!read) {
                     FirebaseFirestore.instance
-                        .collection('notifications')
+                        .collection('notifications_mechanics')
                         .doc(userId)
-                        .collection('messages')
+                        .collection('notifications')
                         .doc(doc.id)
                         .update({'read': true});
                   }
