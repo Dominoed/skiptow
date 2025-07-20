@@ -1013,6 +1013,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       .where('mechanicId', isEqualTo: widget.userId)
                       .snapshots(),
                   builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(),
+                      );
+                    }
                     final docs = snapshot.data?.docs ?? [];
                     final filtered = docs.where((d) {
                       final data = d.data();
@@ -1082,6 +1088,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       .where('status', isEqualTo: 'active')
                       .snapshots(),
                   builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(),
+                      );
+                    }
                     final activeCount = snapshot.hasData ? snapshot.data!.docs.where((d) => d.data()["flagged"] != true).length : 0;
                     return Padding(
                       padding: const EdgeInsets.all(8),
@@ -1101,6 +1113,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       .doc(widget.userId)
                       .snapshots(),
                   builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(),
+                      );
+                    }
                     final data = snapshot.data?.data();
                     final completedCount = data?['completedJobs'] ?? completedJobs;
                     final blocked = data?['blocked'] == true;
@@ -1273,6 +1291,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             .limit(1)
             .snapshots(),
         builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const FloatingActionButton(
+              onPressed: null,
+              child: CircularProgressIndicator(),
+            );
+          }
           final docs = (snapshot.data?.docs ?? [])
               .where((d) => d.data()['flagged'] != true)
               .toList();

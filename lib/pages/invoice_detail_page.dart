@@ -888,6 +888,9 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   .doc(widget.invoiceId)
                   .snapshots(),
               builder: (context, paySnapshot) {
+                if (paySnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 if (!paySnapshot.hasData) {
                   return const SizedBox.shrink();
                 }
