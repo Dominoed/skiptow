@@ -10,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'payment_processing_page.dart';
+import 'image_viewer_page.dart';
 
 /// Page to show full invoice details.
 class InvoiceDetailPage extends StatefulWidget {
@@ -278,6 +279,19 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     _scrollChatToBottom();
   }
 
+  void _openImageViewer(List<String> urls, int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ImageViewerPage(
+          imageUrls: urls,
+          initialIndex: index,
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
   Future<void> _pickReportImage() async {
     final XFile? file =
         await _imagePicker.pickImage(source: ImageSource.gallery);
@@ -435,11 +449,23 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 final docs = snapshot.data!.docs;
                 WidgetsBinding.instance
                     .addPostFrameCallback((_) => _scrollChatToBottom());
+
+                final imageUrls = <String>[];
+                final Map<String, int> imageIndexMap = {};
+                for (final doc in docs) {
+                  final url = doc.data()['imageUrl'] as String?;
+                  if (url != null) {
+                    imageIndexMap[doc.id] = imageUrls.length;
+                    imageUrls.add(url);
+                  }
+                }
+
                 return ListView.builder(
                   controller: _chatScrollController,
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    final msg = docs[index].data();
+                    final doc = docs[index];
+                    final msg = doc.data();
                     final from = msg['fromUserId'];
                     final bool isMechanic = from == mechanicId;
                     final alignment =
@@ -448,6 +474,8 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         isMechanic ? Colors.grey[300] : Colors.blue[100];
                     final String? text = msg['message'] as String?;
                     final String? imageUrl = msg['imageUrl'] as String?;
+                    final int? imageIndex = imageIndexMap[doc.id];
+
                     return Align(
                       alignment: alignment,
                       child: Container(
@@ -464,11 +492,16 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             if (imageUrl != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
-                                child: Image.network(
-                                  imageUrl,
-                                  width: 150,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.broken_image),
+                                child: GestureDetector(
+                                  onTap: imageIndex != null
+                                      ? () => _openImageViewer(imageUrls, imageIndex)
+                                      : null,
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: 150,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.broken_image),
+                                  ),
                                 ),
                               ),
                           ],
