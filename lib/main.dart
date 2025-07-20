@@ -194,9 +194,21 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData lightTheme =
+        ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange));
+    final ThemeData darkTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.orange,
+        brightness: Brightness.dark,
+      ),
+    );
+
     if (_loading || _maintenanceMode == null) {
       return MaterialApp(
         navigatorKey: navigatorKey,
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: ThemeMode.system,
         home: const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
@@ -207,7 +219,9 @@ class _MyAppState extends State<MyApp> {
         navigatorKey: navigatorKey,
         title: 'SkipTow',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange)),
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: ThemeMode.system,
         home: MaintenanceModePage(message: _maintenanceMessage),
       );
     }
@@ -215,7 +229,9 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       title: 'SkipTow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange)),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
       home: _currentUserId != null
           ? DashboardPage(userId: _currentUserId!)
           : const LoginPage(),

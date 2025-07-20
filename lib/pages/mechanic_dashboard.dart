@@ -964,10 +964,13 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ),
               );
             },
-            icon: const Icon(Icons.person, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.person,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            label: Text(
               'Profile',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
           TextButton.icon(
@@ -979,10 +982,13 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ),
               );
             },
-            icon: const Icon(Icons.settings, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            label: Text(
               'Account Settings',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
           _buildMessagesIcon(),
