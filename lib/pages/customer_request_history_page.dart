@@ -122,7 +122,7 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
         'rating': rating,
         if (_feedbackController.text.trim().isNotEmpty)
           'feedbackText': _feedbackController.text.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
+        'submittedAt': FieldValue.serverTimestamp(),
       });
     }
   }
