@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -146,7 +147,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
             .doc(data['mechanicId'])
             .get();
         final mechData = mechDoc.data();
-        data['mechanicIsActive'] = mechData?['isActive'];
+        data['mechanicIsActive'] = mechData?['isActive'] ?? false;
 
         final mechLocation = mechData?['location'];
         final invoiceLocation = data['location'];
@@ -891,14 +892,10 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
           }
 
           // Show mechanic availability status to customers
-          final bool? mechActive = data['mechanicIsActive'] as bool?;
-          String statusText = 'Mechanic Status: Unknown';
-          Color? statusColor;
-          if (mechActive != null) {
-            statusText =
-                'Mechanic Status: ${mechActive ? 'Active' : 'Inactive'}';
-            statusColor = mechActive ? Colors.green : Colors.red;
-          }
+          final bool mechActive = getBool(data, 'mechanicIsActive');
+          String statusText =
+              'Mechanic Status: ${mechActive ? 'Active' : 'Inactive'}';
+          Color? statusColor = mechActive ? Colors.green : Colors.red;
           children.add(
             Padding(
               padding: const EdgeInsets.only(bottom: 8),

@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../utils.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
@@ -327,10 +328,10 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
         return;
       }
       setState(() {
-        isActive = data['isActive'] ?? false;
+        isActive = getBool(data, 'isActive');
         radiusMiles = (data['radiusMiles'] ?? 5).toDouble();
         completedJobs = data['completedJobs'] ?? 0;
-        unavailable = data['unavailable'] ?? false;
+        unavailable = getBool(data, 'unavailable');
         if (data.containsKey('location')) {
           currentPosition = Position(
             latitude: data['location']['lat'],

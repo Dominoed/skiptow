@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:convert';
 import 'services/push_notification_service.dart';
+import 'utils.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
@@ -107,7 +108,7 @@ class _MyAppState extends State<MyApp> {
       final data = snap.data();
       if (data != null) {
         setState(() {
-          _maintenanceMode = data['maintenanceMode'] == true;
+          _maintenanceMode = getBool(data, 'maintenanceMode');
           _maintenanceMessage =
               (data['maintenanceMessage'] ?? '').toString();
         });

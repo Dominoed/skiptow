@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../utils.dart';
 
 /// Page that displays notifications for a mechanic.
 class MechanicNotificationsPage extends StatelessWidget {
@@ -45,7 +46,7 @@ class MechanicNotificationsPage extends StatelessWidget {
               final title = data['title'] ?? '';
               final body = data['body'] ?? '';
               final Timestamp? ts = data['timestamp'];
-              final bool read = data['read'] == true;
+              final bool read = getBool(data, 'read');
               return ListTile(
                 title: Text(
                   title,
