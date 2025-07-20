@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'general_chat_page.dart';
+import 'terms_and_conditions_page.dart';
 
 /// Help page allowing customers and mechanics to chat with support.
 class HelpSupportPage extends StatelessWidget {
@@ -126,6 +127,9 @@ class HelpSupportPage extends StatelessWidget {
               'If you have any issues with the app or your account, you can reach '
               'our support team at any time.',
             ),
+            const Text(
+              'For urgent issues, mechanic no-shows, or payment disputes, please contact us immediately and include your invoice number or job details.',
+            ),
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
@@ -139,6 +143,18 @@ class HelpSupportPage extends StatelessWidget {
                 onPressed: () => _startChat(context),
                 child: const Text('Chat with Support'),
               ),
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TermsAndConditionsPage(),
+                  ),
+                );
+              },
+              child: const Text('View Terms & Conditions'),
             ),
             const SizedBox(height: 8),
             const Text('This does not request a mechanic!'),
