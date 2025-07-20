@@ -1037,6 +1037,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final paymentStatus = (data['paymentStatus'] ?? 'pending') as String;
     final status = (data['status'] ?? '') as String;
     final Timestamp? createdAtTs = data['createdAt'];
+    final Timestamp? acceptedAtTs =
+        data['mechanicAcceptedAt'] ?? data['acceptedAt'];
     final double? finalPrice = (data['finalPrice'] as num?)?.toDouble();
     final mechName = (data['mechanicUsername'] ?? _usernames[data['mechanicId']] ?? data['mechanicId']).toString();
     final custName = (data['customerUsername'] ?? _usernames[data['customerId']] ?? data['customerId']).toString();
@@ -1085,6 +1087,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 if (createdAtTs != null)
                   Text(
                     'Created: ${_formatPrettyDate(createdAtTs)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (acceptedAtTs != null)
+                  Text(
+                    'Accepted: ${_formatPrettyDate(acceptedAtTs)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 if (data['closedAt'] != null)
