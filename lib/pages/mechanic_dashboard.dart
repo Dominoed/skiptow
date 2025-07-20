@@ -12,6 +12,7 @@ import 'mechanic_request_queue_page.dart';
 import 'mechanic_requests_page.dart';
 import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
+import 'account_settings_page.dart';
 import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
@@ -804,6 +805,21 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             icon: const Icon(Icons.person, color: Colors.white),
             label: const Text(
               'Profile',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AccountSettingsPage(userId: widget.userId),
+                ),
+              );
+            },
+            icon: const Icon(Icons.settings, color: Colors.white),
+            label: const Text(
+              'Account Settings',
               style: TextStyle(color: Colors.white),
             ),
           ),
