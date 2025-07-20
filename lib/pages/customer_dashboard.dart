@@ -1167,10 +1167,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 ),
               );
             },
-            icon: const Icon(Icons.receipt, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.receipt,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            label: Text(
               'My Invoices',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
           TextButton.icon(
@@ -1184,12 +1187,15 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 ),
               );
             },
-            icon: const Icon(Icons.history, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.history,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            label: Text(
               'Service History',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
-        ),
         TextButton.icon(
           onPressed: () {
             Navigator.push(
@@ -1201,10 +1207,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               ),
             );
           },
-          icon: const Icon(Icons.person, color: Colors.white),
-          label: const Text(
+          icon: Icon(
+            Icons.person,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          label: Text(
             'Profile',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
         TextButton.icon(
@@ -1216,10 +1225,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               ),
             );
           },
-          icon: const Icon(Icons.settings, color: Colors.white),
-          label: const Text(
+          icon: Icon(
+            Icons.settings,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          label: Text(
             'Account Settings',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
         TextButton.icon(
@@ -1231,10 +1243,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                 ),
               );
             },
-            icon: const Icon(Icons.help, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.help,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            label: Text(
               'Support',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
           _buildMessagesIcon(),
