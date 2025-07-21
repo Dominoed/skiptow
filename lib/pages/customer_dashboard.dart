@@ -486,7 +486,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     ? 'You are ${distance.toStringAsFixed(1)} miles from this mechanic.'
                     : 'Distance unknown.',
               ),
-              onTap: () {
+              onTap: () async {
                 mapController?.showMarkerInfoWindow(MarkerId(doc.id));
                 if (chooseTechMode) {
                   if (!_hasAvailableMechanics) {
