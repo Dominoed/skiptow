@@ -124,7 +124,7 @@ class CustomerInvoicesPage extends StatelessWidget {
                         if (data['closedAt'] != null)
                           Text('Closed on ${_formatDate(data['closedAt'] as Timestamp?)}'),
                         if (finalPrice != null)
-                          Text('Final Price: \\$${finalPrice.toStringAsFixed(2)}'),
+                          Text('Final Price: \$${finalPrice.toStringAsFixed(2)}'),
                       ],
                     ),
                   ),
