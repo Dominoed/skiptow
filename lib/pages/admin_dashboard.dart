@@ -1025,6 +1025,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             style: TextStyle(color: Colors.white, fontSize: 12),
           ),
           backgroundColor: Colors.red,
+        ),
+      );
+    }
     if (unavailable) {
       badges.add(
         const Chip(
@@ -1381,6 +1384,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
           ],
         );
+      },
+    );
+  }
 
   Widget _userTile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
