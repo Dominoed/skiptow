@@ -123,6 +123,12 @@ class _LoginPageState extends State<LoginPage> {
                   ?.copyWith(color: Colors.grey),
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'SkipTow connects vehicle owners with nearby mechanics for on-site repairs. Payments are processed securely through Stripe.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     ),
