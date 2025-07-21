@@ -4,9 +4,10 @@ import 'package:intl/intl.dart';
 
 /// Displays the logged-in mechanic's account information and performance.
 class MechanicProfilePage extends StatefulWidget {
-  final String userId;
+  /// The mechanic ID whose profile will be displayed.
+  final String mechanicId;
 
-  const MechanicProfilePage({super.key, required this.userId});
+  const MechanicProfilePage({super.key, required this.mechanicId});
 
   @override
   State<MechanicProfilePage> createState() => _MechanicProfilePageState();
@@ -24,13 +25,13 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
   Future<Map<String, dynamic>> _loadProfileData() async {
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(widget.userId)
+        .doc(widget.mechanicId)
         .get();
     final userData = userDoc.data() ?? {};
 
     final invoicesSnap = await FirebaseFirestore.instance
         .collection('invoices')
-        .where('mechanicId', isEqualTo: widget.userId)
+        .where('mechanicId', isEqualTo: widget.mechanicId)
         .get();
 
     int completedJobs = 0;
@@ -66,7 +67,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Profile')),
+      appBar: AppBar(title: const Text('Mechanic Profile')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _profileFuture,
         builder: (context, snapshot) {

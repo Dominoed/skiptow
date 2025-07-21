@@ -1087,7 +1087,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => MechanicProfilePage(userId: widget.userId),
+                  builder: (_) => MechanicProfilePage(
+                    mechanicId: widget.userId,
+                  ),
                 ),
               );
             },
