@@ -138,3 +138,8 @@ firebase_options.dart
 - Scanning a QR code or opening a mechanic referral link
   (https://skiptow.site/mechanic/{mechanicId}) opens the app directly (if installed).
 - If logged out, the app redirects to login and automatically opens the mechanic profile after login.
+
+## Mechanic QR Codes
+- Pro mechanics can generate and display a personal QR code.
+- QR code links to https://skiptow.site/mechanic/{mechanicId}.
+- Scanning QR opens the app (or web fallback).

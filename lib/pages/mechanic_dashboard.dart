@@ -7,6 +7,10 @@ import '../utils.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:skiptow/services/error_logger.dart';
+import 'dart:typed_data';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import '../services/image_downloader.dart';
 import 'package:intl/intl.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
@@ -58,6 +62,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   int completedJobs = 0;
   bool unavailable = false;
   String? _currentSessionId;
+  String? _referralLink;
+  final GlobalKey _qrKey = GlobalKey();
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -250,6 +256,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     }
 
     _proUser = getBool(data, 'isProUser');
+    if (_proUser) {
+      _loadReferralLink();
+    }
 
     _loadWrenchIcon();
     _listenForInvoices();
@@ -317,6 +326,26 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       'assets/icons/wrench.png',
     );
     setState(() {});
+  }
+
+  Future<void> _loadReferralLink() async {
+    try {
+      final docRef =
+          FirebaseFirestore.instance.collection('users').doc(widget.userId);
+      final snap = await docRef.get();
+      String? link = snap.data()?['referralLink'];
+      link ??= 'https://skiptow.site/mechanic/${widget.userId}';
+      if (snap.data()?['referralLink'] == null) {
+        await docRef.update({'referralLink': link});
+      }
+      if (mounted) {
+        setState(() {
+          _referralLink = link;
+        });
+      }
+    } catch (e) {
+      logError('Load referral link error: $e');
+    }
   }
 
   Future<void> _loadStatus() async {
@@ -954,6 +983,51 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Widget _buildReferralQr() {
+    if (!_proUser) return const SizedBox.shrink();
+    if (_referralLink == null) {
+      return const Padding(
+        padding: EdgeInsets.all(8),
+        child: CircularProgressIndicator(),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Referral QR Code',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          RepaintBoundary(
+            key: _qrKey,
+            child: QrImage(
+              data: _referralLink!,
+              version: QrVersions.auto,
+              size: 200.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: _shareReferralLink,
+                child: const Text('Share Referral Link'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _downloadQrCode,
+                child: const Text('Download QR Code Image'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasAccountData) {
@@ -1393,6 +1467,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 _buildActiveJobs(),
                 _buildAwaitingFeedback(),
                 _buildRecentActivity(),
+                _buildReferralQr(),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
@@ -1661,6 +1736,34 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
     } catch (e) {
       logError('Location history save error: $e');
+    }
+  }
+
+  void _shareReferralLink() {
+    if (_referralLink != null) {
+      Share.share(_referralLink!);
+    }
+  }
+
+  Future<void> _downloadQrCode() async {
+    if (_referralLink == null) return;
+    try {
+      final painter = QrPainter(
+        data: _referralLink!,
+        version: QrVersions.auto,
+        gapless: true,
+      );
+      final ByteData? data = await painter.toImageData(300);
+      if (data == null) return;
+      await downloadImage(data.buffer.asUint8List(),
+          fileName: 'referral_${widget.userId}.png');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('QR code image downloaded')),
+        );
+      }
+    } catch (e) {
+      logError('QR code download error: $e');
     }
   }
 
