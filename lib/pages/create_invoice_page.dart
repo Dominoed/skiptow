@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:skiptow/services/error_logger.dart';
+import '../utils.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   final String customerId;
@@ -66,16 +67,22 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
   Future<void> _checkActiveRequest() async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
-    final snapshot = await FirebaseFirestore.instance
-        .collection('invoices')
-        .where('customerId', isEqualTo: uid)
-        .where('status', isEqualTo: 'active')
-        .limit(1)
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
         .get();
+    final isPro = getBool(userDoc.data(), 'isProUser');
+    QuerySnapshot<Map<String, dynamic>> snapshot =
+        await FirebaseFirestore.instance
+            .collection('invoices')
+            .where('customerId', isEqualTo: uid)
+            .where('status', isEqualTo: 'active')
+            .limit(1)
+            .get();
 
     if (mounted) {
       setState(() {
-        hasActiveRequest = snapshot.docs.isNotEmpty;
+        hasActiveRequest = !isPro && snapshot.docs.isNotEmpty;
       });
       if (hasActiveRequest) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,13 +153,19 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
 
     // Check for an existing active invoice for this customer before proceeding
     final uid = FirebaseAuth.instance.currentUser?.uid ?? widget.customerId;
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    final isPro = getBool(userDoc.data(), 'isProUser');
+
     final activeSnapshot = await FirebaseFirestore.instance
         .collection('invoices')
         .where('customerId', isEqualTo: uid)
         .where('status', isEqualTo: 'active')
         .limit(1)
         .get();
-    if (activeSnapshot.docs.isNotEmpty) {
+    if (!isPro && activeSnapshot.docs.isNotEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -193,7 +206,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           .where('status', isEqualTo: 'active')
           .limit(1)
           .get();
-      if (dupSnapshot.docs.isNotEmpty) {
+      if (!isPro && dupSnapshot.docs.isNotEmpty) {
         if (mounted) {
           Navigator.of(context).pop(); // hide loading
           ScaffoldMessenger.of(context).showSnackBar(

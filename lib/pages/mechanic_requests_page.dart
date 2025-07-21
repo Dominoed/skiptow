@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../utils.dart';
 import 'invoice_detail_page.dart';
 
 class MechanicRequestsPage extends StatefulWidget {
@@ -142,6 +143,23 @@ class _RequestCard extends StatelessWidget {
     return meters / 1609.34;
   }
 
+  Future<bool> _canAcceptMore() async {
+    final mechDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(mechanicId)
+        .get();
+    final isPro = getBool(mechDoc.data(), 'isProUser');
+    if (isPro) return true;
+
+    final activeSnap = await FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: mechanicId)
+        .where('invoiceStatus', whereIn: ['accepted', 'in_progress'])
+        .limit(1)
+        .get();
+    return activeSnap.docs.isEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     final broadcast = data['mechanicId'] == null;
@@ -239,6 +257,14 @@ class _RequestCard extends StatelessWidget {
   }
 
   Future<void> _acceptBroadcast(BuildContext context) async {
+    if (!await _canAcceptMore()) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You already have an active request.')),
+        );
+      }
+      return;
+    }
     final invoiceRef =
         FirebaseFirestore.instance.collection('invoices').doc(invoiceId);
     try {
@@ -320,6 +346,14 @@ class _RequestCard extends StatelessWidget {
   }
 
   Future<void> _acceptDirect(BuildContext context) async {
+    if (!await _canAcceptMore()) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You already have an active request.')),
+        );
+      }
+      return;
+    }
     await FirebaseFirestore.instance.collection('invoices').doc(invoiceId).update({
       'mechanicAccepted': true,
       'mechanicAcceptedAt': FieldValue.serverTimestamp(),

@@ -54,6 +54,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _hasAccountData = true;
   bool _blocked = false;
   bool _suspicious = false;
+  bool _proUser = false;
   int completedJobs = 0;
   bool unavailable = false;
   String? _currentSessionId;
@@ -247,6 +248,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       });
       return;
     }
+
+    _proUser = getBool(data, 'isProUser');
 
     _loadWrenchIcon();
     _listenForInvoices();

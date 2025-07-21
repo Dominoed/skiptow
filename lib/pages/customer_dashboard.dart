@@ -43,6 +43,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _alertBannerVisible = false;
   bool _hasAccountData = true;
   bool _suspicious = false;
+  bool _proUser = false;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
   bool _requestAcceptedBannerVisible = false;
@@ -256,6 +257,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     final data = doc.data();
     _suspicious = data?['suspicious'] == true;
+    _proUser = getBool(data, 'isProUser');
 
     _loadWrenchIcon();
     _checkLocationPermissionOnLoad();
@@ -415,7 +417,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   }
 
   void _loadMechanics() async {
-    final snapshot = await FirebaseFirestore.instance.collection('users').where('isActive', isEqualTo: true).get();
+    Query<Map<String, dynamic>> query =
+        FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'mechanic');
+    if (!_proUser) {
+      query = query.where('isActive', isEqualTo: true);
+    }
+    final snapshot = await query.get();
 
     Map<String, dynamic> inRange = {};
     Set<Marker> tempMarkers = {};
@@ -425,7 +432,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
-      if (data['unavailable'] == true) continue;
+      if (!_proUser && data['unavailable'] == true) continue;
       if (data.containsKey('location') && data.containsKey('radiusMiles')) {
         final double lat = data['location']['lat'];
         final double lng = data['location']['lng'];
@@ -443,15 +450,20 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               1609.34; // meters to miles
         }
 
-        if (distance != null) {
-          if (distance <= radius) {
-            insideActive = true;
-          } else if (distance <= extendedRadius) {
-            insideExtended = true;
-          }
-          if (distance <= extendedRadius) {
-            count++;
-          }
+        if (_proUser) {
+          insideActive = true;
+          count++;
+        }
+
+        if (distance != null && !_proUser) {
+            if (distance <= radius) {
+              insideActive = true;
+            } else if (distance <= extendedRadius) {
+              insideExtended = true;
+            }
+            if (distance <= extendedRadius) {
+              count++;
+            }
         }
 
         if (_trackingMechanicId != null && doc.id == _trackingMechanicId) {
@@ -463,7 +475,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               position: LatLng(lat, lng),
               icon: wrenchIcon ??
                   BitmapDescriptor.defaultMarkerWithHue(
-                    distance != null && distance <= radius
+                    _proUser || (distance != null && distance <= radius)
                         ? BitmapDescriptor.hueGreen
                         : BitmapDescriptor.hueAzure,
                   ),
@@ -539,7 +551,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         inRange[doc.id] = {
           'username': data['username'] ?? 'Unnamed',
           'distance': distance,
-          'withinActive': distance != null && distance <= radius,
+          'withinActive': _proUser ? true : distance != null && distance <= radius,
         };
       }
     }
@@ -833,6 +845,83 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           },
           icon: const Icon(Icons.directions_car),
           label: const Text('Track Mechanic'),
+        );
+      },
+    );
+  }
+
+  Widget _buildActiveRequestsPanel() {
+    final stream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('customerId', isEqualTo: widget.userId)
+        .where('status', whereIn: [
+          'active',
+          'accepted',
+          'arrived',
+          'in_progress'
+        ])
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snapshot.hasData
+            ? snapshot.data!.docs
+                .where((d) => d.data()['flagged'] != true)
+                .toList()
+            : <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        return ExpansionTile(
+          title: const Text('Your Active Requests'),
+          children: docs.map((doc) {
+            final data = doc.data();
+            final invoiceNum = data['invoiceNumber'] ?? doc.id;
+            final status =
+                (data['invoiceStatus'] ?? data['status'] ?? 'active').toString();
+            final mechanic = data['mechanicUsername'];
+            final issueRaw = (data['description'] ?? '').toString();
+            final issue = issueRaw.length > 50
+                ? '${issueRaw.substring(0, 50)}...'
+                : issueRaw;
+            return ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Invoice #: $invoiceNum',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Chip(
+                    label: Text(
+                      status,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: _statusColor(status),
+                  ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (mechanic != null) Text('Mechanic: $mechanic'),
+                  if (issue.isNotEmpty) Text(issue),
+                ],
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => InvoiceDetailPage(
+                      invoiceId: doc.id,
+                      role: 'customer',
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
         );
       },
     );
@@ -1479,6 +1568,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   const SizedBox(height: 10),
                   _buildTrackMechanicButton(),
                   const SizedBox(height: 10),
+                  if (_proUser) ...[
+                    _buildActiveRequestsPanel(),
+                    const SizedBox(height: 10),
+                  ],
                   _buildRecentRequestsPanel(),
                 ],
               ),
