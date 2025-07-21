@@ -232,7 +232,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
                   Text(_isSuspicious ? 'Unmark Suspicious' : 'Mark as Suspicious Account'),
             ),
             const SizedBox(height: 20),
-          ];
+          ]);
 
           if (role == 'mechanic') {
             children.addAll([
