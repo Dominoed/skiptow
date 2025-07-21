@@ -906,39 +906,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
-  Color _invoiceStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'accepted':
-        return Colors.blue;
-      case 'arrived':
-      case 'in_progress':
-        return Colors.orange;
-      case 'completed':
-        return Colors.purple;
-      case 'closed':
-        return Colors.grey;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  Color _paymentColor(String status) {
-    switch (status) {
-      case 'paid':
-      case 'paid_in_person':
-        return Colors.green;
-      case 'failed':
-        return Colors.red;
-      case 'unpaid':
-      case 'pending':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
 
   Widget _buildRecentActivity() {
     final stream = FirebaseFirestore.instance
@@ -1003,7 +971,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           const SizedBox(height: 8),
           RepaintBoundary(
             key: _qrKey,
-            child: QrImage(
+            child: QrImageView(
               data: _referralLink!,
               version: QrVersions.auto,
               size: 200.0,
@@ -2374,5 +2342,39 @@ class _RecentActivityTile extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+Color _invoiceStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'active':
+    case 'accepted':
+      return Colors.blue;
+    case 'arrived':
+    case 'in_progress':
+      return Colors.orange;
+    case 'completed':
+      return Colors.purple;
+    case 'closed':
+      return Colors.grey;
+    case 'cancelled':
+      return Colors.red;
+    default:
+      return Colors.grey;
+  }
+}
+
+Color _paymentColor(String status) {
+  switch (status) {
+    case 'paid':
+    case 'paid_in_person':
+      return Colors.green;
+    case 'failed':
+      return Colors.red;
+    case 'unpaid':
+    case 'pending':
+      return Colors.orange;
+    default:
+      return Colors.grey;
   }
 }
