@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.skiptow.app",
+      "sha256_cert_fingerprints": [
+        "00:C6:F2:9C:97:5E:47:BD:89:A6:C7:E9:11:5D:66:B9:5B:C2:0F:2D:12:01:6E:B4:EB:F0:3E:E9:42:94:7A:65"
+      ]
+    }
+  }
+]
