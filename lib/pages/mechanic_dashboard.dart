@@ -818,6 +818,62 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     );
   }
 
+  Widget _buildAwaitingFeedback() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('invoices')
+          .where('mechanicId', isEqualTo: widget.userId)
+          .where('invoiceStatus', whereIn: ['completed', 'closed'])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          );
+        }
+        final docs = (snapshot.data?.docs ?? [])
+            .where((d) => d.data()['flagged'] != true)
+            .toList();
+        if (docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text(
+                'Awaiting Feedback',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...docs.map(
+              (d) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: d.reference.collection('mechanicFeedback').snapshots(),
+                builder: (context, fbSnap) {
+                  if (!fbSnap.hasData || fbSnap.data!.docs.isNotEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final data = d.data();
+                  return ListTile(
+                    title: Text('Invoice ${d.id}'),
+                    subtitle: Text((data['description'] ?? '').toString()),
+                    trailing: TextButton(
+                      onPressed: () =>
+                          showCustomerRatingDialog(context, d.id),
+                      child: const Text('Rate'),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Color _invoiceStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'active':
@@ -1330,6 +1386,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   },
                 ),
                 _buildActiveJobs(),
+                _buildAwaitingFeedback(),
                 _buildRecentActivity(),
                 Container(
                   width: double.infinity,
@@ -1968,6 +2025,8 @@ class _ActiveRequestCard extends StatelessWidget {
         } else if (paidInPerson == false) {
           await docRef.update({'paymentStatus': 'unpaid'});
         }
+
+        await showCustomerRatingDialog(context, invoiceId);
       }
     }
   }

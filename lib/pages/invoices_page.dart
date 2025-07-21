@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'invoice_detail_page.dart';
+import '../utils.dart';
 
 /// Displays a list of invoices for the logged in user.
 ///
@@ -371,6 +372,8 @@ class _InvoiceTile extends StatelessWidget {
                       .collection('users')
                       .doc(currentUserId)
                       .update({'completedJobs': FieldValue.increment(1)});
+
+                  await showCustomerRatingDialog(context, invoiceId);
                 }
               }
             },
