@@ -65,7 +65,10 @@ class _LoginPageState extends State<LoginPage> {
           pendingRedirectMechanicId = null;
           navigatorKey.currentState?.push(
             MaterialPageRoute(
-              builder: (_) => MechanicProfilePage(mechanicId: mechId),
+              builder: (_) => MechanicProfilePage(
+                mechanicId: mechId,
+                referral: true,
+              ),
             ),
           );
         }
