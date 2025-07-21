@@ -353,7 +353,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
     }
     _monthlyServiceTotal = monthlyServiceTotal;
-    _platformRevenueEstimate = monthlyServiceTotal * 0.15;
+    _platformRevenueEstimate = monthlyServiceTotal * 0.10;
     _monthlyPlatformFees = monthlyPlatformFees;
 
     final paidSnap = await FirebaseFirestore.instance
@@ -380,9 +380,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       }
     }
     _totalPaidAmount = total;
-    _totalPlatformRevenue = total * 0.15;
+    _totalPlatformRevenue = total * 0.10;
     _monthlyCollected = monthlyTotal;
-    _monthlyPayoutEstimate = monthlyTotal * 0.85;
+    _monthlyPayoutEstimate = monthlyTotal * 0.90;
     _averagePaidAmount =
         _paidInvoices > 0 ? _totalPaidAmount / _paidInvoices : 0.0;
     _allTimePlatformFees = allTimeFees;
@@ -513,11 +513,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
-      _totalPlatformRevenue = total * 0.15;
+      _totalPlatformRevenue = total * 0.10;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
-      _platformRevenueEstimate = monthlyServiceTotal * 0.15;
-      _monthlyPayoutEstimate = monthlyPayout * 0.85;
+      _platformRevenueEstimate = monthlyServiceTotal * 0.10;
+      _monthlyPayoutEstimate = monthlyPayout * 0.90;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;
@@ -535,11 +535,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _overdueInvoices = overdue;
       _paidInvoices = paid;
       _totalPaidAmount = total;
-      _totalPlatformRevenue = total * 0.15;
+      _totalPlatformRevenue = total * 0.10;
       _monthlyCollected = monthlyTotal;
       _monthlyServiceTotal = monthlyServiceTotal;
-      _platformRevenueEstimate = monthlyServiceTotal * 0.15;
-      _monthlyPayoutEstimate = monthlyPayout * 0.85;
+      _platformRevenueEstimate = monthlyServiceTotal * 0.10;
+      _monthlyPayoutEstimate = monthlyPayout * 0.90;
       _averagePaidAmount = avg;
       _unpaidOutstanding = pendingTotal;
       _overdueBalance = overdueTotal;

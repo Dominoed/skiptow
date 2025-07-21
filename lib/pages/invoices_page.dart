@@ -358,7 +358,7 @@ class _InvoiceTile extends StatelessWidget {
                 );
 
                 if (confirmed == true) {
-                  final double fee = double.parse((price * 0.15).toStringAsFixed(2));
+                  final double fee = double.parse((price * 0.10).toStringAsFixed(2));
                   await FirebaseFirestore.instance
                       .collection('invoices')
                       .doc(invoiceId)

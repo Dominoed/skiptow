@@ -68,10 +68,10 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
       }
     }
 
-    final platformRevenueAllTime = totalPaid * 0.15;
-    final platformRevenueMonth = monthlyPaid * 0.15;
-    final payoutsAllTime = totalPaid * 0.85;
-    final payoutsMonth = monthlyPaid * 0.85;
+    final platformRevenueAllTime = totalPaid * 0.10;
+    final platformRevenueMonth = monthlyPaid * 0.10;
+    final payoutsAllTime = totalPaid * 0.90;
+    final payoutsMonth = monthlyPaid * 0.90;
     final averagePayment = paidInvoices > 0 ? totalPaid / paidInvoices : 0.0;
 
     return {
@@ -202,7 +202,7 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
               fee = feeNum.toDouble();
             } else {
               final price = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
-              fee = price * 0.15;
+              fee = price * 0.10;
             }
             totals[key] = (totals[key] ?? 0) + fee;
           }
