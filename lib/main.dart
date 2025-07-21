@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:uni_links/uni_links.dart';
 import 'dart:convert';
 import 'services/push_notification_service.dart';
 import 'utils.dart';
@@ -17,6 +18,8 @@ import 'pages/customer_invoices_page.dart';
 import 'pages/invoice_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pages/maintenance_mode_page.dart';
+import 'pages/mechanic_profile_page.dart';
+import 'deep_link_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,6 +90,7 @@ class _MyAppState extends State<MyApp> {
   bool _loading = true;
   bool _offlineBannerVisible = false;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _maintSub;
+  StreamSubscription<Uri?>? _linkSub;
   bool? _maintenanceMode;
   String _maintenanceMessage = '';
 
@@ -97,6 +101,7 @@ class _MyAppState extends State<MyApp> {
     _initConnectivity();
     _listenMaintenance();
     _initAuth();
+    _initLinks();
   }
 
   void _listenMaintenance() {
@@ -182,11 +187,40 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  void _initLinks() async {
+    try {
+      final initialUri = await getInitialUri();
+      _processDeepLink(initialUri ?? Uri.base);
+    } catch (_) {}
+    _linkSub = uriLinkStream.listen(_processDeepLink, onError: (_) {});
+  }
+
+  void _processDeepLink(Uri? uri) {
+    if (uri == null) return;
+    if (uri.scheme.startsWith('http') &&
+        uri.host == 'skiptow.site' &&
+        uri.pathSegments.length == 2 &&
+        uri.pathSegments.first == 'mechanic') {
+      final id = uri.pathSegments[1];
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => MechanicProfilePage(mechanicId: id),
+          ),
+        );
+      } else {
+        pendingRedirectMechanicId = id;
+      }
+    }
+  }
+
   @override
   void dispose() {
     _authSub.cancel();
     _connectSub?.cancel();
     _maintSub?.cancel();
+    _linkSub?.cancel();
     super.dispose();
   }
 

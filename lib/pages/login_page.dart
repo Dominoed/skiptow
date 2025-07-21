@@ -7,6 +7,9 @@ import 'package:skiptow/pages/terms_of_service_page.dart';
 import 'package:skiptow/pages/privacy_policy_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../deep_link_state.dart';
+import 'mechanic_profile_page.dart';
+import 'package:skiptow/main.dart' show navigatorKey;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,6 +60,15 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(builder: (_) => DashboardPage(userId: user.uid)),
         );
+        if (pendingRedirectMechanicId != null) {
+          final mechId = pendingRedirectMechanicId!;
+          pendingRedirectMechanicId = null;
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => MechanicProfilePage(mechanicId: mechId),
+            ),
+          );
+        }
       } else {
         _status = 'No user ID found';
       }
