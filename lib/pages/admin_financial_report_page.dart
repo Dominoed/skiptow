@@ -6,6 +6,12 @@ import '../services/csv_downloader.dart';
 
 import 'dashboard_page.dart';
 
+class _MonthRevenue {
+  final DateTime month;
+  final double total;
+  _MonthRevenue(this.month, this.total);
+}
+
 class AdminFinancialReportPage extends StatefulWidget {
   final String userId;
   const AdminFinancialReportPage({super.key, required this.userId});
@@ -164,13 +170,6 @@ class _AdminFinancialReportPageState extends State<AdminFinancialReportPage> {
         const SnackBar(content: Text('Invoice CSV exported')),
       );
     }
-  }
-
-  // Data class for monthly revenue totals
-  class _MonthRevenue {
-    final DateTime month;
-    final double total;
-    _MonthRevenue(this.month, this.total);
   }
 
   /// Builds a bar chart showing platform revenue over the last 12 months.

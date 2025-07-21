@@ -211,7 +211,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             Text('User ID: ${widget.userId}'),
             Text('Email: ${data['email']}'),
             Text('Role: $role'),
-            Text('Account Created: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+            Text("Account Created: ${_formatDate(data['createdAt'] as Timestamp?)}"),
             Text('Blocked: ${data['blocked'] == true ? 'Yes' : 'No'}'),
             Text('Flagged: ${data['flagged'] == true ? 'Yes' : 'No'}'),
             Text('Suspicious: ${data['suspicious'] == true ? 'Yes' : 'No'}'),

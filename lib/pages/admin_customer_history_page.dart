@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'dashboard_page.dart';
 
 class _MonthSpending {
   final DateTime month;
   final double total;
   _MonthSpending(this.month, this.total);
 }
-
-import 'dashboard_page.dart';
 
 class AdminCustomerHistoryPage extends StatefulWidget {
   final String customerId;
