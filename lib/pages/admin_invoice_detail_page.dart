@@ -76,9 +76,9 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
         .where('isActive', isEqualTo: true)
         .get();
     return snap.docs
-        .map((d) => {
+        .map((d) => <String, String>{
               'id': d.id,
-              'username': d.data()['username'] ?? d.id,
+              'username': (d.data()['username'] ?? d.id).toString(),
             })
         .toList();
   }
@@ -399,7 +399,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
                       .map(
                         (m) => DropdownMenuItem(
                           value: m['id'],
-                          child: Text(m['username'] ?? m['id']),
+                          child: Text(m['username'] ?? m['id'] ?? ''),
                         ),
                       )
                       .toList(),
