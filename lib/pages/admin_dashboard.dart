@@ -1954,6 +1954,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             ...filteredDocs.map((d) {
               final data = d.data();
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2146,6 +2147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             ...filteredDocs.map((d) {
               final data = d.data();
+              final suspicious = data['suspicious'] == true;
               return ListTile(
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
