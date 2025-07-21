@@ -1542,19 +1542,45 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           final docs = (snapshot.data?.docs ?? [])
               .where((d) => d.data()['flagged'] != true)
               .toList();
-          if (docs.length != 1) return const SizedBox.shrink();
-          final doc = docs.first;
+          if (docs.isEmpty) return const SizedBox.shrink();
+
+          void openJob(String id) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MechanicCurrentJobPage(invoiceId: id),
+              ),
+            );
+          }
+
           return FloatingActionButton.extended(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      MechanicCurrentJobPage(invoiceId: doc.id),
-                ),
-              );
+              if (docs.length == 1) {
+                openJob(docs.first.id);
+              } else {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (_) {
+                    return ListView(
+                      children: [
+                        for (final d in docs)
+                          ListTile(
+                            title: Text('Invoice ${d.id}'),
+                            subtitle: Text(
+                                (d.data()['invoiceStatus'] ?? '').toString()),
+                            trailing: const Icon(Icons.arrow_forward),
+                            onTap: () {
+                              Navigator.pop(context);
+                              openJob(d.id);
+                            },
+                          ),
+                      ],
+                    );
+                  },
+                );
+              }
             },
-            label: const Text('View Current Job'),
+            label: Text(docs.length == 1 ? 'View Current Job' : 'Manage Jobs'),
             icon: const Icon(Icons.work),
           );
         },
@@ -1760,58 +1786,97 @@ class _ActiveJobCard extends StatelessWidget {
             snapshot.data?.data()?['username'] ?? data['customerId'];
         return Card(
           margin: const EdgeInsets.all(8),
-          child: ListTile(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => InvoiceDetailPage(
-                    invoiceId: invoiceId,
-                    role: 'mechanic',
-                  ),
-                ),
-              );
-            },
-            title: Text('Invoice $invoiceId'),
-            subtitle: Column(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Customer: $customerName'),
-                if (description.toString().isNotEmpty)
-                  Text(
-                    description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-            trailing: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _invoiceStatusColor(status),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    status,
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Invoice $invoiceId',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text('Customer: $customerName'),
+                          if (description.toString().isNotEmpty)
+                            Text(
+                              description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _invoiceStatusColor(status),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            status,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _paymentColor(paymentStatus),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            paymentStatus,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _paymentColor(paymentStatus),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    paymentStatus,
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => InvoiceDetailPage(
+                              invoiceId: invoiceId,
+                              role: 'mechanic',
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Details'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                MechanicCurrentJobPage(invoiceId: invoiceId),
+                          ),
+                        );
+                      },
+                      child: const Text('Manage'),
+                    ),
+                  ],
                 ),
               ],
             ),
