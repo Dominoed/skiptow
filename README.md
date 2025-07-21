@@ -51,6 +51,12 @@ SkipTow is currently open source for community contributions; it may become clos
 - Step-by-step invoice timeline showing request lifecycle
 - Web and Android builds provided by Flutter
 
+## Pro User Features
+- Pro customers see all mechanics and bypass normal limits.
+- Pro customers can open multiple simultaneous requests, non-pro users can't have more than one open request at a time.
+- Pro mechanics can have multiple open requests at once, but non-pro users can't.
+- Stripe billing handled externally.
+
 ## File Structure
 lib/main.dart
 lib/pages/
