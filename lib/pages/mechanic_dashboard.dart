@@ -1163,6 +1163,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 MaterialPageRoute(
                   builder: (_) => MechanicProfilePage(
                     mechanicId: widget.userId,
+                    referral: false,
                   ),
                 ),
               );

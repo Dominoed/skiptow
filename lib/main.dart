@@ -206,7 +206,10 @@ class _MyAppState extends State<MyApp> {
       if (user != null) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(
-            builder: (_) => MechanicProfilePage(mechanicId: id),
+            builder: (_) => MechanicProfilePage(
+              mechanicId: id,
+              referral: true,
+            ),
           ),
         );
       } else {

@@ -134,6 +134,9 @@ firebase_options.dart
 - Payment processing integration
 - Additional UI/UX improvements
 
+## Mechanic Profile
+- Referral customers bypass normal restrictions.
+
 ## Mechanic Referral Links
 - Scanning a QR code or opening a mechanic referral link
   (https://skiptow.site/mechanic/{mechanicId}) opens the app directly (if installed).

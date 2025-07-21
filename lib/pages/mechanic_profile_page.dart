@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:skiptow/pages/create_invoice_page.dart';
 
 /// Displays the logged-in mechanic's account information and performance.
 class MechanicProfilePage extends StatefulWidget {
   /// The mechanic ID whose profile will be displayed.
   final String mechanicId;
 
-  const MechanicProfilePage({super.key, required this.mechanicId});
+  /// Whether this profile was opened from a referral link.
+  final bool referral;
+
+  const MechanicProfilePage({
+    super.key,
+    required this.mechanicId,
+    this.referral = false,
+  });
 
   @override
   State<MechanicProfilePage> createState() => _MechanicProfilePageState();
@@ -92,6 +101,31 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                 Text('Total Jobs Completed: ${data['completedJobs']}'),
                 Text('Total Earnings: \$${data['totalEarnings'].toStringAsFixed(2)}'),
                 Text('Account Status: ${blocked ? 'Blocked' : 'Active'}'),
+                if (widget.referral) ...[
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Referral Request \u2014 mechanic may still decline.',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateInvoicePage(
+                            customerId:
+                                FirebaseAuth.instance.currentUser?.uid ?? '',
+                            mechanicId: widget.mechanicId,
+                            mechanicUsername: data['username'] ?? 'Unnamed',
+                            distance: 0,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Request This Mechanic'),
+                  ),
+                ],
               ],
             ),
           );
