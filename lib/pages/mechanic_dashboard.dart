@@ -2044,7 +2044,7 @@ class _ActiveRequestCard extends StatelessWidget {
       );
 
       if (confirmed == true) {
-        final double fee = double.parse((price * 0.15).toStringAsFixed(2));
+        final double fee = double.parse((price * 0.10).toStringAsFixed(2));
         final docRef =
             FirebaseFirestore.instance.collection('invoices').doc(invoiceId);
         final existing = await docRef.get();

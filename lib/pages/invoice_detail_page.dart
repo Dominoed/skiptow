@@ -1471,7 +1471,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
                       if (confirmed == true) {
                         final double fee =
-                            double.parse((price * 0.15).toStringAsFixed(2));
+                            double.parse((price * 0.10).toStringAsFixed(2));
                         await FirebaseFirestore.instance
                             .collection('invoices')
                             .doc(widget.invoiceId)

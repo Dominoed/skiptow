@@ -93,7 +93,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
         paidCount++;
         totalPaid += price;
         if (price > highest) highest = price;
-        fees += (data['platformFee'] as num?)?.toDouble() ?? price * 0.15;
+        fees += (data['platformFee'] as num?)?.toDouble() ?? price * 0.10;
       } else if (paymentStatus == 'pending' &&
           createdAtTs != null &&
           DateTime.now().difference(createdAtTs.toDate()).inDays > 7) {
