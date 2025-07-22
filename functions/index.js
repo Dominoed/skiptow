@@ -1,4 +1,6 @@
-const functions = require('firebase-functions');
+// Use the v1 compat import since the code relies on the classic
+// firebase-functions API (e.g. functions.firestore.document()).
+const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const stripe = require('stripe')(functions.config().stripe.secret);
 admin.initializeApp();
