@@ -114,4 +114,6 @@ flutter:
 dependency_overrides:
   charts_flutter:
     path: third_party/charts_flutter
+  uni_links:
+    path: packages/uni_links
 
