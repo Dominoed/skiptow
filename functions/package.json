@@ -1,13 +1,24 @@
 {
   "name": "skiptow-functions",
   "description": "Firebase Cloud Functions for SkipTow",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
   "engines": {
     "node": "18"
   },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^11.11.1",
-    "firebase-functions": "^4.4.1",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
     "stripe": "^12.18.0"
-  }
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
 }

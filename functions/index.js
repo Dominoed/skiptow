@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const stripe = require('stripe')(functions.config().stripe.secret);
 admin.initializeApp();
 
 function haversineDistance(loc1, loc2) {
@@ -379,3 +380,32 @@ exports.autoResetInactiveMechanics = functions.pubsub
     return null;
   });
 
+exports.createPaymentIntent = functions.https
+  .onCall(async (data, context) => {
+    const { amount, currency, mechanicStripeAccountId, description } = data;
+
+    // Calculate app fee (e.g. 10% fee)
+    const appFeeAmount = Math.round(amount * 0.10);  // 10% platform fee
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount, // In cents
+        currency,
+        description: description || 'SkipTow Service Payment',
+
+        // Connect payment to mechanic’s Stripe account
+        transfer_data: {
+          destination: mechanicStripeAccountId,
+        },
+
+        // App fee for SkipTow
+        application_fee_amount: appFeeAmount,
+      });
+
+      return { clientSecret: paymentIntent.client_secret };
+
+    } catch (error) {
+      console.error('Error creating PaymentIntent:', error);
+      throw new functions.https.HttpsError('unknown', 'PaymentIntent creation failed');
+    }
+  });
