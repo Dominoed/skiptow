@@ -1,10 +1,13 @@
 {
   "name": "skiptow-functions",
   "description": "Firebase Cloud Functions for SkipTow",
-  "engines": {"node": "18"},
+  "engines": {
+    "node": "18"
+  },
   "main": "index.js",
   "dependencies": {
     "firebase-admin": "^11.11.1",
-    "firebase-functions": "^4.4.1"
+    "firebase-functions": "^4.4.1",
+    "stripe": "^12.18.0"
   }
 }
