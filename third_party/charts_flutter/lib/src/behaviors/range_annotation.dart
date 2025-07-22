@@ -25,7 +25,7 @@ import 'package:charts_common/common.dart' as common
         RangeAnnotation,
         TextStyleSpec;
 import 'package:collection/collection.dart' show ListEquality;
-import 'dart:ui' show hashValues;
+import '../util/hash_helper.dart' show hashValues;
 import 'package:meta/meta.dart' show immutable;
 
 import 'chart_behavior.dart' show ChartBehavior, GestureType;
