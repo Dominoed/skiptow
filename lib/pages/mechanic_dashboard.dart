@@ -1483,24 +1483,13 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       ),
                       Positioned(
                         bottom: 16,
-                        left: 16,
+                        right: 16,
                         child: FloatingActionButton(
-                          heroTag: 'refresh_location',
-                          tooltip: 'Refresh Location',
+                          heroTag: 'center_refresh_mech',
+                          tooltip: 'Center Map',
                           mini: true,
                           onPressed: _refreshLocation,
-                          child: const Icon(Icons.refresh),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 16,
-                        right: 16,
-                        child: FloatingActionButton.extended(
-                          heroTag: 'center_map_mech',
-                          tooltip: 'Center Map',
-                          label: const Text('Center Map'),
-                          icon: const Icon(Icons.my_location),
-                          onPressed: _centerMap,
+                          child: const Icon(Icons.my_location),
                         ),
                       ),
                     ],
@@ -1649,15 +1638,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     super.dispose();
   }
 
-  void _centerMap() {
-    if (currentPosition != null) {
-      mapController?.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        ),
-      );
-    }
-  }
 
   Future<void> _refreshLocation() async {
     final hasPermission = await _handleLocationPermission();

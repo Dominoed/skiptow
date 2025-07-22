@@ -359,15 +359,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     }
   }
 
-  void _centerMap() {
-    if (currentPosition != null) {
-      mapController?.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(currentPosition!.latitude, currentPosition!.longitude),
-        ),
-      );
-    }
-  }
 
   Future<bool> _handleLocationPermission() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -1473,25 +1464,14 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   child: _buildEtaOverlay(),
                 ),
                 Positioned(
-                  bottom: 16,
-                  left: 16,
-                  child: FloatingActionButton(
-                    heroTag: 'refresh_location_cust',
-                    tooltip: 'Refresh Location',
-                    mini: true,
-                    onPressed: _refreshLocation,
-                    child: const Icon(Icons.refresh),
-                  ),
-                ),
-                Positioned(
                   top: 10,
                   right: 10,
-                  child: FloatingActionButton.extended(
-                    heroTag: 'center_map_cust',
+                  child: FloatingActionButton(
+                    heroTag: 'center_refresh_cust',
                     tooltip: 'Center Map',
-                    label: const Text('Center Map'),
-                    icon: const Icon(Icons.my_location),
-                    onPressed: _centerMap,
+                    mini: true,
+                    onPressed: _refreshLocation,
+                    child: const Icon(Icons.my_location),
                   ),
                 ),
                 Positioned(
