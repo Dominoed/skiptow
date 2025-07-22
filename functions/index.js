@@ -3,6 +3,9 @@
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const stripe = require('stripe')(functions.config().stripe.secret);
+const stripeClientId = functions.config().stripe.client_id;
+const YOUR_FRONTEND_REDIRECT_URL = 'https://skiptow.site/connected';  // Replace ASAP ! with whatever redirect needed after stripe onboarding
+
 admin.initializeApp();
 
 function haversineDistance(loc1, loc2) {
@@ -410,4 +413,26 @@ exports.createPaymentIntent = functions.https
       console.error('Error creating PaymentIntent:', error);
       throw new functions.https.HttpsError('unknown', 'PaymentIntent creation failed');
     }
+  });
+
+  exports.generateStripeOnboardingLink = functions.https
+  .onCall(async (data, context) => {
+    const { userId } = data;
+
+    const account = await stripe.accounts.create({
+      type: 'standard',
+    });
+
+    const link = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: YOUR_FRONTEND_REDIRECT_URL,
+      return_url: YOUR_FRONTEND_REDIRECT_URL,
+      type: 'account_onboarding',
+    });
+
+    await admin.firestore().collection('users').doc(userId).update({
+      stripeAccountId: account.id,
+    });
+
+    return { url: link.url };
   });
