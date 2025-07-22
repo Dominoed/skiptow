@@ -23,3 +23,11 @@ int hashValues(
     arg8,
   ]);
 }
+
+/// Helper to compute hash codes for an arbitrary number of values.
+///
+/// This mirrors the `hashList` utility from Flutter which wraps
+/// `Object.hashAll` but exposes a name consistent with [hashValues].
+int hashAll(Iterable<Object?> values) {
+  return Object.hashAll(values);
+}

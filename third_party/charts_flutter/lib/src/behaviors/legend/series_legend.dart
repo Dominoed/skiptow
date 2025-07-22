@@ -28,7 +28,7 @@ import 'package:charts_common/common.dart' as common
         TextStyleSpec;
 import 'package:collection/collection.dart' show ListEquality;
 import 'package:flutter/widgets.dart' show BuildContext, EdgeInsets, Widget;
-import '../../util/hash_helper.dart' show hashValues;
+import '../../util/hash_helper.dart' show hashAll, hashValues;
 import 'package:meta/meta.dart' show immutable;
 import '../../chart_container.dart' show ChartContainerRenderObject;
 import '../chart_behavior.dart'
@@ -288,18 +288,19 @@ class SeriesLegend<D> extends ChartBehavior<D> {
 
   @override
   int get hashCode {
-    return hashValues(
-        selectionModelType,
-        contentBuilder,
-        position,
-        outsideJustification,
-        insideJustification,
-        defaultHiddenSeries,
-        showMeasures,
-        legendDefaultMeasure,
-        measureFormatter,
-        secondaryMeasureFormatter,
-        entryTextStyle);
+    return hashAll([
+      selectionModelType,
+      contentBuilder,
+      position,
+      outsideJustification,
+      insideJustification,
+      defaultHiddenSeries,
+      showMeasures,
+      legendDefaultMeasure,
+      measureFormatter,
+      secondaryMeasureFormatter,
+      entryTextStyle,
+    ]);
   }
 }
 
