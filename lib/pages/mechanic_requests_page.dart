@@ -36,7 +36,7 @@ class _MechanicRequestsPageState extends State<MechanicRequestsPage> {
       future: _mechFuture,
       builder: (context, mechSnap) {
         if (!mechSnap.hasData) {
-          return const Scaffold(
+          return Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
@@ -63,7 +63,7 @@ class _MechanicRequestsPageState extends State<MechanicRequestsPage> {
               builder: (context, broadSnap) {
                 if (directSnap.connectionState == ConnectionState.waiting ||
                     broadSnap.connectionState == ConnectionState.waiting) {
-                  return const Scaffold(
+                  return Scaffold(
                     appBar: AppBar(title: Text('Service Requests')),
                     body: Center(child: CircularProgressIndicator()),
                   );
@@ -388,7 +388,7 @@ class _RequestCard extends StatelessWidget {
       },
     );
     if (confirmed != true) return;
-    final update = {
+    final update = <String, dynamic>{
       'status': 'cancelled',
       'cancelledBy': 'mechanic',
     };
