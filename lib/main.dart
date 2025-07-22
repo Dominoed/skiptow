@@ -115,6 +115,11 @@ class _MyAppState extends State<MyApp> {
         _maintenanceMode = getBool(data, 'enabled');
         _maintenanceMessage = (data?['message'] ?? '').toString();
       });
+    }, onError: (_) {
+      setState(() {
+        _maintenanceMode ??= false;
+        _maintenanceMessage = '';
+      });
     });
   }
 
