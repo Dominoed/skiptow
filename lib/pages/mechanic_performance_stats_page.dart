@@ -65,6 +65,97 @@ class MechanicPerformanceStatsPage extends StatelessWidget {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('invoices')
+                        .where('mechanicId', isEqualTo: mechanicId)
+                        .snapshots(),
+                    builder: (context, invoiceSnap) {
+                      if (!invoiceSnap.hasData) {
+                        return const SizedBox.shrink();
+                      }
+                      final docs = invoiceSnap.data!.docs;
+                      final filtered = docs.where((d) {
+                        final data = d.data();
+                        if (data['flagged'] == true) return false;
+                        final status = data['status'] ?? '';
+                        final pay = data['paymentStatus'] ?? '';
+                        return pay == 'paid' || status == 'completed';
+                      }).toList();
+
+                      final jobs = filtered.length;
+                      double earnings = 0.0;
+                      int totalMinutes = 0;
+                      int timeCount = 0;
+                      for (final doc in filtered) {
+                        final data = doc.data();
+                        earnings += (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
+                        final Timestamp? start = data['acceptedAt'] ?? data['mechanicAcceptedAt'] ?? data['mechanicAcceptedTimestamp'];
+                        final Timestamp? end = data['completedAt'] ?? data['jobCompletedTimestamp'] ?? data['closedAt'];
+                        if (start != null && end != null) {
+                          totalMinutes += end.toDate().difference(start.toDate()).inMinutes;
+                          timeCount++;
+                        }
+                      }
+                      final avgHours = timeCount > 0 ? (totalMinutes / timeCount) / 60.0 : 0.0;
+
+                      final ratedDocs = docs.where((d) {
+                        final fb = d.data()['feedback'];
+                        return fb is Map && fb['rating'] != null;
+                      }).toList();
+                      final totalRated = ratedDocs.length;
+                      double ratingSum = 0.0;
+                      for (final doc in ratedDocs) {
+                        final fb = doc.data()['feedback'] as Map<String, dynamic>;
+                        ratingSum += (fb['rating'] as num).toDouble();
+                      }
+                      final avgRating = totalRated > 0 ? ratingSum / totalRated : 0.0;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            title: const Text('Total Jobs Completed'),
+                            trailing: Text('$jobs'),
+                          ),
+                          ListTile(
+                            title: const Text('Average Completion Time (hrs)'),
+                            trailing: Text(avgHours.toStringAsFixed(2)),
+                          ),
+                          ListTile(
+                            title: const Text('Total Earnings (Paid Invoices)'),
+                            trailing: Text('\$${earnings.toStringAsFixed(2)}'),
+                          ),
+                          ListTile(
+                            title: const Text('Average Rating'),
+                            trailing: Text(avgRating.toStringAsFixed(1)),
+                          ),
+                          ListTile(
+                            title: const Text('Total Jobs Rated'),
+                            trailing: Text('$totalRated'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(mechanicId)
+                        .snapshots(),
+                    builder: (context, userSnap) {
+                      if (!userSnap.hasData) {
+                        return const SizedBox.shrink();
+                      }
+                      final data = userSnap.data!.data();
+                      final completedJobs = data?['completedJobs'] ?? 0;
+                      return ListTile(
+                        title: const Text('Total Completed Jobs'),
+                        trailing: Text('$completedJobs'),
+                      );
+                    },
+                  ),
+                  const Divider(),
                   ListTile(
                     title: const Text('Active Hours This Week'),
                     trailing: Text(weekHours.toStringAsFixed(2)),
