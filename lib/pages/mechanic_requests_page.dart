@@ -35,9 +35,14 @@ class _MechanicRequestsPageState extends State<MechanicRequestsPage> {
     return FutureBuilder<Map<String, dynamic>?>(
       future: _mechFuture,
       builder: (context, mechSnap) {
-        if (!mechSnap.hasData) {
-          return Scaffold(
+        if (mechSnap.connectionState != ConnectionState.done) {
+          return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (!mechSnap.hasData) {
+          return const Scaffold(
+            body: Center(child: Text('Unable to load mechanic data')),
           );
         }
         final mechLocation = mechSnap.data?['location'];
