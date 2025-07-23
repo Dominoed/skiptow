@@ -100,13 +100,14 @@ class _DashboardPageState extends State<DashboardPage> {
           body: Stack(
             children: [
               dash,
-              Positioned(
-                top: 16,
-                left: 16,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              if (role != 'mechanic')
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               FloatingActionButton(
                 heroTag: 'refresh_button',
                 onPressed: () {
