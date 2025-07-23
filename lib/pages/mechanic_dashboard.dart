@@ -18,7 +18,7 @@ import 'mechanic_request_queue_page.dart';
 import 'mechanic_requests_page.dart';
 import 'mechanic_job_history_page.dart';
 import 'mechanic_profile_page.dart';
-import 'account_settings_page.dart';
+import 'settings_page.dart';
 import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
 import 'mechanic_radius_history_page.dart';
@@ -908,48 +908,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
 
 
-  Widget _buildRecentActivity() {
-    final stream = FirebaseFirestore.instance
-        .collection('invoices')
-        .where('mechanicId', isEqualTo: widget.userId)
-        .orderBy('createdAt', descending: true)
-        .limit(5)
-        .snapshots();
-
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: stream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(8),
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        final docs = (snapshot.data?.docs ?? [])
-            .where((d) => d.data()['flagged'] != true)
-            .toList();
-
-        return ExpansionTile(
-          title: const Text('Recent Activity'),
-          children: docs.isEmpty
-              ? const [
-                  ListTile(
-                    title: Text('No recent activity'),
-                  )
-                ]
-              : docs
-                  .map(
-                    (doc) => _RecentActivityTile(
-                      invoiceId: doc.id,
-                      data: doc.data(),
-                    ),
-                  )
-                  .toList(),
-        );
-      },
-    );
-  }
 
   Widget _buildReferralQr() {
     if (!_proUser) return const SizedBox.shrink();
@@ -1150,7 +1108,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => AccountSettingsPage(userId: widget.userId),
+                  builder: (_) => const SettingsPage(),
                 ),
               );
             },
@@ -1217,7 +1175,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 if (_suspicious) const SizedBox(height: 8),
                 _buildActiveJobs(),
                 _buildAwaitingFeedback(),
-                _buildRecentActivity(),
                 _buildReferralQr(),
                 Container(
                   width: double.infinity,
@@ -1263,17 +1220,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                         markers: _buildMarkers(),
                         circles: _buildRadiusCircles(),
                       ),
-                      Positioned(
-                        bottom: 16,
-                        right: 16,
-                        child: FloatingActionButton(
-                          heroTag: 'center_refresh_mech',
-                          tooltip: 'Center Map',
-                          mini: true,
-                          onPressed: _refreshLocation,
-                          child: const Icon(Icons.my_location),
-                        ),
-                      ),
+                      // Map refresh is triggered from the dashboard page
                     ],
                   ),
                 ),
@@ -1281,12 +1228,19 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     children: [
-                      Text('Status: $status', style: const TextStyle(fontSize: 20)),
-                      const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _blocked ? null : _onTogglePressed,
-                  child: Text(isActive ? 'Go Inactive' : 'Go Active'),
-                ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Status: $status',
+                              style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: _blocked ? null : _onTogglePressed,
+                            child:
+                                Text(isActive ? 'Go Inactive' : 'Go Active'),
+                          ),
+                        ],
+                      ),
                 SwitchListTile(
                   title: const Text('Temporarily Unavailable'),
                   value: unavailable,
@@ -1449,6 +1403,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       logError('Error refreshing location: $e');
       debugPrint('Error refreshing location: $e');
     }
+  }
+
+  /// Expose location refresh for parent widgets
+  void refreshLocation() {
+    _refreshLocation();
   }
 
   Future<void> _storeLocationHistory() async {
@@ -2034,78 +1993,6 @@ class _ActiveRequestCard extends StatelessWidget {
   }
 }
 
-class _RecentActivityTile extends StatelessWidget {
-  final String invoiceId;
-  final Map<String, dynamic> data;
-
-  const _RecentActivityTile({required this.invoiceId, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final status =
-        (data['invoiceStatus'] ?? data['status'] ?? '').toString();
-    final priceNum = data['finalPrice'] ?? data['estimatedPrice'];
-    final priceVal = priceNum is num ? priceNum.toDouble() : null;
-    final price =
-        priceVal != null ? '\$${priceVal.toStringAsFixed(2)}' : null;
-    final Timestamp? ts = data['createdAt'] ?? data['mechanicAcceptedAt'];
-    final date = ts != null
-        ? DateFormat('MMM d, h:mm a').format(ts.toDate().toLocal())
-        : '';
-
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: FirebaseFirestore.instance
-          .collection('users')
-          .doc(data['customerId'])
-          .get(),
-      builder: (context, snapshot) {
-        final customerName = snapshot.data?.data()?['username'];
-        return ListTile(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Invoice $invoiceId',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Chip(
-                label: Text(
-                  status,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                backgroundColor: _invoiceStatusColor(status),
-              ),
-            ],
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (customerName != null) Text('Customer: $customerName'),
-              if (price != null)
-                Text(
-                  status == 'closed'
-                      ? 'Final Price: $price'
-                      : 'Est. Price: $price',
-                ),
-              if (date.isNotEmpty) Text(date),
-            ],
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => InvoiceDetailPage(
-                  invoiceId: invoiceId,
-                  role: 'mechanic',
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
 
 Color _invoiceStatusColor(String status) {
   switch (status.toLowerCase()) {

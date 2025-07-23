@@ -13,7 +13,7 @@ import 'service_request_history_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
 import 'customer_profile_page.dart';
-import 'account_settings_page.dart';
+import 'settings_page.dart';
 import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'help_support_page.dart';
@@ -357,6 +357,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         ),
       );
     }
+  }
+
+  /// Expose location refresh for parent widgets
+  void refreshLocation() {
+    _refreshLocation();
   }
 
 
@@ -1326,7 +1331,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => AccountSettingsPage(userId: widget.userId),
+                builder: (_) => const SettingsPage(),
               ),
             );
           },
@@ -1463,17 +1468,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   right: 10,
                   child: _buildEtaOverlay(),
                 ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: FloatingActionButton(
-                    heroTag: 'center_refresh_cust',
-                    tooltip: 'Center Map',
-                    mini: true,
-                    onPressed: _refreshLocation,
-                    child: const Icon(Icons.my_location),
-                  ),
-                ),
+                // Map refresh is triggered from the dashboard page
                 Positioned(
                   top: 10,
                   left: 10,

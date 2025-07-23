@@ -11,15 +11,22 @@ import 'help_support_page.dart';
 import 'service_request_history_page.dart';
 import 'vehicle_history_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   final String userId;
   // Track if the role snackbar has been shown for this session
   static bool _snackbarShown = false;
   const DashboardPage({super.key, required this.userId});
 
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final GlobalKey mechKey = GlobalKey();
+  final GlobalKey custKey = GlobalKey();
 
   Future<String?> _getRole() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
     if (doc.exists) {
       return doc.data()?['role'];
     }
@@ -58,7 +65,7 @@ class DashboardPage extends StatelessWidget {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => AdminDashboardPage(userId: userId),
+                  builder: (_) => AdminDashboardPage(userId: widget.userId),
                 ),
               );
             }
@@ -80,9 +87,9 @@ class DashboardPage extends StatelessWidget {
         }
         Widget? dash;
         if (role == 'mechanic') {
-          dash = MechanicDashboard(userId: userId);
+          dash = MechanicDashboard(key: mechKey, userId: widget.userId);
         } else if (role == 'customer') {
-          dash = CustomerDashboard(userId: userId);
+          dash = CustomerDashboard(key: custKey, userId: widget.userId);
         } else {
           return const Scaffold(
             body: Center(child: Text('❌ Unknown role or error')),
@@ -91,16 +98,31 @@ class DashboardPage extends StatelessWidget {
 
         return Scaffold(
           body: dash,
+          floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              FloatingActionButton(
+                heroTag: 'refresh_button',
+                onPressed: () {
+                  if (role == 'mechanic') {
+                    (mechKey.currentState as dynamic?)?.refreshLocation();
+                  } else {
+                    (custKey.currentState as dynamic?)?.refreshLocation();
+                  }
+                },
+                tooltip: 'Refresh Location',
+                child: const Icon(Icons.my_location),
+              ),
+              const SizedBox(height: 12),
               if (role == 'admin') ...[
                 FloatingActionButton.extended(
                   heroTag: 'admin_button',
                   onPressed: () async {
                     final doc = await FirebaseFirestore.instance
                         .collection('users')
-                        .doc(userId)
+                        .doc(widget.userId)
                         .get();
                     final currentRole = doc.data()?['role'];
                     if (currentRole == 'admin') {
@@ -109,7 +131,7 @@ class DashboardPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AdminDashboardPage(userId: userId),
+                            builder: (_) => AdminDashboardPage(userId: widget.userId),
                           ),
                         );
                       }
@@ -148,7 +170,7 @@ class DashboardPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => HelpSupportPage(
-                        userId: userId,
+                        userId: widget.userId,
                         userRole: role ?? 'user',
                       ),
                     ),
@@ -165,7 +187,7 @@ class DashboardPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ServiceRequestHistoryPage(userId: userId),
+                        builder: (_) => ServiceRequestHistoryPage(userId: widget.userId),
                       ),
                     );
                   },
@@ -179,7 +201,7 @@ class DashboardPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => VehicleHistoryPage(userId: userId),
+                        builder: (_) => VehicleHistoryPage(userId: widget.userId),
                       ),
                     );
                   },

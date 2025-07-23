@@ -15,6 +15,9 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String? _role;
   String? _username;
+  double? _radiusMiles;
+  bool? _isActive;
+  bool? _unavailable;
   String _appVersion = '1.0.0';
 
   @override
@@ -34,6 +37,9 @@ class _SettingsPageState extends State<SettingsPage> {
           final data = doc.data();
           _role = data?['role'];
           _username = data?['username'];
+          _radiusMiles = (data?['radiusMiles'] as num?)?.toDouble();
+          _isActive = data?['isActive'] as bool?;
+          _unavailable = data?['unavailable'] as bool?;
         });
       }
     }
@@ -73,6 +79,17 @@ class _SettingsPageState extends State<SettingsPage> {
           SnackBar(content: Text('Failed to delete account: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
     }
   }
 
@@ -117,7 +134,18 @@ class _SettingsPageState extends State<SettingsPage> {
             Text('Username: ${_username ?? 'Loading...'}'),
             Text('Role: ${_role ?? 'Loading...'}'),
             Text('User ID: ${user?.uid ?? 'N/A'}'),
+            if (_role == 'mechanic') ...[
+              const SizedBox(height: 20),
+              Text('Radius: ${_radiusMiles?.toString() ?? 'N/A'} miles'),
+              Text('Status: ${(_isActive ?? false) ? 'Active' : 'Inactive'}'),
+              Text('Temporarily Unavailable: ${(_unavailable ?? false) ? 'Yes' : 'No'}'),
+            ],
             const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _logout,
+              child: const Text('Log Out'),
+            ),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _confirmDelete,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
