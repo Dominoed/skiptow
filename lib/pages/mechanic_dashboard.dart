@@ -44,6 +44,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   StreamSubscription<Position>? positionStream;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? invoiceSubscription;
   bool _initialInvoiceLoad = true;
+  // These streams are initialized once in initState to avoid recreating
+  // Firestore listeners on every build, which caused loading spinners to
+  // briefly appear whenever state updated (e.g. location updates).
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _activeJobsStream;
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _activeRequestsStream;
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _awaitingFeedbackStream;
   bool isActive = false;
   double radiusMiles = 5;
   String status = 'Inactive';
@@ -223,6 +229,28 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   @override
   void initState() {
     super.initState();
+    _activeJobsStream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .where('invoiceStatus', whereIn: ['accepted', 'arrived', 'in_progress'])
+        .snapshots();
+
+    _activeRequestsStream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .where('status', whereIn: [
+          'accepted',
+          'arrived',
+          'in_progress',
+          'completed'
+        ])
+        .snapshots();
+
+    _awaitingFeedbackStream = FirebaseFirestore.instance
+        .collection('invoices')
+        .where('mechanicId', isEqualTo: widget.userId)
+        .where('invoiceStatus', whereIn: ['completed', 'closed'])
+        .snapshots();
     _updateLastActive();
     _verifyAccountData();
     _checkGlobalAlert();
@@ -751,15 +779,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   Widget _buildActiveJobs() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('invoices')
-          .where('mechanicId', isEqualTo: widget.userId)
-          .where('invoiceStatus', whereIn: [
-            'accepted',
-            'arrived',
-            'in_progress'
-          ])
-          .snapshots(),
+      stream: _activeJobsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
@@ -800,16 +820,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   Widget _buildActiveRequests() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('invoices')
-          .where('mechanicId', isEqualTo: widget.userId)
-          .where('status', whereIn: [
-            'accepted',
-            'arrived',
-            'in_progress',
-            'completed'
-          ])
-          .snapshots(),
+      stream: _activeRequestsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
@@ -852,11 +863,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
   Widget _buildAwaitingFeedback() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('invoices')
-          .where('mechanicId', isEqualTo: widget.userId)
-          .where('invoiceStatus', whereIn: ['completed', 'closed'])
-          .snapshots(),
+      stream: _awaitingFeedbackStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
