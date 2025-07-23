@@ -436,3 +436,21 @@ exports.generateStripeOnboardingLink = functions.https
 
     return { url: link.url };
   });
+exports.createProSubscriptionSession = functions.https
+  .onCall(async (data, context) => {
+    const { customerEmail, userId } = data;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      customer_email: customerEmail,
+      line_items: [{
+        price: functions.config().stripe.pro_price_id,
+        quantity: 1,
+      }],
+      success_url: 'https://skiptow.site/prosuccess?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://skiptow.site/procancelled',
+    });
+
+    return { url: session.url };
+  });
