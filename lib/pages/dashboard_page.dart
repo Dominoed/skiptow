@@ -37,7 +37,7 @@ class _DashboardPageState extends State<DashboardPage> {
     await FirebaseAuth.instance.signOut();
     await const FlutterSecureStorage().delete(key: 'session_token');
     // Reset snackbar flag so message shows on next login
-    _snackbarShown = false;
+    DashboardPage._snackbarShown = false;
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,
@@ -75,7 +75,7 @@ class _DashboardPageState extends State<DashboardPage> {
           );
         }
 
-        if (!_snackbarShown && role != null) {
+        if (!DashboardPage._snackbarShown && role != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -83,7 +83,7 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             }
           });
-          _snackbarShown = true;
+          DashboardPage._snackbarShown = true;
         }
         Widget? dash;
         if (role == 'mechanic') {
