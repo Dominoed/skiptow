@@ -979,179 +979,200 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mechanic Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.receipt_long),
-            tooltip: 'View My Invoices',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => InvoicesPage(userId: widget.userId),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.work_outline),
-            tooltip: 'Request Queue',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MechanicRequestsPage(
-                    mechanicId: widget.userId,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.inbox),
-            tooltip: 'Service Requests',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MechanicRequestQueuePage(
-                    mechanicId: widget.userId,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Job History',
-            onPressed: _blocked
-                ? null
-                : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MechanicJobHistoryPage(
-                          mechanicId: widget.userId,
-                        ),
-                      ),
-                    );
-                  },
-          ),
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            tooltip: 'Earnings Report',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MechanicEarningsReportPage(
-                    mechanicId: widget.userId,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.query_stats),
-            tooltip: 'Performance Stats',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      MechanicPerformanceStatsPage(mechanicId: widget.userId),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.timeline),
-            tooltip: 'Radius History',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      MechanicRadiusHistoryPage(mechanicId: widget.userId),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.location_searching),
-            tooltip: 'Location History',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      MechanicLocationHistoryPage(mechanicId: widget.userId),
-                ),
-              );
-            },
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MechanicProfilePage(
-                    mechanicId: widget.userId,
-                    referral: false,
-                  ),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.person,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            label: Text(
-              'Profile',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SettingsPage(),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.settings,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          label: Text(
-            'Account Settings',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
-        ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => HelpSupportPage(
-                  userId: widget.userId,
-                  userRole: 'mechanic',
-                ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
               ),
-            );
-          },
-          icon: Icon(
-            Icons.support_agent,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          label: Text(
-            'Help & Support',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
+              child: const Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('View My Invoices'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => InvoicesPage(userId: widget.userId),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.work_outline),
+              title: const Text('Request Queue'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MechanicRequestsPage(
+                      mechanicId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.inbox),
+              title: const Text('Service Requests'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MechanicRequestQueuePage(
+                      mechanicId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Job History'),
+              onTap: _blocked
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MechanicJobHistoryPage(
+                            mechanicId: widget.userId,
+                          ),
+                        ),
+                      );
+                    },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bar_chart),
+              title: const Text('Earnings Report'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MechanicEarningsReportPage(
+                      mechanicId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.query_stats),
+              title: const Text('Performance Stats'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MechanicPerformanceStatsPage(mechanicId: widget.userId),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.timeline),
+              title: const Text('Radius History'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MechanicRadiusHistoryPage(mechanicId: widget.userId),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_searching),
+              title: const Text('Location History'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MechanicLocationHistoryPage(mechanicId: widget.userId),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MechanicProfilePage(
+                      mechanicId: widget.userId,
+                      referral: false,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Account Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsPage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.support_agent),
+              title: const Text('Help & Support'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HelpSupportPage(
+                      userId: widget.userId,
+                      userRole: 'mechanic',
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mail),
+              title: const Text('Messages'),
+              onTap: () {
+                Navigator.pop(context);
+                _openMessages();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications),
+              title: const Text('Notifications'),
+              onTap: () {
+                Navigator.pop(context);
+                _openNotifications();
+              },
+            ),
+          ],
         ),
-        _buildMessagesIcon(),
-        _buildNotificationsIcon(),
-      ],
       ),
       body: _blocked
           ? const Center(

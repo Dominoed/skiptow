@@ -1251,123 +1251,127 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Customer Map"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.receipt_long),
-            tooltip: 'View My Requests',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ServiceRequestHistoryPage(
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-            },
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CustomerInvoicesPage(
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.receipt,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            label: Text(
-              'My Invoices',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CustomerRequestHistoryPage(
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.history,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            label: Text(
-              'Service History',
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-            ),
-          ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CustomerProfilePage(
-                  userId: widget.userId,
-                ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
               ),
-            );
-          },
-          icon: Icon(
-            Icons.person,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          label: Text(
-            'Profile',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
-        ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const SettingsPage(),
+              child: const Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
-            );
-          },
-          icon: Icon(
-            Icons.settings,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          label: Text(
-            'Account Settings',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('View My Requests'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ServiceRequestHistoryPage(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt),
+              title: const Text('My Invoices'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustomerInvoicesPage(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Service History'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustomerRequestHistoryPage(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustomerProfilePage(
+                      userId: widget.userId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Account Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsPage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.support_agent),
+              title: const Text('Help & Support'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HelpSupportPage(
+                      userId: widget.userId,
+                      userRole: 'customer',
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mail),
+              title: const Text('Messages'),
+              onTap: () {
+                Navigator.pop(context);
+                _openMessages();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications),
+              title: const Text('Notifications'),
+              onTap: () {
+                Navigator.pop(context);
+                _openNotifications();
+              },
+            ),
+          ],
         ),
-        TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => HelpSupportPage(
-                  userId: widget.userId,
-                  userRole: 'customer',
-                ),
-              ),
-            );
-          },
-          icon: Icon(
-            Icons.support_agent,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          label: Text(
-            'Help & Support',
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-          ),
-        ),
-          _buildMessagesIcon(),
-          _buildNotificationsIcon(),
-        ],
       ),
       body: !_locationPermissionGranted
           ? const Center(

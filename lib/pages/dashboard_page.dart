@@ -97,12 +97,16 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         return Scaffold(
-          body: dash,
-          floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-          floatingActionButton: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          body: Stack(
             children: [
+              dash,
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               FloatingActionButton(
                 heroTag: 'refresh_button',
                 onPressed: () {
@@ -218,7 +222,10 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
-        );
+        ),
+      ],
+    ),
+  );
       },
     );
   }
