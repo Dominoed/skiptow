@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:firebase_functions/firebase_functions.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/csv_downloader.dart';
 
@@ -32,6 +34,27 @@ class MechanicEarningsReportPage extends StatelessWidget {
       s = '"$s"';
     }
     return s;
+  }
+
+  Future<void> _startStripeOnboarding(BuildContext context) async {
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('generateStripeOnboardingLink')
+          .call({'userId': mechanicId});
+      final url = (result.data['url'] ?? result.data).toString();
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open onboarding link')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to launch onboarding')),
+      );
+    }
   }
 
   Future<void> _exportCsv(BuildContext context,
@@ -136,6 +159,29 @@ class MechanicEarningsReportPage extends StatelessWidget {
 
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  future: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(mechanicId)
+                      .get(),
+                  builder: (context, userSnap) {
+                    if (userSnap.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    }
+                    final stripeId =
+                        userSnap.data?.data()?['stripeAccountId'];
+                    if (stripeId == null || stripeId.toString().isEmpty) {
+                      return ElevatedButton(
+                        onPressed: () => _startStripeOnboarding(context),
+                        child: const Text('Setup Payouts'),
+                      );
+                    }
+                    return const Text('Payments Status: Ready');
+                  },
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(

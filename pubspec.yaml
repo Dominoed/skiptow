@@ -50,6 +50,7 @@ dependencies:
   firebase_storage: ^11.6.6
   image_picker: ^1.0.7
   pdf: ^3.10.7
+  firebase_functions: ^4.4.0
   uni_links:
     path: packages/uni_links
 

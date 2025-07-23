@@ -146,3 +146,7 @@ firebase_options.dart
 - Pro mechanics can generate and display a personal QR code.
 - QR code links to https://skiptow.site/mechanic/{mechanicId}.
 - Scanning QR opens the app (or web fallback).
+
+## Stripe Connect (Mechanic Payout Setup)
+- Mechanics tap "Setup Payouts" to link their Stripe account.
+- Platform stores stripeAccountId.
