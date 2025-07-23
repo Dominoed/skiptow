@@ -415,7 +415,7 @@ exports.createPaymentIntent = functions.https
     }
   });
 
-  exports.generateStripeOnboardingLink = functions.https
+exports.generateStripeOnboardingLink = functions.https
   .onCall(async (data, context) => {
     const { userId } = data;
 
