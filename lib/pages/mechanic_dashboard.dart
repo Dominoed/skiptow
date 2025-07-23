@@ -28,6 +28,9 @@ import 'mechanic_performance_stats_page.dart';
 import '../services/alert_service.dart';
 import 'mechanic_current_job_page.dart';
 import 'invoice_detail_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'login_page.dart';
 
 BitmapDescriptor? wrenchIcon;
 
@@ -1249,6 +1252,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                         circles: _buildRadiusCircles(),
                       ),
                       // Map refresh is triggered from the dashboard page
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: _buildFloatingButtons(),
+                      ),
                     ],
                   ),
                 ),
@@ -1483,6 +1491,68 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     } catch (e) {
       logError('QR code download error: $e');
     }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    await const FlutterSecureStorage().delete(key: 'session_token');
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
+  }
+
+  Widget _buildFloatingButtons() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: 'refresh_button',
+          onPressed: _refreshLocation,
+          tooltip: 'Refresh Location',
+          child: const Icon(Icons.my_location),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          heroTag: 'settings_button',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+            );
+          },
+          tooltip: 'Settings',
+          child: const Icon(Icons.settings),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          heroTag: 'help_button',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HelpSupportPage(
+                  userId: widget.userId,
+                  userRole: 'mechanic',
+                ),
+              ),
+            );
+          },
+          tooltip: 'Help / Support',
+          child: const Icon(Icons.help_outline),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          heroTag: 'logout_button',
+          onPressed: _logout,
+          tooltip: 'Logout',
+          child: const Icon(Icons.logout),
+        ),
+      ],
+    );
   }
 
   Future<void> _startSession() async {
