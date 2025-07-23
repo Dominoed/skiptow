@@ -438,19 +438,42 @@ exports.generateStripeOnboardingLink = functions.https
   });
 exports.createProSubscriptionSession = functions.https
   .onCall(async (data, context) => {
-    const { customerEmail, userId } = data;
+    const uid = context.auth?.uid;
+    if (!uid) throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+
+    const userDoc = await admin.firestore().collection('users').doc(uid).get();
+    if (!userDoc.exists) throw new functions.https.HttpsError('not-found', 'User not found.');
+
+    const user = userDoc.data();
+    const email = user.email;
+    if (!email) throw new functions.https.HttpsError('invalid-argument', 'Email is missing.');
+
+    const stripe = require('stripe')('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');
+
+    // Create or retrieve Stripe customer
+    const customerList = await stripe.customers.list({ email, limit: 1 });
+    const customer = customerList.data.length > 0
+      ? customerList.data[0]
+      : await stripe.customers.create({
+          email,
+          metadata: { firebaseUID: uid, role: user.role || 'unknown' },
+        });
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       mode: 'subscription',
-      customer_email: customerEmail,
+      payment_method_types: ['card'],
+      customer: customer.id,
       line_items: [{
-        price: functions.config().stripe.pro_price_id,
+        price: 'price_1Ro8DPEYbPKlq1mjYaBzZtJk', 
         quantity: 1,
       }],
-      success_url: 'https://skiptow.site/prosuccess?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://skiptow.site/procancelled',
+      success_url: 'https://skiptow.site/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://skiptow.site/cancel',
+      metadata: {
+        firebaseUID: uid,
+        userRole: user.role || 'unknown',
+      },
     });
 
-    return { url: session.url };
+    return { sessionId: session.id };
   });
