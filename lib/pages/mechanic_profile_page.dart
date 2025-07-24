@@ -64,6 +64,9 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       'completedJobs': completedJobs,
       'totalEarnings': totalEarnings,
       'blocked': userData['blocked'] == true,
+      'pro': userData['isProUser'] == true,
+      'isActive': userData['isActive'] == true,
+      'unavailable': userData['unavailable'] == true,
     };
   }
 
@@ -89,6 +92,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
 
           final data = snapshot.data!;
           final bool blocked = data['blocked'] == true;
+          final bool pro = data['pro'] == true;
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -108,23 +112,29 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                     style: TextStyle(fontStyle: FontStyle.italic),
                   ),
                   const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CreateInvoicePage(
-                            customerId:
-                                FirebaseAuth.instance.currentUser?.uid ?? '',
-                            mechanicId: widget.mechanicId,
-                            mechanicUsername: data['username'] ?? 'Unnamed',
-                            distance: 0,
-                          ),
+                  pro
+                      ? ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CreateInvoicePage(
+                                  customerId:
+                                      FirebaseAuth.instance.currentUser?.uid ??
+                                          '',
+                                  mechanicId: widget.mechanicId,
+                                  mechanicUsername: data['username'] ?? 'Unnamed',
+                                  distance: 0,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Request This Mechanic'),
+                        )
+                      : const Text(
+                          'This mechanic does not accept referral requests.',
+                          style: TextStyle(fontStyle: FontStyle.italic),
                         ),
-                      );
-                    },
-                    child: const Text('Request This Mechanic'),
-                  ),
                 ],
               ],
             ),
