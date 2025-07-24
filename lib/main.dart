@@ -252,7 +252,6 @@ class _MyAppState extends State<MyApp> {
         darkTheme: darkTheme,
         themeMode: ThemeMode.system,
         routes: {
-          '/': (context) => const LoginPage(),
           '/success': (context) => const SuccessPage(),
           '/cancel': (context) => const CancelPage(),
         },
@@ -270,7 +269,6 @@ class _MyAppState extends State<MyApp> {
         darkTheme: darkTheme,
         themeMode: ThemeMode.system,
         routes: {
-          '/': (context) => const LoginPage(),
           '/success': (context) => const SuccessPage(),
           '/cancel': (context) => const CancelPage(),
         },
@@ -285,7 +283,6 @@ class _MyAppState extends State<MyApp> {
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
       routes: {
-        '/': (context) => const LoginPage(),
         '/success': (context) => const SuccessPage(),
         '/cancel': (context) => const CancelPage(),
       },

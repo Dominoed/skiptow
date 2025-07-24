@@ -136,7 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
           .httpsCallable('createProSubscriptionSession')
           .call();
       final sessionId = (result.data['sessionId'] ?? result.data).toString();
-      final url = 'https://checkout.stripe.com/pay/$sessionId';
+      final url = '$sessionId'; //instead of 'https://checkout.stripe.com/pay/$sessionId';
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -188,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Subscribe to Pro - $10/month'),
+                      : const Text('Subscribe to Pro - \$10/month'),
                 )
             ] else ...[
               const Text('You have an active Pro subscription.'),
