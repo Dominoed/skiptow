@@ -30,6 +30,9 @@ migrate_working_dir/
 
 # Firebase secrets
 firebase.json
+firebase-messaging-sw.js
+web/firebase-messaging-sw.js
+/web/firebase-messaging-sw.js
 
 # Build outputs (cross-platform)
 build/

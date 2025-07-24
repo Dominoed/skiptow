@@ -71,19 +71,6 @@ SkipTow is currently open source for community contributions; it may become clos
 3. After payment on Stripe the user is redirected back to the success page.
 4. Server-side logic marks the account's `isProUser` field as `true` once the subscription is active.
 
-## File Structure
-lib/main.dart
-lib/pages/
-├── login_page.dart
-├── signup_page.dart
-├── dashboard_page.dart
-├── mechanic_dashboard.dart
-├── customer_dashboard.dart
-├── create_invoice_page.dart
-├── messages_page.dart
-lib/services/auth_service.dart
-firebase_options.dart
-
 ## Data Structure (Firestore)
 
 ### users/{userId}
