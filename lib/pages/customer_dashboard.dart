@@ -9,7 +9,7 @@ import 'package:skiptow/services/error_logger.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import '../services/alert_service.dart';
-import 'service_request_history_page.dart';
+import 'jobs_page.dart';
 import 'messages_page.dart';
 import 'customer_invoices_page.dart';
 import 'customer_profile_page.dart';
@@ -1267,13 +1267,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             ),
             ListTile(
               leading: const Icon(Icons.receipt_long),
-              title: const Text('View My Requests'),
+              title: const Text('Jobs'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ServiceRequestHistoryPage(
+                    builder: (_) => JobsPage(
                       userId: widget.userId,
                     ),
                   ),
@@ -1297,13 +1297,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text('Service History'),
+              title: const Text('Jobs'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => CustomerRequestHistoryPage(
+                    builder: (_) => JobsPage(
                       userId: widget.userId,
                     ),
                   ),

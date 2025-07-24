@@ -13,7 +13,7 @@ import 'utils.dart';
 import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
-import 'pages/mechanic_request_queue_page.dart';
+import 'pages/jobs_page.dart';
 import 'pages/customer_invoices_page.dart';
 import 'pages/invoice_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,9 +42,7 @@ void _handleNotificationTap(NotificationResponse response) {
       .get()
       .then((doc) {
     final role = doc.data()?['role'];
-    final defaultPage = role == 'customer'
-        ? CustomerInvoicesPage(userId: user.uid)
-        : MechanicRequestQueuePage(mechanicId: user.uid);
+    final defaultPage = JobsPage(userId: user.uid);
 
     if (response.payload != null && response.payload!.isNotEmpty) {
       try {

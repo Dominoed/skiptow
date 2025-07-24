@@ -4,22 +4,21 @@ import 'package:intl/intl.dart';
 import 'invoice_detail_page.dart';
 import '../utils.dart';
 
-/// Displays a list of invoices for the logged in user.
+/// Displays a list of jobs for the logged in user.
 ///
 /// The page automatically determines if the user is a customer or
 /// mechanic by checking the `users` collection. It then queries the
 /// `invoices` collection for documents associated with the user.
-class InvoicesPage extends StatefulWidget {
+class JobsPage extends StatefulWidget {
   final String userId;
 
-  const InvoicesPage({super.key, required this.userId});
+  const JobsPage({super.key, required this.userId});
 
   @override
-  State<InvoicesPage> createState() => _InvoicesPageState();
+  State<JobsPage> createState() => _JobsPageState();
 }
 
-class _InvoicesPageState extends State<InvoicesPage> {
-
+class _JobsPageState extends State<JobsPage> {
   // Fetch the role of the current user so we know which field to query.
   Future<String?> _getRole() async {
     final doc = await FirebaseFirestore.instance
@@ -28,7 +27,6 @@ class _InvoicesPageState extends State<InvoicesPage> {
         .get();
     return doc.data()?['role'] as String?;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +57,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
         query = query.orderBy('timestamp', descending: true);
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Invoices')),
+          appBar: AppBar(title: const Text('Jobs')),
           body: Column(
             children: [
               Expanded(
@@ -74,14 +72,14 @@ class _InvoicesPageState extends State<InvoicesPage> {
                         .where((d) => d.data()['flagged'] != true)
                         .toList();
                     if (docs.isEmpty) {
-                      return const Center(child: Text('No invoices found'));
+                      return const Center(child: Text('No jobs found'));
                     }
 
                     return ListView.builder(
                       itemCount: docs.length,
                       itemBuilder: (context, index) {
                         final data = docs[index].data();
-                        return _InvoiceTile(
+                        return _JobTile(
                           invoiceId: docs[index].id,
                           data: data,
                           role: role!,
@@ -100,14 +98,14 @@ class _InvoicesPageState extends State<InvoicesPage> {
   }
 }
 
-/// Widget to display a single invoice in the list.
-class _InvoiceTile extends StatelessWidget {
+/// Widget to display a single job in the list.
+class _JobTile extends StatelessWidget {
   final String invoiceId;
   final Map<String, dynamic> data;
   final String role;
   final String currentUserId;
 
-  const _InvoiceTile({
+  const _JobTile({
     required this.invoiceId,
     required this.data,
     required this.role,
