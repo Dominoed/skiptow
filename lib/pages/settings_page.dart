@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'login_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:firebase_functions/firebase_functions.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -18,6 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   double? _radiusMiles;
   bool? _isActive;
   bool? _unavailable;
+  bool _proUser = false;
   String _appVersion = '1.0.0';
 
   @override
@@ -40,6 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _radiusMiles = (data?['radiusMiles'] as num?)?.toDouble();
           _isActive = data?['isActive'] as bool?;
           _unavailable = data?['unavailable'] as bool?;
+          _proUser = data?['isProUser'] == true;
         });
       }
     }
@@ -120,6 +124,28 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _upgradeToPro() async {
+    try {
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('createProSubscriptionSession')
+          .call();
+      final sessionId = (result.data['sessionId'] ?? result.data).toString();
+      final url = 'https://checkout.stripe.com/pay/$sessionId';
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open checkout')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to start subscription')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -139,6 +165,15 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('Radius: ${_radiusMiles?.toString() ?? 'N/A'} miles'),
               Text('Status: ${(_isActive ?? false) ? 'Active' : 'Inactive'}'),
               Text('Temporarily Unavailable: ${(_unavailable ?? false) ? 'Yes' : 'No'}'),
+            ],
+            const SizedBox(height: 20),
+            if (!_proUser) ...[
+              ElevatedButton(
+                onPressed: _upgradeToPro,
+                child: const Text('Upgrade to Pro - $10/month'),
+              ),
+            ] else ...[
+              const Text('You have an active Pro subscription.'),
             ],
             const SizedBox(height: 20),
             ElevatedButton(

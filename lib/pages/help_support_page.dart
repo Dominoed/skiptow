@@ -26,7 +26,7 @@ class HelpSupportPage extends StatelessWidget {
   }
 
   Future<void> _contactSupport() async {
-    final uri = Uri.parse('mailto:support@skiptow.com');
+    final uri = Uri.parse('mailto:skiptowhelp@gmail.com');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -134,7 +134,7 @@ class HelpSupportPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: _contactSupport,
-                child: const Text('Email support@skiptow.com'),
+                child: const Text('Email SkipTowHelp@gmail.com'),
               ),
             ),
             const SizedBox(height: 20),
