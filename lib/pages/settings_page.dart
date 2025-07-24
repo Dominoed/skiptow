@@ -21,6 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool? _isActive;
   bool? _unavailable;
   bool _proUser = false;
+  bool _loadingPro = false;
   String _appVersion = '1.0.0';
 
   @override
@@ -125,6 +126,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _upgradeToPro() async {
+    if (_loadingPro) return;
+    setState(() {
+      _loadingPro = true;
+    });
     try {
       final result = await FirebaseFunctions.instance
           .httpsCallable('createProSubscriptionSession')
@@ -143,6 +148,12 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to start subscription')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingPro = false;
+        });
+      }
     }
   }
 
@@ -168,10 +179,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
             const SizedBox(height: 20),
             if (!_proUser) ...[
-              ElevatedButton(
-                onPressed: _upgradeToPro,
-                child: const Text('Upgrade to Pro - $10/month'),
-              ),
+                ElevatedButton(
+                  onPressed: _loadingPro ? null : _upgradeToPro,
+                  child: _loadingPro
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Upgrade to Pro - $10/month'),
+                )
             ] else ...[
               const Text('You have an active Pro subscription.'),
             ],

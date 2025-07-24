@@ -438,42 +438,83 @@ exports.generateStripeOnboardingLink = functions.https
   });
 exports.createProSubscriptionSession = functions.https
   .onCall(async (data, context) => {
-    const uid = context.auth?.uid;
-    if (!uid) throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+    try {
+      const uid = context.auth?.uid;
+      if (!uid) throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
 
-    const userDoc = await admin.firestore().collection('users').doc(uid).get();
-    if (!userDoc.exists) throw new functions.https.HttpsError('not-found', 'User not found.');
+      const userDoc = await admin.firestore().collection('users').doc(uid).get();
+      if (!userDoc.exists) throw new functions.https.HttpsError('not-found', 'User not found.');
 
-    const user = userDoc.data();
-    const email = user.email;
-    if (!email) throw new functions.https.HttpsError('invalid-argument', 'Email is missing.');
+      const user = userDoc.data();
+      const email = user.email;
+      if (!email) throw new functions.https.HttpsError('invalid-argument', 'Email is missing.');
 
-    const stripe = require('stripe')('sklive');
+      const stripe = require('stripe')('sklive');
 
-    // Create or retrieve Stripe customer
-    const customerList = await stripe.customers.list({ email, limit: 1 });
-    const customer = customerList.data.length > 0
-      ? customerList.data[0]
-      : await stripe.customers.create({
-          email,
-          metadata: { firebaseUID: uid, role: user.role || 'unknown' },
-        });
+      // Create or retrieve Stripe customer
+      const customerList = await stripe.customers.list({ email, limit: 1 });
+      const customer = customerList.data.length > 0
+        ? customerList.data[0]
+        : await stripe.customers.create({
+            email,
+            metadata: { firebaseUID: uid, role: user.role || 'unknown' },
+          });
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      customer: customer.id,
-      line_items: [{
-        price: 'price_1Ro8DPEYbPKlq1mjYaBzZtJk', 
-        quantity: 1,
-      }],
-      success_url: 'https://skiptow.site/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://skiptow.site/cancel',
-      metadata: {
-        firebaseUID: uid,
-        userRole: user.role || 'unknown',
-      },
-    });
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        customer: customer.id,
+        line_items: [{
+          price: 'price_1Ro8DPEYbPKlq1mjYaBzZtJk',
+          quantity: 1,
+        }],
+        success_url: 'https://skiptow.site/success?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: 'https://skiptow.site/cancel',
+        metadata: {
+          firebaseUID: uid,
+          userRole: user.role || 'unknown',
+        },
+      });
 
-    return { sessionId: session.id };
+      await admin.firestore().collection('users').doc(uid).update({
+        subscriptionStatus: 'pending',
+      });
+
+      return { sessionId: session.id };
+    } catch (err) {
+      console.error('Stripe session creation failed:', err);
+      throw new functions.https.HttpsError('internal', 'Failed to create Stripe session');
+    }
   });
+
+exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = functions.config().stripe.webhook_secret;
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const uid = session.metadata?.firebaseUID;
+    if (uid) {
+      const update = {
+        isPro: true,
+        isProUser: true,
+        subscriptionStatus: 'active',
+      };
+      if (session.subscription) {
+        update.stripeSubscriptionId = session.subscription;
+      }
+      await admin.firestore().collection('users').doc(uid).update(update).catch(err => {
+        console.error('Error updating user after checkout:', err);
+      });
+    }
+  }
+
+  res.json({ received: true });
+});
