@@ -293,6 +293,7 @@ class _RequestCard extends StatelessWidget {
           'mechanicAcceptedAt': FieldValue.serverTimestamp(),
           'acceptedAt': FieldValue.serverTimestamp(),
           'status': 'accepted',
+          'invoiceStatus': 'accepted',
         });
       });
       if (context.mounted) {
@@ -364,6 +365,7 @@ class _RequestCard extends StatelessWidget {
       'mechanicAcceptedAt': FieldValue.serverTimestamp(),
       'acceptedAt': FieldValue.serverTimestamp(),
       'status': 'accepted',
+      'invoiceStatus': 'accepted',
     });
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -395,6 +397,7 @@ class _RequestCard extends StatelessWidget {
     if (confirmed != true) return;
     final update = <String, dynamic>{
       'status': 'cancelled',
+      'invoiceStatus': 'cancelled',
       'cancelledBy': 'mechanic',
     };
     if (data['mechanicResponded'] is List) {

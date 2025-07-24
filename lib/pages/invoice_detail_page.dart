@@ -1292,6 +1292,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         'mechanicAcceptedAt': FieldValue.serverTimestamp(),
                         'acceptedAt': FieldValue.serverTimestamp(),
                         'status': 'accepted',
+                        'invoiceStatus': 'accepted',
                       });
                     });
                     if (context.mounted) {
@@ -1326,7 +1327,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   await FirebaseFirestore.instance
                       .collection('invoices')
                       .doc(widget.invoiceId)
-                      .update({'status': 'arrived'});
+                      .update({'status': 'arrived', 'invoiceStatus': 'arrived'});
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1352,7 +1353,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                   await FirebaseFirestore.instance
                       .collection('invoices')
                       .doc(widget.invoiceId)
-                      .update({'status': 'in_progress'});
+                      .update({'status': 'in_progress', 'invoiceStatus': 'in_progress'});
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1539,6 +1540,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                         .doc(widget.invoiceId)
                         .update({
                       'status': 'cancelled',
+                      'invoiceStatus': 'cancelled',
                       'cancelledBy': 'mechanic',
                     });
 

@@ -1946,6 +1946,7 @@ class _ActiveRequestCard extends StatelessWidget {
         final existing = await docRef.get();
         final updateData = {
           'status': 'completed',
+          'invoiceStatus': 'completed',
           'finalPrice': price,
           'postJobNotes': notes,
           'platformFee': fee,
