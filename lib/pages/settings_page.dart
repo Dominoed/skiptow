@@ -6,6 +6,7 @@ import 'login_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'mechanic_qr_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -191,6 +192,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 )
             ] else ...[
               const Text('You have an active Pro subscription.'),
+              const SizedBox(height: 8),
+              if (_role == 'mechanic')
+                ElevatedButton(
+                  onPressed: () {
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    if (uid != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MechanicQrPage(mechanicId: uid),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Referral QR Code'),
+                ),
             ],
             const SizedBox(height: 20),
             ElevatedButton(
