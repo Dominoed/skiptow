@@ -58,6 +58,18 @@ SkipTow is currently open source for community contributions; it may become clos
 - Pro customers can open multiple simultaneous requests, non-pro users can't have more than one open request at a time.
 - Pro mechanics can have multiple open requests at once, but non-pro users can't.
 - Stripe billing handled externally.
+- Pro mechanics can generate and share QR codes linking directly to their profile.
+
+### Billing Status Logic
+- Each user document contains an `isProUser` boolean flag.
+- When `true` the app hides the upgrade button and Pro features are enabled.
+- When `false` or missing the account is treated as a free tier user.
+
+### Pro Onboarding Flow
+1. Navigate to **Settings** and tap **Upgrade to Pro - $10/month**.
+2. The app calls the `createProSubscriptionSession` cloud function to create a Stripe Checkout session.
+3. After payment on Stripe the user is redirected back to the success page.
+4. Server-side logic marks the account's `isProUser` field as `true` once the subscription is active.
 
 ## File Structure
 lib/main.dart
