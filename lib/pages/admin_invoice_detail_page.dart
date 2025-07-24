@@ -182,6 +182,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
       'mechanicUsername': newUsername,
       'mechanicAccepted': false,
       'status': 'active',
+      'invoiceStatus': 'active',
       'reassignmentHistory': FieldValue.arrayUnion([
         {
           'mechanicId': mechanicId,
@@ -259,6 +260,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
     final existing = await docRef.get();
     final updateData = {
       'invoiceStatus': 'closed',
+      'status': 'closed',
       'adminOverride': true,
     };
     if (existing.data()?['closedAt'] == null) {
@@ -308,6 +310,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
         .doc(widget.invoiceId)
         .update({
       'invoiceStatus': 'cancelled',
+      'status': 'cancelled',
       'adminOverride': true,
     });
 

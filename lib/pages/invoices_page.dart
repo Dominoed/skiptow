@@ -364,6 +364,7 @@ class _InvoiceTile extends StatelessWidget {
                       .doc(invoiceId)
                       .update({
                     'status': 'completed',
+                    'invoiceStatus': 'completed',
                     'finalPrice': price,
                     'postJobNotes': notes,
                     'platformFee': fee,
@@ -416,7 +417,7 @@ class _InvoiceTile extends StatelessWidget {
                 await FirebaseFirestore.instance
                     .collection('invoices')
                     .doc(invoiceId)
-                    .update({'status': 'cancelled'});
+                    .update({'status': 'cancelled', 'invoiceStatus': 'cancelled'});
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

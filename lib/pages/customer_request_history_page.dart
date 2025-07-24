@@ -371,7 +371,8 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                           .collection('invoices')
                                           .doc(doc.id)
                                           .update({
-                                        'invoiceStatus': 'cancelled'
+                                        'invoiceStatus': 'cancelled',
+                                        'status': 'cancelled'
                                       });
 
                                       if (context.mounted) {
