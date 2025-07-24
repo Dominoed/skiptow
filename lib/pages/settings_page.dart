@@ -187,7 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Upgrade to Pro - $10/month'),
+                      : const Text('Subscribe to Pro - $10/month'),
                 )
             ] else ...[
               const Text('You have an active Pro subscription.'),

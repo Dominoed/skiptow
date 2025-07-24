@@ -66,7 +66,7 @@ SkipTow is currently open source for community contributions; it may become clos
 - When `false` or missing the account is treated as a free tier user.
 
 ### Pro Onboarding Flow
-1. Navigate to **Settings** and tap **Upgrade to Pro - $10/month**.
+1. Navigate to **Settings** and tap **Subscribe to Pro - $10/month**.
 2. The app calls the `createProSubscriptionSession` cloud function to create a Stripe Checkout session.
 3. After payment on Stripe the user is redirected back to the success page.
 4. Server-side logic marks the account's `isProUser` field as `true` once the subscription is active.
