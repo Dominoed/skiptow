@@ -14,9 +14,7 @@ import '../services/image_downloader.dart';
 import 'package:intl/intl.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
-import 'mechanic_request_queue_page.dart';
-import 'mechanic_requests_page.dart';
-import 'mechanic_job_history_page.dart';
+import 'jobs_page.dart';
 import 'mechanic_profile_page.dart';
 import 'settings_page.dart';
 import 'mechanic_earnings_report_page.dart';
@@ -165,19 +163,18 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
     _activeRequestsBannerVisible = true;
     ScaffoldMessenger.of(context).showMaterialBanner(
       MaterialBanner(
-        content: const Text('⚠️ You have active service requests.'),
+        content: const Text('⚠️ You have active jobs.'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) =>
-                      MechanicRequestsPage(mechanicId: widget.userId),
+                  builder: (_) => JobsPage(userId: widget.userId),
                 ),
               );
             },
-            child: const Text('View Current Requests'),
+            child: const Text('View Current Jobs'),
           ),
         ],
       ),
@@ -513,12 +510,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       backgroundTimer?.cancel();
     }
 
-    // Navigate to the request queue page when activating
+    // Navigate to the jobs page when activating
     if (goingActive && mounted) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => MechanicRequestQueuePage(mechanicId: widget.userId),
+          builder: (_) => JobsPage(userId: widget.userId),
         ),
       );
     }
@@ -592,7 +589,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
           return AlertDialog(
             title: const Text('Confirm Activation'),
             content: const Text(
-                'Are you ready to go active and start receiving service requests?'),
+                'Are you ready to go active and start receiving jobs?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -633,7 +630,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             change.doc.data()?['flagged'] != true) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('New service request received')),
+              const SnackBar(content: Text('New job received')),
             );
           }
         }
@@ -1011,50 +1008,16 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
             ),
             ListTile(
               leading: const Icon(Icons.work_outline),
-              title: const Text('Request Queue'),
+              title: const Text('Jobs'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => MechanicRequestsPage(
-                      mechanicId: widget.userId,
-                    ),
+                    builder: (_) => JobsPage(userId: widget.userId),
                   ),
                 );
               },
-            ),
-            ListTile(
-              leading: const Icon(Icons.inbox),
-              title: const Text('Service Requests'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MechanicRequestQueuePage(
-                      mechanicId: widget.userId,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Job History'),
-              onTap: _blocked
-                  ? null
-                  : () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MechanicJobHistoryPage(
-                            mechanicId: widget.userId,
-                          ),
-                        ),
-                      );
-                    },
             ),
             ListTile(
               leading: const Icon(Icons.bar_chart),
@@ -1225,7 +1188,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                       const SizedBox(height: 4),
                       Text(
                         isActive
-                            ? 'Customers in your radius can now send you service requests.'
+                            ? 'Customers in your radius can now send you jobs.'
                             : 'You are not visible to customers.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(

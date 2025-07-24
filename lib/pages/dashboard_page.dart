@@ -8,7 +8,7 @@ import 'settings_page.dart';
 import 'admin_dashboard.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'help_support_page.dart';
-import 'service_request_history_page.dart';
+import 'jobs_page.dart';
 import 'vehicle_history_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -192,11 +192,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ServiceRequestHistoryPage(userId: widget.userId),
+                        builder: (_) => JobsPage(userId: widget.userId),
                       ),
                     );
                   },
-                  tooltip: 'My Service Requests',
+                  tooltip: 'My Jobs',
                   child: const Icon(Icons.history),
                 ),
                 const SizedBox(height: 12),
