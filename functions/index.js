@@ -478,6 +478,8 @@ exports.createProSubscriptionSession = functions.https
 
       await admin.firestore().collection('users').doc(uid).update({
         subscriptionStatus: 'pending',
+        subscriptionRole: user.role || 'unknown',
+        stripeCustomerId: customer.id,
       });
 
       return { sessionId: session.id };
@@ -506,6 +508,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         isPro: true,
         isProUser: true,
         subscriptionStatus: 'active',
+        subscriptionRole: session.metadata?.userRole || 'unknown',
       };
       if (session.subscription) {
         update.stripeSubscriptionId = session.subscription;
