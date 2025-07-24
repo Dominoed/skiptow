@@ -448,7 +448,7 @@ exports.createProSubscriptionSession = functions.https
     const email = user.email;
     if (!email) throw new functions.https.HttpsError('invalid-argument', 'Email is missing.');
 
-    const stripe = require('stripe')('REPLACE_WITH_KEY');
+    const stripe = require('stripe')('sklive');
 
     // Create or retrieve Stripe customer
     const customerList = await stripe.customers.list({ email, limit: 1 });
