@@ -19,6 +19,8 @@ import 'pages/invoice_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pages/maintenance_mode_page.dart';
 import 'pages/mechanic_profile_page.dart';
+import 'pages/success_page.dart';
+import 'pages/cancel_page.dart';
 import 'deep_link_state.dart';
 
 void main() async {
@@ -249,6 +251,11 @@ class _MyAppState extends State<MyApp> {
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: ThemeMode.system,
+        routes: {
+          '/': (context) => const LoginPage(),
+          '/success': (context) => const SuccessPage(),
+          '/cancel': (context) => const CancelPage(),
+        },
         home: const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
@@ -262,6 +269,11 @@ class _MyAppState extends State<MyApp> {
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: ThemeMode.system,
+        routes: {
+          '/': (context) => const LoginPage(),
+          '/success': (context) => const SuccessPage(),
+          '/cancel': (context) => const CancelPage(),
+        },
         home: MaintenanceModePage(message: _maintenanceMessage),
       );
     }
@@ -272,6 +284,11 @@ class _MyAppState extends State<MyApp> {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.system,
+      routes: {
+        '/': (context) => const LoginPage(),
+        '/success': (context) => const SuccessPage(),
+        '/cancel': (context) => const CancelPage(),
+      },
       home: _currentUserId != null
           ? DashboardPage(userId: _currentUserId!)
           : const LoginPage(),
