@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'help_support_page.dart';
 import 'jobs_page.dart';
 import 'vehicle_history_page.dart';
+import 'package:skiptow/services/push_notification_service.dart';
 
 class DashboardPage extends StatefulWidget {
   final String userId;
@@ -34,6 +35,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _logout(BuildContext context) async {
+    await PushNotificationService().unregisterDevice(widget.userId);
     await FirebaseAuth.instance.signOut();
     await const FlutterSecureStorage().delete(key: 'session_token');
     // Reset snackbar flag so message shows on next login
