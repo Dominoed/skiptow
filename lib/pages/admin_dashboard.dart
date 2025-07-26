@@ -765,7 +765,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Future<void> _logout() async {
-    await PushNotificationService().unregisterDevice(widget.userId);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await PushNotificationService().unregisterDevice(user.uid);
+      } catch (_) {}
+    }
     await FirebaseAuth.instance.signOut();
     await const FlutterSecureStorage().delete(key: 'session_token');
     if (mounted) {
