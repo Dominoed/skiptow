@@ -236,19 +236,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     final ThemeData lightTheme =
         ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange));
-    final ThemeData darkTheme = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.orange,
-        brightness: Brightness.dark,
-      ),
-    );
 
     if (_loading || _maintenanceMode == null) {
       return MaterialApp(
         navigatorKey: navigatorKey,
         theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: ThemeMode.system,
         routes: {
           '/': (context) => const LoginPage(),
           '/success': (context) => const SuccessPage(),
@@ -265,8 +257,6 @@ class _MyAppState extends State<MyApp> {
         title: 'SkipTow',
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: ThemeMode.system,
         routes: {
           '/': (context) => const LoginPage(),
           '/success': (context) => const SuccessPage(),
@@ -280,8 +270,6 @@ class _MyAppState extends State<MyApp> {
       title: 'SkipTow',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
       routes: {
         '/': (context) => const LoginPage(),
         '/success': (context) => const SuccessPage(),
