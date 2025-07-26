@@ -47,6 +47,22 @@ class PushNotificationService {
     });
   }
 
+  /// Removes the current device token for the given user in Firestore
+  /// and attempts to delete it from Firebase Messaging.
+  Future<void> unregisterDevice(String userId) async {
+    final token = await _messaging.getToken();
+    if (token == null) return;
+    final ref = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('tokens')
+        .doc(token);
+    await ref.delete();
+    try {
+      await _messaging.deleteToken();
+    } catch (_) {}
+  }
+
   /// Display the notification locally when received.
   Future<void> handleMessage(RemoteMessage message) async {
     final notification = message.notification;
