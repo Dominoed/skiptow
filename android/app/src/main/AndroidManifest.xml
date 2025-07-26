@@ -37,6 +37,9 @@
                     android:scheme="https"
                     android:host="skiptow.site"
                     android:pathPrefix="/mechanic/" />
+                <data
+                    android:scheme="https"
+                    android:host="checkout.stripe.com" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
