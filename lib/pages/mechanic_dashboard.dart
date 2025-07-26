@@ -984,9 +984,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
               ),
-              child: const Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Text(
+                  'Mechanic Dashboard >',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
               ),
             ),
             ListTile(
