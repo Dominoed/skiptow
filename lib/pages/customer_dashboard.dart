@@ -43,7 +43,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _alertBannerVisible = false;
   bool _hasAccountData = true;
   bool _suspicious = false;
-  bool _proUser = false;
+  bool _isPro = false;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
   bool _drawerOpen = false;
@@ -258,7 +258,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     final data = doc.data();
     _suspicious = data?['suspicious'] == true;
-    _proUser = getBool(data, 'isProUser');
+    _isPro = getBool(data, 'isPro');
 
     _loadWrenchIcon();
     _checkLocationPermissionOnLoad();
@@ -416,7 +416,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   void _loadMechanics() async {
     Query<Map<String, dynamic>> query =
         FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'mechanic');
-    if (!_proUser) {
+    if (!_isPro) {
       query = query.where('isActive', isEqualTo: true);
     }
     final snapshot = await query.get();
@@ -429,7 +429,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
-      if (!_proUser && data['unavailable'] == true) continue;
+      if (!_isPro && data['unavailable'] == true) continue;
       if (data.containsKey('location') && data.containsKey('radiusMiles')) {
         final double lat = data['location']['lat'];
         final double lng = data['location']['lng'];
@@ -447,12 +447,12 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               1609.34; // meters to miles
         }
 
-        if (_proUser) {
+        if (_isPro) {
           insideActive = true;
           count++;
         }
 
-        if (distance != null && !_proUser) {
+        if (distance != null && !_isPro) {
             if (distance <= radius) {
               insideActive = true;
             } else if (distance <= extendedRadius) {
@@ -472,7 +472,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               position: LatLng(lat, lng),
               icon: wrenchIcon ??
                   BitmapDescriptor.defaultMarkerWithHue(
-                    _proUser || (distance != null && distance <= radius)
+                    _isPro || (distance != null && distance <= radius)
                         ? BitmapDescriptor.hueGreen
                         : BitmapDescriptor.hueAzure,
                   ),
@@ -548,7 +548,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         inRange[doc.id] = {
           'username': data['username'] ?? 'Unnamed',
           'distance': distance,
-          'withinActive': _proUser ? true : distance != null && distance <= radius,
+          'withinActive': _isPro ? true : distance != null && distance <= radius,
         };
       }
     }
@@ -1538,7 +1538,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   const SizedBox(height: 10),
                   _buildTrackMechanicButton(),
                   const SizedBox(height: 10),
-                  if (_proUser) ...[
+                  if (_isPro) ...[
                     _buildActiveRequestsPanel(),
                     const SizedBox(height: 10),
                   ],

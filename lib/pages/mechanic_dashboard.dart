@@ -66,7 +66,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   bool _hasAccountData = true;
   bool _blocked = false;
   bool _suspicious = false;
-  bool _proUser = false;
+  bool _isPro = false;
   int completedJobs = 0;
   bool unavailable = false;
   String? _currentSessionId;
@@ -284,8 +284,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       return;
     }
 
-    _proUser = getBool(data, 'isProUser');
-    if (_proUser) {
+    _isPro = getBool(data, 'isPro');
+    if (_isPro) {
       _loadReferralLink();
     }
 
@@ -918,7 +918,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
 
 
   Widget _buildReferralQr() {
-    if (!_proUser) return const SizedBox.shrink();
+    if (!_isPro) return const SizedBox.shrink();
     if (_referralLink == null) {
       return const Padding(
         padding: EdgeInsets.all(8),
