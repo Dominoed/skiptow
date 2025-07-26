@@ -20,8 +20,7 @@ import 'mechanic_profile_page.dart';
 import 'settings_page.dart';
 import 'mechanic_earnings_report_page.dart';
 import 'mechanic_notifications_page.dart';
-import 'mechanic_radius_history_page.dart';
-import 'mechanic_location_history_page.dart';
+import 'mechanic_history_page.dart';
 import 'help_support_page.dart';
 import 'mechanic_performance_stats_page.dart';
 import '../services/alert_service.dart';
@@ -1042,20 +1041,6 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.timeline),
-              title: const Text('Radius History'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MechanicRadiusHistoryPage(mechanicId: widget.userId),
-                  ),
-                );
-              },
-            ),
-            ListTile(
               leading: const Icon(Icons.location_searching),
               title: const Text('Location History'),
               onTap: () {
@@ -1064,7 +1049,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        MechanicLocationHistoryPage(mechanicId: widget.userId),
+                        MechanicHistoryPage(mechanicId: widget.userId),
                   ),
                 );
               },
