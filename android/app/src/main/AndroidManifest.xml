@@ -40,6 +40,9 @@
                 <data
                     android:scheme="https"
                     android:host="checkout.stripe.com" />
+                <data
+                    android:scheme="https"
+                    android:host="stripe.com" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
