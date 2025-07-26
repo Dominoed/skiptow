@@ -102,7 +102,8 @@ class _DashboardPageState extends State<DashboardPage> {
               dash,
               if (role != 'mechanic')
                 Positioned(
-                  top: 16,
+                  // Position buttons below the app bar
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
                   left: 16,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
