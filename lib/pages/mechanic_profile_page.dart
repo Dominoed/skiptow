@@ -90,6 +90,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
           final data = snapshot.data!;
           final bool blocked = data['blocked'] == true;
           final bool pro = data['pro'] == true;
+          final bool isCurrentUser =
+              widget.mechanicId == FirebaseAuth.instance.currentUser?.uid;
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -98,6 +100,8 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
                 Text('Username: ${data['username']}'),
                 Text('Email: ${data['email']}'),
                 Text('Member Since: ${formatDate(data['createdAt'] as Timestamp?)}'),
+                if (isCurrentUser)
+                  Text('Basic or Pro: ${pro ? 'Pro' : 'Basic'}'),
                 const SizedBox(height: 20),
                 Text('Total Jobs Completed: ${data['completedJobs']}'),
                 Text('Total Earnings: \$${data['totalEarnings'].toStringAsFixed(2)}'),
