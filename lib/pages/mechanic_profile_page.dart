@@ -65,7 +65,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
       'completedJobs': completedJobs,
       'totalEarnings': totalEarnings,
       'blocked': userData['blocked'] == true,
-      'pro': userData['isProUser'] == true,
+      'pro': userData['isPro'] == true,
       'isActive': userData['isActive'] == true,
       'unavailable': userData['unavailable'] == true,
     };

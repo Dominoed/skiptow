@@ -71,7 +71,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         .collection('users')
         .doc(uid)
         .get();
-    final isPro = getBool(userDoc.data(), 'isProUser');
+    final isPro = getBool(userDoc.data(), 'isPro');
     QuerySnapshot<Map<String, dynamic>> snapshot =
         await FirebaseFirestore.instance
             .collection('invoices')
@@ -157,7 +157,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
         .collection('users')
         .doc(uid)
         .get();
-    final isPro = getBool(userDoc.data(), 'isProUser');
+    final isPro = getBool(userDoc.data(), 'isPro');
 
     final activeSnapshot = await FirebaseFirestore.instance
         .collection('invoices')

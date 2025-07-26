@@ -153,7 +153,7 @@ class _RequestCard extends StatelessWidget {
         .collection('users')
         .doc(mechanicId)
         .get();
-    final isPro = getBool(mechDoc.data(), 'isProUser');
+    final isPro = getBool(mechDoc.data(), 'isPro');
     if (isPro) return true;
 
     final activeSnap = await FirebaseFirestore.instance

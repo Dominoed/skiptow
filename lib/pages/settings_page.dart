@@ -22,8 +22,9 @@ class _SettingsPageState extends State<SettingsPage> {
   double? _radiusMiles;
   bool? _isActive;
   bool? _unavailable;
-  bool _proUser = false;
+  bool _isPro = false;
   bool _loadingPro = false;
+  bool _loadingCancel = false;
   String _appVersion = '1.0.0';
 
   @override
@@ -46,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _radiusMiles = (data?['radiusMiles'] as num?)?.toDouble();
           _isActive = data?['isActive'] as bool?;
           _unavailable = data?['unavailable'] as bool?;
-          _proUser = data?['isProUser'] == true;
+          _isPro = data?['isPro'] == true;
         });
       }
     }
@@ -170,6 +171,38 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _cancelPro() async {
+    if (_loadingCancel) return;
+    setState(() {
+      _loadingCancel = true;
+    });
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('cancelProSubscription')
+          .call();
+      if (mounted) {
+        setState(() {
+          _isPro = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Subscription cancelled')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to cancel subscription')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingCancel = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -191,18 +224,30 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('Temporarily Unavailable: ${(_unavailable ?? false) ? 'Yes' : 'No'}'),
             ],
             const SizedBox(height: 20),
-            if (!_proUser) ...[
-                ElevatedButton(
-                  onPressed: _loadingPro ? null : _upgradeToPro,
-                  child: _loadingPro
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Subscribe to Pro - \$10/month'),
-                )
-            ] else ...[
+            ElevatedButton(
+              onPressed: _isPro || _loadingPro ? null : _upgradeToPro,
+              child: _loadingPro
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Subscribe to Pro - \$10/month'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: !_isPro || _loadingCancel ? null : _cancelPro,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: _loadingCancel
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Unsubscribe'),
+            ),
+            if (_isPro) ...[
+              const SizedBox(height: 8),
               const Text('You have an active Pro subscription.'),
               const SizedBox(height: 8),
               if (_role == 'mechanic')

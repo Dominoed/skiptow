@@ -508,7 +508,6 @@ exports.handleStripeWebhook = functions.https.onRequest({rawBody:true}, async (r
     if (uid) {
       const update = {
         isPro: true,
-        isProUser: true,
         subscriptionStatus: 'active',
         subscriptionRole: session.metadata?.userRole || 'unknown',
       };
@@ -522,4 +521,15 @@ exports.handleStripeWebhook = functions.https.onRequest({rawBody:true}, async (r
   }
 
   res.json({ received: true });
+});
+
+exports.cancelProSubscription = functions.https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+  await admin.firestore().collection('users').doc(uid).update({
+    isPro: false,
+    subscriptionStatus: 'cancelled',
+  });
+  // TODO: cancel Stripe subscription here
+  return { success: true };
 });
