@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import "../utils.dart";
 
 import 'invoice_detail_page.dart';
 
@@ -33,18 +34,6 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'closed':
-        return Colors.blueGrey;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.yellow[700]!;
-    }
-  }
 
   Color _paymentColor(String status) {
     switch (status) {
@@ -127,23 +116,11 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
     }
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
-
-  @override
   Widget build(BuildContext context) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
         .collection('invoices')
         .where('customerId', isEqualTo: widget.userId);
 
-    if (_filter == 'active') {
-      query = query.where('status', isEqualTo: 'active');
-    } else if (_filter == 'completed') {
-      query = query.where('status', whereIn: ['completed', 'closed']);
-    }
 
     query = query.orderBy('createdAt', descending: true);
 
@@ -209,7 +186,7 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: _statusColor(status),
+                                    color: statusColor(status),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -221,7 +198,7 @@ class _CustomerRequestHistoryPageState extends State<CustomerRequestHistoryPage>
                             ),
                             const SizedBox(height: 4),
                             if (mechanic != null) Text('Mechanic: $mechanic'),
-                            Text('Created: ${_formatDate(createdAt)}'),
+                            Text('Created: ${formatDate(createdAt)}'),
                             if (estimated != null)
                               Text('Estimated: \${estimated.toDouble().toStringAsFixed(2)}'),
                             if (finalPrice != null)

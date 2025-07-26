@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../services/csv_downloader.dart';
+import "../utils.dart";
 import '../services/pdf_downloader.dart';
 import '../services/invoice_pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -83,28 +84,6 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
         .toList();
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return dt.toString().split('.').first;
-  }
-
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'paid':
-      case 'paid_in_person':
-        return Colors.green;
-      case 'overdue':
-        return Colors.red;
-      case 'pending':
-      case 'unpaid':
-        return Colors.yellow;
-      case 'closed':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
 
   String _csvEscape(String? input) {
     if (input == null) return '';
@@ -125,8 +104,8 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
     final finalPrice = (data['finalPrice'] as num?)?.toString() ?? '';
     final fee = (data['platformFee'] as num?)?.toString() ?? '';
     final paymentStatus = (data['paymentStatus'] ?? '').toString();
-    final created = _formatDate(data['createdAt'] as Timestamp?);
-    final closed = _formatDate(data['closedAt'] as Timestamp?);
+    final created = formatDate(data['createdAt'] as Timestamp?);
+    final closed = formatDate(data['closedAt'] as Timestamp?);
     final override = (data['adminOverride'] == true).toString();
     final row = [
       invoiceNum,
@@ -345,9 +324,9 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Text('Created: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+        Text('Created: ${formatDate(data['createdAt'] as Timestamp?)}'),
         if (data['closedAt'] != null)
-          Text('Closed: ${_formatDate(data['closedAt'] as Timestamp?)}'),
+          Text('Closed: ${formatDate(data['closedAt'] as Timestamp?)}'),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -357,7 +336,7 @@ class _AdminInvoiceDetailPageState extends State<AdminInvoiceDetailPage> {
                 status,
                 style: const TextStyle(color: Colors.white),
               ),
-              backgroundColor: _statusColor(status),
+              backgroundColor: statusColor(status),
             ),
           ],
         ),

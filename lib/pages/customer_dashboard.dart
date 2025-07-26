@@ -640,22 +640,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'closed':
-        return Colors.blueGrey;
-      case 'cancelled':
-        return Colors.red;
-      case 'paid':
-        return Colors.green;
-      case 'overdue':
-        return Colors.red;
-      default:
-        return Colors.yellow[700]!;
-    }
-  }
 
   Widget _buildActiveInvoiceOverlay() {
     final stream = FirebaseFirestore.instance
@@ -895,7 +879,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       status,
                       style: const TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: _statusColor(status),
+                    backgroundColor: statusColor(status),
                   ),
                 ],
               ),
@@ -980,7 +964,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                       status,
                       style: const TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: _statusColor(status),
+                    backgroundColor: statusColor(status),
                   ),
                 ],
               ),

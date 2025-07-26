@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'admin_invoice_detail_page.dart';
 import 'admin_user_detail_page.dart';
+import "../utils.dart";
 import 'dashboard_page.dart';
 
 /// Detailed view of a specific report for admins.
@@ -74,11 +75,6 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
     return data;
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate();
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _saveNotes() async {
@@ -130,7 +126,7 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(data['reportText']),
             ),
-          if (ts != null) Text('Date: ${_formatDate(ts)}'),
+          if (ts != null) Text('Date: ${formatDate(ts)}'),
           Text('Status: $status'),
           const SizedBox(height: 16),
           Wrap(
