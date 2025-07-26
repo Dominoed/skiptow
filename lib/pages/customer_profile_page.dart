@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import "../utils.dart";
 
 /// Displays the logged-in customer's basic profile information.
@@ -51,6 +52,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       'createdAt': userData['createdAt'],
       'totalRequests': totalRequests,
       'totalPaid': totalPaid,
+      'pro': userData['isPro'] == true,
     };
   }
 
@@ -70,6 +72,9 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
           }
 
           final data = snapshot.data!;
+          final bool pro = data['pro'] == true;
+          final bool isCurrentUser =
+              widget.userId == FirebaseAuth.instance.currentUser?.uid;
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -78,6 +83,8 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 Text('Username: ${data['username']}'),
                 Text('Email: ${data['email']}'),
                 Text('Member Since: ${formatDate(data['createdAt'] as Timestamp?)}'),
+                if (isCurrentUser)
+                  Text('Basic or Pro: ${pro ? 'Pro' : 'Basic'}'),
                 const SizedBox(height: 20),
                 Text('Total Service Requests: ${data['totalRequests']}'),
                 Text('Total Paid: \$${data['totalPaid'].toStringAsFixed(2)}'),
