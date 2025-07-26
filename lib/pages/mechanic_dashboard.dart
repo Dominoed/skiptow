@@ -511,15 +511,10 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       backgroundTimer?.cancel();
     }
 
-    // Navigate to the jobs page when activating
-    if (goingActive && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => JobsPage(userId: widget.userId),
-        ),
-      );
-    }
+    // No automatic navigation when activating; mechanic stays on dashboard
+    // Previously the app redirected to the jobs page when the mechanic
+    // toggled active. This behavior has been removed so mechanics can
+    // remain on the dashboard after going active.
   }
 
   Future<void> _toggleUnavailable(bool value) async {
