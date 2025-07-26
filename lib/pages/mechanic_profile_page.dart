@@ -71,8 +71,6 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
     };
   }
 
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

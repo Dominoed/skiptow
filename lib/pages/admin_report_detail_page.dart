@@ -75,8 +75,6 @@ class _AdminReportDetailPageState extends State<AdminReportDetailPage> {
     return data;
   }
 
-  }
-
   Future<void> _saveNotes() async {
     await FirebaseFirestore.instance
         .collection('reports')
