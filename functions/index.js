@@ -2,8 +2,9 @@
 // firebase-functions API (e.g. functions.firestore.document()).
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
-const stripe = require('stripe')(functions.config().stripe.secret);
-const stripeClientId = functions.config().stripe.client_id;
+const stripe = require('stripe')('sklive_KEYREPLACE');
+const stripeClientId = 'ca_clientidKEYREPLACE';
+const endpointSecret = 'whsec_KEYREPLACE';
 const YOUR_FRONTEND_REDIRECT_URL = 'https://skiptow.site/connected';  // Replace ASAP ! with whatever redirect needed after stripe onboarding
 
 admin.initializeApp();
@@ -449,7 +450,7 @@ exports.createProSubscriptionSession = functions.https
       const email = user.email;
       if (!email) throw new functions.https.HttpsError('invalid-argument', 'Email is missing.');
 
-      const stripe = require('stripe')('sklive');
+      const stripe = require('stripe')('sklive_KEYREPLACE');
 
       // Create or retrieve Stripe customer
       const customerList = await stripe.customers.list({ email, limit: 1 });
@@ -465,7 +466,7 @@ exports.createProSubscriptionSession = functions.https
         payment_method_types: ['card'],
         customer: customer.id,
         line_items: [{
-          price: 'price_1Ro8DPEYbPKlq1mjYaBzZtJk',
+          price: 'price_KEYREPLACE',
           quantity: 1,
         }],
         success_url: 'https://skiptow.site/success?session_id={CHECKOUT_SESSION_ID}',
@@ -482,27 +483,28 @@ exports.createProSubscriptionSession = functions.https
         stripeCustomerId: customer.id,
       });
 
-      return { sessionId: session.id };
+      return { sessionId: session.id, url: session.url }; //url instead of just id
     } catch (err) {
       console.error('Stripe session creation failed:', err);
       throw new functions.https.HttpsError('internal', 'Failed to create Stripe session');
     }
   });
 
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+exports.handleStripeWebhook = functions.https.onRequest({rawBody:true}, async (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const endpointSecret = functions.config().stripe.webhook_secret;
+  const endpointSecret = 'whsec_KEYREPLACE';
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const uid = session.metadata?.firebaseUID;
+    console.log('Payment Received:',session.id);
     if (uid) {
       const update = {
         isPro: true,

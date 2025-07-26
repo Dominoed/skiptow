@@ -135,14 +135,21 @@ class _SettingsPageState extends State<SettingsPage> {
       final result = await FirebaseFunctions.instance
           .httpsCallable('createProSubscriptionSession')
           .call();
-      final sessionId = (result.data['sessionId'] ?? result.data).toString();
-      final url = '$sessionId'; //instead of 'https://checkout.stripe.com/pay/$sessionId';
-      final uri = Uri.parse(url);
+      final url = (result.data['url'] ?? result.data['sessionId'])?.toString();
+      if (url == null) throw Exception('Checkout URL missing');
+      final uri = Uri.parse(url.startsWith('http')
+          ? url
+          : 'https://checkout.stripe.com/pay/$url');
+      var launched = false;
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      if (!launched) {
+        launched = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      }
+      if (!launched && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open checkout')),
+          const SnackBar(content: Text("Could not open url")),
         );
       }
     } catch (e) {
