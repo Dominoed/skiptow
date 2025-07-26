@@ -14,7 +14,6 @@ import 'messages_page.dart';
 import 'customer_invoices_page.dart';
 import 'customer_profile_page.dart';
 import 'settings_page.dart';
-import 'customer_request_history_page.dart';
 import 'customer_notifications_page.dart';
 import 'help_support_page.dart';
 import 'customer_mechanic_tracking_page.dart';
