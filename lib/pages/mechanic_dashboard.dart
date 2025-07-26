@@ -350,8 +350,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Future<void> _loadWrenchIcon() async {
+    final double size = kIsWeb ? 32 : 48;
     wrenchIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
+      ImageConfiguration(size: Size(size, size)),
       'assets/icons/wrench.png',
     );
     setState(() {});
@@ -711,15 +712,8 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       };
     }
 
-    return {
-      Marker(
-        markerId: const MarkerId('mechanic'),
-        position: pos,
-        icon:
-            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(title: 'You (Mechanic)'),
-      ),
-    };
+    // When inactive, rely on Google's blue location dot only.
+    return {};
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -1205,7 +1199,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                           target: initialMapPos,
                           zoom: 13,
                         ),
-                        myLocationEnabled: !kIsWeb,
+                        myLocationEnabled: !kIsWeb && !isActive,
                         myLocationButtonEnabled: !kIsWeb,
                         markers: _buildMarkers(),
                         circles: _buildRadiusCircles(),

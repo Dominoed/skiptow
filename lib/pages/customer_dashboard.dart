@@ -406,8 +406,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   }
 
   Future<void> _loadWrenchIcon() async {
+    final double size = kIsWeb ? 32 : 48;
     wrenchIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
+      ImageConfiguration(size: Size(size, size)),
       'assets/icons/wrench.png',
     );
     if (mounted) setState(() {});
