@@ -46,6 +46,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   bool _proUser = false;
   int availableMechanicCount = 0;
   bool _noMechanicsSnackbarShown = false;
+  bool _drawerOpen = false;
   bool _requestAcceptedBannerVisible = false;
   bool _completedBannerVisible = false;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _acceptedInvoiceSub;
@@ -1252,6 +1253,11 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       appBar: AppBar(
         title: const Text("Customer Map"),
       ),
+      onDrawerChanged: (open) {
+        setState(() {
+          _drawerOpen = open;
+        });
+      },
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -1416,6 +1422,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                 ),
+                if (!_drawerOpen) ...[
                 Positioned(
                   top: 10,
                   left: 10,
@@ -1552,6 +1559,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                     const SizedBox(height: 10),
                   ],
                   _buildRecentRequestsPanel(),
+                ],
                 ],
               ),
             ),
