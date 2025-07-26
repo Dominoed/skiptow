@@ -76,6 +76,23 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+/// Navigate to a mechanic profile if a referral deep link was opened
+/// before authentication.
+void processPendingRedirect() {
+  final id = pendingRedirectMechanicId;
+  if (id != null) {
+    pendingRedirectMechanicId = null;
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => MechanicProfilePage(
+          mechanicId: id,
+          referral: true,
+        ),
+      ),
+    );
+  }
+}
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -151,6 +168,7 @@ class _MyAppState extends State<MyApp> {
           _currentUserId = user.uid;
         });
         _pushService.registerDevice(user.uid);
+        processPendingRedirect();
       }
     });
     setState(() { _loading = false; });
