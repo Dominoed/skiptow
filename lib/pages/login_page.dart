@@ -78,6 +78,17 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            Text(
+              'SkipTow',
+              style: Theme.of(context).textTheme.headlineMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Never go to a garage again',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
             TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email')),
             TextField(controller: _passController, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
             const SizedBox(height: 20),
