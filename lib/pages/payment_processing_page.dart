@@ -46,9 +46,9 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('Payment')),
-      body: Center(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Payment')),
+      body: const Center(
         child: CircularProgressIndicator(),
       ),
     );
