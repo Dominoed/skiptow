@@ -525,11 +525,45 @@ exports.handleStripeWebhook = functions.https.onRequest({rawBody:true}, async (r
 
 exports.cancelProSubscription = functions.https.onCall(async (data, context) => {
   const uid = context.auth?.uid;
-  if (!uid) throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
-  await admin.firestore().collection('users').doc(uid).update({
-    isPro: false,
-    subscriptionStatus: 'cancelled',
-  });
-  // TODO: cancel Stripe subscription here
-  return { success: true };
+  if (!uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
+  }
+
+  // Get user document
+  const userDoc = await admin.firestore().collection('users').doc(uid).get();
+  const userData = userDoc.data();
+  const subscriptionId = userData?.stripeSubscriptionId;
+
+  if (!subscriptionId) {
+    throw new functions.https.HttpsError('not-found', 'No active Stripe subscription found.');
+  }
+
+  try {
+    // Cancel subscription at period end (user stays Pro until billing cycle ends)
+    await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true
+    });
+
+    // Optionally: fetch subscription to get exact end date
+    const updatedSub = await stripe.subscriptions.retrieve(subscriptionId);
+
+    // Update Firestore
+    await admin.firestore().collection('users').doc(uid).update({
+      isPro: false,
+      subscriptionStatus: 'cancelled',
+      stripeSubscriptionStatus: updatedSub.status,
+      subscriptionCancelAt: updatedSub.cancel_at * 1000 || null, // timestamp in ms
+    });
+
+    return {
+      success: true,
+      cancelledAt: updatedSub.cancel_at,
+      currentPeriodEnd: updatedSub.current_period_end,
+      stripeStatus: updatedSub.status
+    };
+  } catch (error) {
+    console.error('Stripe cancellation failed:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to cancel subscription.');
+  }
 });
+
