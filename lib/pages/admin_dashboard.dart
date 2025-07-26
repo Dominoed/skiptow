@@ -16,6 +16,7 @@ import 'admin_customer_history_page.dart';
 import 'admin_broadcast_message_page.dart';
 import 'admin_report_detail_page.dart';
 import 'admin_message_center_page.dart';
+import 'package:skiptow/services/push_notification_service.dart';
 
 /// Simple admin dashboard for monitoring the platform.
 class AdminDashboardPage extends StatefulWidget {
@@ -763,6 +764,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Future<void> _logout() async {
+    await PushNotificationService().unregisterDevice(widget.userId);
     await FirebaseAuth.instance.signOut();
     await const FlutterSecureStorage().delete(key: 'session_token');
     if (mounted) {

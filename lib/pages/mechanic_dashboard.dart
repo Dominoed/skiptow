@@ -12,6 +12,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/image_downloader.dart';
 import 'package:intl/intl.dart';
+import 'package:skiptow/services/push_notification_service.dart';
 import 'invoices_page.dart';
 import 'messages_page.dart';
 import 'jobs_page.dart';
@@ -1457,6 +1458,10 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   }
 
   Future<void> _logout() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await PushNotificationService().unregisterDevice(user.uid);
+    }
     await FirebaseAuth.instance.signOut();
     await const FlutterSecureStorage().delete(key: 'session_token');
     if (mounted) {

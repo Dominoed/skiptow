@@ -128,6 +128,9 @@ SkipTow is currently open source for community contributions; it may become clos
 7. Deploy Cloud Functions:
    - From the `functions` directory run `npm install`.
    - Deploy with `firebase deploy --only functions`.
+8. Create Firestore indexes:
+   - Ensure the `firestore.indexes.json` file is present in the project root.
+   - Deploy the indexes with `firebase deploy --only firestore:indexes`.
 
 ## Next Steps
 - Payment processing integration

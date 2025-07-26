@@ -142,6 +142,9 @@ class _MessagesPageState extends State<MessagesPage> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Error loading messages'));
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -221,6 +224,9 @@ class _MessagesPageState extends State<MessagesPage> {
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: query.snapshots(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(child: Text('Error loading messages'));
+              }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
