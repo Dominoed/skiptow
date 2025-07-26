@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
+import "../utils.dart";
 import 'dashboard_page.dart';
 
 class AdminMechanicPerformancePage extends StatefulWidget {
@@ -153,11 +154,6 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
     return NumberFormat.currency(locale: 'en_US', symbol: '\$').format(value);
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return 'N/A';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
 
   Widget _statItem(String label, String value) {
     return Padding(
@@ -265,7 +261,7 @@ class _AdminMechanicPerformancePageState extends State<AdminMechanicPerformanceP
                 children: [
                   Text('Mechanic Username: ${data['username']}'),
                   Text('User ID: ${widget.mechanicId}'),
-                  Text('Registration Date: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+                  Text('Registration Date: ${formatDate(data['createdAt'] as Timestamp?)}'),
                   Text('Blocked: ${data['blocked'] ? 'Yes' : 'No'}'),
                   Text('Flagged: ${data['flagged'] ? 'Yes' : 'No'}'),
                   Text('Suspicious: ${data['suspicious'] ? 'Yes' : 'No'}'),

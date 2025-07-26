@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import "../utils.dart";
 import 'package:intl/intl.dart';
 import '../services/csv_downloader.dart';
 import 'login_page.dart';
@@ -940,11 +941,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return dt.toString().split('.').first;
-  }
 
   String _formatMonthYear(Timestamp? ts) {
     if (ts == null) return '';
@@ -1533,7 +1529,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           (data['username'] ?? data['displayName'] ?? '').toString();
       final email = (data['email'] ?? '').toString();
       final role = (data['role'] ?? '').toString();
-      final created = _formatDate(data['createdAt'] as Timestamp?);
+      final created = formatDate(data['createdAt'] as Timestamp?);
       final blocked = data['blocked'] == true ? 'yes' : 'no';
       final flagged = data['flagged'] == true ? 'yes' : 'no';
       final suspicious = data['suspicious'] == true ? 'yes' : 'no';

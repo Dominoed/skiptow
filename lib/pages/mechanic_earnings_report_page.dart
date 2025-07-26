@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:cloud_functions/cloud_functions.dart';
+import "../utils.dart";
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/csv_downloader.dart';
@@ -21,11 +22,6 @@ class MechanicEarningsReportPage extends StatelessWidget {
     return NumberFormat.currency(locale: 'en_US', symbol: '\$').format(value);
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('yyyy-MM-dd').format(dt);
-  }
 
   String _csvEscape(String? input) {
     if (input == null) return '';
@@ -66,7 +62,7 @@ class MechanicEarningsReportPage extends StatelessWidget {
       final invoiceNum = (data['invoiceNumber'] ?? doc.id).toString();
       final customer = (data['customerUsername'] ?? '').toString();
       final amount = (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
-      final date = _formatDate(data['closedAt'] as Timestamp?);
+      final date = formatDate(data['closedAt'] as Timestamp?);
       final row = [
         invoiceNum,
         customer,
@@ -241,7 +237,7 @@ class MechanicEarningsReportPage extends StatelessWidget {
                     final invoiceNum = data['invoiceNumber'] ?? docs[index].id;
                     final amount =
                         (data['finalPrice'] as num?)?.toDouble() ?? 0.0;
-                    final date = _formatDate(data['closedAt'] as Timestamp?);
+                    final date = formatDate(data['closedAt'] as Timestamp?);
                     final customer = (data['customerUsername'] ?? '').toString();
                     return Card(
                       margin: const EdgeInsets.all(8),

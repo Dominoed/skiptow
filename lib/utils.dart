@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import "package:intl/intl.dart";
 
 bool getBool(Map<String, dynamic>? data, String key, {bool defaultValue = false}) {
   final value = data?[key];
@@ -80,5 +81,30 @@ Future<void> showCustomerRatingDialog(
         'feedbackText': controller.text.trim(),
       'timestamp': FieldValue.serverTimestamp(),
     });
+  }
+}
+
+/// Format a Firestore [Timestamp] for display.
+String formatDate(Timestamp? ts) {
+  if (ts == null) return '';
+  final dt = ts.toDate().toLocal();
+  return DateFormat('MMMM d, yyyy').format(dt);
+}
+
+/// Map invoice status strings to colors used throughout the UI.
+Color statusColor(String status) {
+  switch (status) {
+    case 'completed':
+      return Colors.green;
+    case 'closed':
+      return Colors.blueGrey;
+    case 'cancelled':
+      return Colors.red;
+    case 'paid':
+      return Colors.green;
+    case 'overdue':
+      return Colors.red;
+    default:
+      return Colors.yellow[700]!;
   }
 }

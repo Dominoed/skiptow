@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import "../utils.dart";
 
 /// Displays the logged-in customer's basic profile information.
 class CustomerProfilePage extends StatefulWidget {
@@ -53,11 +54,6 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     };
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return 'N/A';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +77,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
               children: [
                 Text('Username: ${data['username']}'),
                 Text('Email: ${data['email']}'),
-                Text('Member Since: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+                Text('Member Since: ${formatDate(data['createdAt'] as Timestamp?)}'),
                 const SizedBox(height: 20),
                 Text('Total Service Requests: ${data['totalRequests']}'),
                 Text('Total Paid: \$${data['totalPaid'].toStringAsFixed(2)}'),

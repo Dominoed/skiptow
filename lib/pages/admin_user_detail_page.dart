@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import "../utils.dart";
 
 /// Displays detailed account information for any user.
 class AdminUserDetailPage extends StatefulWidget {
@@ -88,11 +89,6 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
     };
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return 'N/A';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
 
   Future<void> _toggleBlock() async {
     final newStatus = !_isBlocked;
@@ -211,7 +207,7 @@ class _AdminUserDetailPageState extends State<AdminUserDetailPage> {
             Text('User ID: ${widget.userId}'),
             Text('Email: ${data['email']}'),
             Text('Role: $role'),
-            Text("Account Created: ${_formatDate(data['createdAt'] as Timestamp?)}"),
+            Text("Account Created: ${formatDate(data['createdAt'] as Timestamp?)}"),
             Text('Blocked: ${data['blocked'] == true ? 'Yes' : 'No'}'),
             Text('Flagged: ${data['flagged'] == true ? 'Yes' : 'No'}'),
             Text('Suspicious: ${data['suspicious'] == true ? 'Yes' : 'No'}'),

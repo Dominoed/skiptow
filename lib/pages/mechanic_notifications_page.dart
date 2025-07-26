@@ -9,12 +9,6 @@ class MechanicNotificationsPage extends StatelessWidget {
 
   const MechanicNotificationsPage({super.key, required this.userId});
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MM/dd h:mm a').format(dt);
-  }
-
   @override
   Widget build(BuildContext context) {
     final stream = FirebaseFirestore.instance
@@ -63,7 +57,7 @@ class MechanicNotificationsPage extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    Text(_formatDate(ts)),
+                    Text(formatDate(ts)),
                   ],
                 ),
                 trailing: read
