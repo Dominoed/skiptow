@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Placeholder page that simulates Stripe payment processing.
 class PaymentProcessingPage extends StatefulWidget {
@@ -11,54 +13,43 @@ class PaymentProcessingPage extends StatefulWidget {
 }
 
 class _PaymentProcessingPageState extends State<PaymentProcessingPage> {
-  bool _done = false;
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () async {
-      await FirebaseFirestore.instance
-          .collection('invoices')
-          .doc(widget.invoiceId)
-          .update({'paymentStatus': 'paid'});
-      if (mounted) {
-        setState(() {
-          _done = true;
-        });
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) {
-            Navigator.pop(context);
-          }
-        });
+    _startCheckout();
+  }
+
+  Future<void> _startCheckout() async {
+    try {
+      final response = await FirebaseFunctions.instance
+          .httpsCallable('createStripeCheckout')
+          .call({
+        'invoiceId': widget.invoiceId,
+        'userId': FirebaseAuth.instance.currentUser!.uid,
+      });
+      final checkoutUrl = response.data['url'];
+      if (await canLaunch(checkoutUrl)) {
+        await launch(checkoutUrl);
+      } else {
+        throw 'Could not launch $checkoutUrl';
       }
-    });
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment error: $e')),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
+    return const Scaffold(
+      appBar: AppBar(title: Text('Payment')),
       body: Center(
-        child: !_done
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Processing payment via Stripe…'),
-                ],
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Payment successful (placeholder).'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Return to Invoice'),
-                  ),
-                ],
-              ),
+        child: CircularProgressIndicator(),
       ),
     );
   }
