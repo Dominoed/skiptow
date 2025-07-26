@@ -1662,12 +1662,33 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               ),
             ),
           );
-        }
-        if (widget.role == 'customer' || widget.role == 'mechanic') {
-          children.add(
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
+      }
+      if (widget.role == 'customer' &&
+          (paymentStatus == 'pending' || paymentStatus == 'overdue') &&
+          invoiceStatus != 'closed' &&
+          invoiceStatus != 'cancelled') {
+        children.add(
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PaymentProcessingPage(invoiceId: widget.invoiceId),
+                  ),
+                );
+              },
+              child: const Text('💳 Pay Now'),
+            ),
+          ),
+        );
+      }
+      if (widget.role == 'customer' || widget.role == 'mechanic') {
+        children.add(
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
                 onPressed: () => _showReportDialog(data),
                 child: const Text('Report Issue with This Service'),
               ),

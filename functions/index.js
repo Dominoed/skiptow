@@ -437,6 +437,44 @@ exports.generateStripeOnboardingLink = functions.https
 
     return { url: link.url };
   });
+
+exports.createStripeCheckout = functions.https
+  .onCall(async (data, context) => {
+    const { invoiceId, userId } = data;
+    if (!invoiceId || !userId) {
+      throw new functions.https.HttpsError('invalid-argument', 'Missing invoiceId or userId');
+    }
+
+    const db = admin.firestore();
+    const invoiceSnap = await db.collection('invoices').doc(invoiceId).get();
+    if (!invoiceSnap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Invoice not found');
+    }
+    const invoice = invoiceSnap.data();
+    const amount = Math.round(((invoice.finalPrice || invoice.estimatedPrice || 0) * 100));
+
+    const userSnap = await db.collection('users').doc(userId).get();
+    const email = userSnap.exists ? userSnap.data().email : undefined;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `Invoice #${invoice.invoiceNumber || invoiceId}` },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      }],
+      success_url: 'https://skiptow.site/success',
+      cancel_url: 'https://skiptow.site/cancel',
+      metadata: { invoiceId, firebaseUID: userId },
+    });
+
+    return { url: session.url };
+  });
 exports.createProSubscriptionSession = functions.https
   .onCall(async (data, context) => {
     try {
@@ -504,7 +542,15 @@ exports.handleStripeWebhook = functions.https.onRequest({rawBody:true}, async (r
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const uid = session.metadata?.firebaseUID;
+    const invoiceId = session.metadata?.invoiceId;
     console.log('Payment Received:',session.id);
+    if (invoiceId) {
+      await admin.firestore().collection('invoices').doc(invoiceId).update({
+        paymentStatus: 'paid'
+      }).catch(err => {
+        console.error('Error updating invoice after checkout:', err);
+      });
+    }
     if (uid) {
       const update = {
         isPro: true,
