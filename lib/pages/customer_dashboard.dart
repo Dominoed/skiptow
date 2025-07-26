@@ -1516,42 +1516,42 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
                                     },
                               child: const Text("Any Tech"),
                             ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: _hasAvailableMechanics
-                            ? () {
-                              setState(() {
-                                chooseTechMode = true;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("☝🏽 Find and tap a mechanic icon")),
-                              );
-                            }
-                            : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('No mechanics available nearby.')),
-                              );
-                            },
-                        child: const Text("Choose Tech"),
-                      ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: _hasAvailableMechanics
+                                  ? () {
+                                      setState(() {
+                                        chooseTechMode = true;
+                                      });
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text("☝🏽 Find and tap a mechanic icon")),
+                                      );
+                                    }
+                                  : () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('No mechanics available nearby.')),
+                                      );
+                                    },
+                              child: const Text("Choose Tech"),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 10),
+                      _buildTrackMechanicButton(),
+                      const SizedBox(height: 10),
+                      if (_isPro) ...[
+                        _buildActiveRequestsPanel(),
+                        const SizedBox(height: 10),
+                      ],
+                      _buildRecentRequestsPanel(),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  _buildTrackMechanicButton(),
-                  const SizedBox(height: 10),
-                  if (_isPro) ...[
-                    _buildActiveRequestsPanel(),
-                    const SizedBox(height: 10),
-                  ],
-                  _buildRecentRequestsPanel(),
-                ],
-                ],
-              ),
-            ),
-          ],
-        ),
+                ),
+              ],
+            ],
+          ),
     );
   }
 
