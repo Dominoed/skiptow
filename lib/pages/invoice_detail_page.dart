@@ -97,21 +97,21 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
 
     final steps = [
       buildStep('Request Submitted',
-          subtitle: _formatDate(createdAt), index: 0),
+          subtitle: formatDate(createdAt), index: 0),
       buildStep('Mechanic Accepted',
-          subtitle: _formatDate(acceptedAt), index: 1),
+          subtitle: formatDate(acceptedAt), index: 1),
       buildStep('ETA Provided',
           subtitle:
               data['etaMinutes'] != null ? '${data['etaMinutes']} min' : '',
           index: 2),
       buildStep('Mechanic Marked Completed',
-          subtitle: _formatDate(completedAt), index: 3),
+          subtitle: formatDate(completedAt), index: 3),
       buildStep('Customer Confirmed Price',
-          subtitle: customerConfirmed ? _formatDate(closedAt) : '', index: 4),
+          subtitle: customerConfirmed ? formatDate(closedAt) : '', index: 4),
       buildStep('Payment Completed',
-          subtitle: paymentCompleted ? _formatDate(closedAt) : '', index: 5),
+          subtitle: paymentCompleted ? formatDate(closedAt) : '', index: 5),
       buildStep('Invoice Closed',
-          subtitle: _formatDate(closedAt), index: 6),
+          subtitle: formatDate(closedAt), index: 6),
     ];
 
     return Stepper(
@@ -189,11 +189,6 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     });
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return dt.toString().split('.').first;
-  }
 
   Color _paymentColor(String status) {
     switch (status) {
@@ -925,14 +920,14 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                 backgroundColor: _invoiceStatusColor(invoiceStatus),
               ),
               const SizedBox(width: 8),
-              Text('Created: ${_formatDate(createdAtTs)}'),
+              Text('Created: ${formatDate(createdAtTs)}'),
               if (acceptedAtTs != null) ...[
                 const SizedBox(width: 8),
-                Text('Accepted: ${_formatDate(acceptedAtTs)}'),
+                Text('Accepted: ${formatDate(acceptedAtTs)}'),
               ],
               if (closedAtTs != null) ...[
                 const SizedBox(width: 8),
-                Text('Closed: ${_formatDate(closedAtTs)}'),
+                Text('Closed: ${formatDate(closedAtTs)}'),
               ],
             ],
           ),

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'dashboard_page.dart';
+import "../utils.dart";
 
 class _MonthSpending {
   final DateTime month;
@@ -119,25 +120,6 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
     };
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'paid':
-        return Colors.green;
-      case 'overdue':
-        return Colors.red;
-      case 'closed':
-        return Colors.blueGrey;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return 'N/A';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
-
   String _currency(double value) {
     return NumberFormat.currency(locale: 'en_US', symbol: '\$').format(value);
   }
@@ -231,7 +213,7 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                 children: [
                   Text('Customer Username: ${data['username']}'),
                   Text('User ID: ${widget.customerId}'),
-                  Text('Registration Date: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+                  Text('Registration Date: ${formatDate(data['createdAt'] as Timestamp?)}'),
                   Text('Blocked: ${data['blocked'] ? 'Yes' : 'No'}'),
                   Text('Flagged: ${data['flagged'] ? 'Yes' : 'No'}'),
                   Text('Suspicious: ${data['suspicious'] ? 'Yes' : 'No'}'),
@@ -291,7 +273,7 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: _statusColor(status),
+                                    color: statusColor(status),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -321,7 +303,7 @@ class _AdminCustomerHistoryPageState extends State<AdminCustomerHistoryPage> {
                                 return Text('Mechanic: $name');
                               },
                             ),
-                            Text('Created: ${_formatDate(createdAtTs)}'),
+                            Text('Created: ${formatDate(createdAtTs)}'),
                             if (price != null) Text('Final Price: \$${price.toStringAsFixed(2)}'),
                           ],
                         ),

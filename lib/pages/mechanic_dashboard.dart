@@ -1762,18 +1762,6 @@ class _ActiveRequestCard extends StatelessWidget {
     required this.mechanicId,
   });
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'closed':
-        return Colors.blueGrey;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.yellow[700]!;
-    }
-  }
 
   Future<void> _updateEstimate(BuildContext context) async {
     final controller = TextEditingController(
@@ -2024,7 +2012,7 @@ class _ActiveRequestCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _statusColor(status),
+                        color: statusColor(status),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

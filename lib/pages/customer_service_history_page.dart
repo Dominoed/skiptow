@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
+import "../utils.dart";
 import '../services/csv_downloader.dart';
 
 class _MonthSpending {
@@ -15,24 +16,6 @@ class CustomerServiceHistoryPage extends StatelessWidget {
   final String userId;
   const CustomerServiceHistoryPage({super.key, required this.userId});
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'paid':
-        return Colors.green;
-      case 'overdue':
-        return Colors.red;
-      case 'closed':
-        return Colors.blueGrey;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return '';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
-  }
 
   String _formatTimestamp(Timestamp? ts) {
     if (ts == null) return '';
@@ -266,7 +249,7 @@ class CustomerServiceHistoryPage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: _statusColor(status),
+                                    color: statusColor(status),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -278,9 +261,9 @@ class CustomerServiceHistoryPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text('Mechanic: $mechanic'),
-                            Text('Created: ${_formatDate(createdAtTs)}'),
+                            Text('Created: ${formatDate(createdAtTs)}'),
                             if (closedAtTs != null)
-                              Text('Completed: ${_formatDate(closedAtTs)}'),
+                              Text('Completed: ${formatDate(closedAtTs)}'),
                             if (price != null)
                               Text('Final Price: \$${price.toStringAsFixed(2)}'),
                           ],

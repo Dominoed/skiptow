@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:skiptow/pages/create_invoice_page.dart';
 
+import "../utils.dart";
 /// Displays the logged-in mechanic's account information and performance.
 class MechanicProfilePage extends StatefulWidget {
   /// The mechanic ID whose profile will be displayed.
@@ -70,10 +71,6 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
     };
   }
 
-  String _formatDate(Timestamp? ts) {
-    if (ts == null) return 'N/A';
-    final dt = ts.toDate().toLocal();
-    return DateFormat('MMMM d, yyyy').format(dt);
   }
 
   @override
@@ -100,7 +97,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
               children: [
                 Text('Username: ${data['username']}'),
                 Text('Email: ${data['email']}'),
-                Text('Member Since: ${_formatDate(data['createdAt'] as Timestamp?)}'),
+                Text('Member Since: ${formatDate(data['createdAt'] as Timestamp?)}'),
                 const SizedBox(height: 20),
                 Text('Total Jobs Completed: ${data['completedJobs']}'),
                 Text('Total Earnings: \$${data['totalEarnings'].toStringAsFixed(2)}'),
