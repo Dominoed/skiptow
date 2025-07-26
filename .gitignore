@@ -55,6 +55,7 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 .firebase/hosting.YnVpbGQvd2Vi.cache
+*.cache
 windows/flutter/generated_plugins.cmake
 windows/flutter/generated_plugin_registrant.cc
 macos/Flutter/GeneratedPluginRegistrant.swift
