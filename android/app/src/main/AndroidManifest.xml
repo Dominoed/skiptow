@@ -39,7 +39,7 @@
                     android:pathPrefix="/mechanic/" />
                 <data
                     android:scheme="https"
-                    android:host="checkout.stripe.com" />
+                    android:host="*.stripe.com" />
                 <data
                     android:scheme="https"
                     android:host="stripe.com" />
