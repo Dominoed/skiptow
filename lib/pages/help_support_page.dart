@@ -10,14 +10,17 @@ class HelpSupportPage extends StatelessWidget {
   final String userRole; // customer or mechanic
   const HelpSupportPage({super.key, required this.userId, required this.userRole});
 
+  /// Returns the administrator user's ID.
+  ///
+  /// The admin account currently uses a fixed ID since only one
+  /// administrator exists. We hard code this value so that starting a
+  /// support chat always works even if the query for an `admin` role
+  /// fails. If additional admin accounts are added in the future this
+  /// function can be updated to perform a query instead.
   Future<String?> _getAdminId() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'admin')
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    return snap.docs.first.id;
+    // Directly return the known admin user id.
+    const adminId = 'HvTwsJCasRZUIl2hXBzxmVyhLLL2';
+    return adminId;
   }
 
   Future<String?> _getUsername(String id) async {
