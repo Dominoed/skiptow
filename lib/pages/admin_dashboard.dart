@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/admin_config.dart';
 import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -800,7 +801,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => AdminMessageCenterPage(adminId: widget.userId),
+                    builder: (_) => const AdminMessageCenterPage(),
                   ),
                 );
               },

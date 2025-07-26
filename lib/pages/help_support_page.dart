@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/admin_config.dart';
 import 'general_chat_page.dart';
 import 'terms_and_conditions_page.dart';
 
@@ -19,8 +20,7 @@ class HelpSupportPage extends StatelessWidget {
   /// function can be updated to perform a query instead.
   Future<String?> _getAdminId() async {
     // Directly return the known admin user id.
-    const adminId = 'HvTwsJCasRZUIl2hXBzxmVyhLLL2';
-    return adminId;
+    return kSupportAdminId;
   }
 
   Future<String?> _getUsername(String id) async {

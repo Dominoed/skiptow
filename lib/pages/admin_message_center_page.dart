@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../services/admin_config.dart';
 import 'general_chat_page.dart';
 
 /// Page for admins to manage general message threads with any user.
 class AdminMessageCenterPage extends StatelessWidget {
   final String adminId;
-  const AdminMessageCenterPage({super.key, required this.adminId});
+  const AdminMessageCenterPage({super.key, this.adminId = kSupportAdminId});
 
   Future<void> _startNewChat(BuildContext context) async {
     final controller = TextEditingController();
