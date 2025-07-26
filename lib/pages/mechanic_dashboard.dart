@@ -71,6 +71,7 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
   String? _currentSessionId;
   String? _referralLink;
   final GlobalKey _qrKey = GlobalKey();
+  bool _drawerOpen = false;
 
   void _showLocationBanner() {
     if (_locationBannerVisible || !mounted) return;
@@ -969,6 +970,11 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
       appBar: AppBar(
         title: const Text('Mechanic Dashboard'),
       ),
+      onDrawerChanged: (open) {
+        setState(() {
+          _drawerOpen = open;
+        });
+      },
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -1193,11 +1199,12 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                         circles: _buildRadiusCircles(),
                       ),
                       // Map refresh is triggered from the dashboard page
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: _buildFloatingButtons(),
-                      ),
+                      if (!_drawerOpen)
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: _buildFloatingButtons(),
+                        ),
                     ],
                   ),
                 ),
@@ -1277,7 +1284,9 @@ class _MechanicDashboardState extends State<MechanicDashboard> {
                 ),
               ],
             ),
-      floatingActionButton: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      floatingActionButton: _drawerOpen
+          ? null
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('invoices')
             .where('mechanicId', isEqualTo: widget.userId)
